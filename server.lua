@@ -1,8 +1,10 @@
 local sock = require "sock"
+local game = require "game"
 
 local server_func = {}
 
 local server = nil
+local id = 0
 local client_data = {}
 local client_list = {}
 
@@ -11,14 +13,19 @@ local server_hooks = {
     event = function(data, client)
       server_func.update_client_list()
       client_data[client.connectId] = {index = client:getIndex()}
-      server:sendToAll("client_list", client_list)
+      server:sendToAll("client_list", {client_list, client.connectId, nil})
+
+      if game.started() then
+        game.add_player(client.connectId)
+        server:sendToPeer(server:getPeerByIndex(client_data[client.connectId].index), "start_game")
+      end
     end
   },
   disconnect = {
     event = function(data, client)
       server_func.update_client_list()
       client_data[client.connectId] = nil
-      server:sendToAll("client_list", client_list)
+      server:sendToAll("client_list", {client_list, nil, client.connectId})
     end
   }
 }
@@ -39,14 +46,18 @@ server_func.draw = function()
   end
 end
 
-
-
 server_func.quit = function()
   if server then
     server:sendToAll("quit", {})
     server:update()
     server:destroy()
     server = nil
+  end
+end
+
+server_func.keypressed = function(key)
+  if key == "space" then
+    server_func.start_game()
   end
 end
 
@@ -60,10 +71,15 @@ server_func.load_hooks = function()
 end
 
 server_func.update_client_list = function()
-  client_list = {}
+  client_list = {0}
   for i, v in ipairs(server:getClients()) do
     client_list[#client_list+1] = v.connectId
   end
+end
+
+server_func.start_game = function()
+  server:sendToAll("start_game")
+  game.load(id, client_list)
 end
 
 return server_func

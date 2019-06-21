@@ -17,9 +17,10 @@ love.quit = function()
 end
 
 love.keypressed = function(key)
-  if key == "1" then
+  network.keypressed(key)
+  if key == "1" and network.get_state() ~= "server"then
     network.set_state("server")
-  elseif key == "2" then
+  elseif key == "2" and network.get_state() ~= "client" then
     network.set_state("client")
   end
 end

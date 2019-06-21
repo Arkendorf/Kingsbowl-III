@@ -1,4 +1,5 @@
 local sock = require "sock"
+local game = require "game"
 
 local client_func = {}
 
@@ -23,8 +24,17 @@ local client_hooks = {
     end
   },
   client_list = {
+    schema = {"total", "added", "removed"},
     event = function(data)
-      client_list = data
+      client_list = data.total
+      if data.added and game.started() then
+        game.add_player(data.added)
+      end
+    end
+  },
+  start_game = {
+    event = function()
+      game.load(id, client_list)
     end
   }
 }
