@@ -5,7 +5,7 @@ local client_func = {}
 
 local client = nil
 local id = nil
-local client_list = {}
+local client_list = {0}
 
 local client_hooks = {
   connect = {
@@ -36,7 +36,18 @@ local client_hooks = {
     event = function()
       game.load(id, client_list)
     end
-  }
+  },
+
+end_turn = {
+    event = function()
+      game.end_turn()
+    end
+  },
+  timer = {
+    event = function(data)
+      game.set_timer(data)
+    end
+  },
 }
 
 client_func.load = function()
@@ -80,6 +91,10 @@ client_func.get_status = function()
   else
     return "nonexistant"
   end
+end
+
+client_func.send = function(event, data)
+  client:send(event, data)
 end
 
 return client_func

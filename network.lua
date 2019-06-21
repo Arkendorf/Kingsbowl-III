@@ -20,7 +20,6 @@ end
 
 network.draw = function()
   love.graphics.print(state)
-  love.graphics.print("game started: "..tostring(game.started()), 48, 0)
 
   if state == "server" then
     server_func.draw()
@@ -56,6 +55,15 @@ end
 
 network.get_state = function()
   return state
+end
+
+network.send = function(event, data)
+  if state == "server" then
+    server_func.send(event, data)
+    game[event](data)
+  elseif state == "client" then
+    client_func.send(event, data)
+  end
 end
 
 return network

@@ -6,7 +6,7 @@ local server_func = {}
 local server = nil
 local id = 0
 local client_data = {}
-local client_list = {}
+local client_list = {0}
 
 local server_hooks = {
   connect = {
@@ -27,12 +27,25 @@ local server_hooks = {
       client_data[client.connectId] = nil
       server:sendToAll("client_list", {client_list, nil, client.connectId})
     end
-  }
+  },
+
+  end_turn = {
+    event = function(data, client)
+      server:sendToPeer(server:getPeerByIndex(client_data[client.connectId].index), "timer", game.get_timer)
+    end
+  },
 }
 
 server_func.load = function()
+  if pcall(server_func.create_server) then
+    server_func.load_hooks()
+  else
+    network.set_state("server error")
+  end
+end
+
+server_func.create_server = function()
   server = sock.newServer("localhost", 25565)
-  server_func.load_hooks()
 end
 
 server_func.update = function(dt)
@@ -80,6 +93,10 @@ end
 server_func.start_game = function()
   server:sendToAll("start_game")
   game.load(id, client_list)
+end
+
+server_func.send = function(event, data)
+  server:sendToAll(event, data)
 end
 
 return server_func
