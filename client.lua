@@ -1,5 +1,6 @@
 local sock = require "sock"
 local game = require "game"
+local movement = require "movement"
 
 local client_func = {}
 
@@ -38,14 +39,36 @@ local client_hooks = {
     end
   },
 
-end_turn = {
+  start_turn = {
     event = function()
-      game.end_turn()
+      game.network_func.start_turn()
+    end
+  },
+  end_turn = {
+    event = function()
+      game.network_func.end_turn()
     end
   },
   timer = {
     event = function(data)
-      game.set_timer(data)
+      timer = data
+    end
+  },
+  new_move = {
+    schema = {"player", "x", "y"},
+    event = function(data)
+      players[data.player].x_move = data.x
+      players[data.player].y_move = data.y
+    end
+  },
+  new_pos = {
+    schema = {"player", "x", "y"},
+    event = function(data)
+      players[data.player].grid_x = data.x
+      players[data.player].grid_y = data.y
+      if not players[data.player].resolved then
+        movement.resolve(players[data.player])
+      end
     end
   },
 }

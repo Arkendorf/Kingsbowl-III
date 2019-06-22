@@ -57,11 +57,13 @@ network.get_state = function()
   return state
 end
 
-network.send = function(event, data)
+network.send = function(event, data, server_only)
   if state == "server" then
     server_func.send(event, data)
-    game[event](data)
-  elseif state == "client" then
+    if game.network_func[event] then
+      game.network_func[event](data)
+    end
+  elseif state == "client" and not server_only then
     client_func.send(event, data)
   end
 end

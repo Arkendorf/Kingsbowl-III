@@ -29,9 +29,22 @@ local server_hooks = {
     end
   },
 
+  start_turn = {
+    event = function(data, client)
+      server:sendToPeer(server:getPeerByIndex(client_data[client.connectId].index), "timer", timer)
+    end
+  },
   end_turn = {
     event = function(data, client)
-      server:sendToPeer(server:getPeerByIndex(client_data[client.connectId].index), "timer", game.get_timer)
+      server:sendToPeer(server:getPeerByIndex(client_data[client.connectId].index), "timer", timer)
+    end
+  },
+  new_move = {
+    schema = {"player", "x", "y"},
+    event = function(data, client)
+      server:sendToAll("new_move", {data.player, data.x, data.y})
+      players[data.player].x_move = data.x
+      players[data.player].y_move = data.y
     end
   },
 }
