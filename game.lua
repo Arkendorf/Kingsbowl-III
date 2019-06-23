@@ -10,17 +10,7 @@ id = nil
 tile_size = 32
 turn_time = 3
 timer = turn_time
-turn_delay = .4
-turn_order = {
-  ball = 0,
-  qb = 0, -- qb's state should only be qb as long as they have ball
-  offense = 1,
-  defense = 2,
-  baller = 3,
-  max = 3
-}
 states = {"defense", "offense", "qb", "baller"}
-move_speed = .1
 resolve = true
 
 game.load = function(client, client_list)
@@ -80,7 +70,6 @@ end
 game.network_func.end_turn = function()
   movement.end_turn()
   resolve = true
-  timer = (turn_order.max+1)*turn_delay
 end
 
 return game

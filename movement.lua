@@ -1,5 +1,16 @@
 local movement = {}
 
+local turn_delay = .4
+local turn_order = {
+  ball = 0,
+  qb = 1, -- qb's state should only be qb as long as they have ball
+  offense = 1,
+  defense = 2,
+  baller = 3,
+  max = 3
+}
+local move_speed = .1
+
 movement.update = function(dt)
   for k, v in pairs(players) do
     if resolve then
@@ -51,6 +62,7 @@ movement.end_turn = function()
     v.y = v.grid_y
     v.resolved = false
   end
+  timer = (turn_order.max+1)*turn_delay
 end
 
 movement.collision = function(k, v)
