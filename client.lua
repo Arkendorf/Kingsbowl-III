@@ -1,123 +1,190 @@
-local sock = require "sock"
-local game = require "game"
-local movement = require "movement"
+local gui = require "gui"
 
-local client_func = {}
+client_func = {}
 
+local ip_test = {}
+local servers = {}
 local client = nil
-local id = nil
-local client_list = {0}
+local client_list = {}
+local client_info = {}
+local id = 0
+local textboxes = {ip_port = "", username = ""}
 
-local client_hooks = {
-  connect = {
-    event = function()
-      id = client:getConnectId()
-    end
-  },
-  disconnect = {
-    event = function()
-      client:disconnect()
-    end
-  },
-  quit = {
-    event = function()
-      client:disconnectNow()
-    end
-  },
-  client_list = {
-    schema = {"total", "added", "removed"},
-    event = function(data)
-      client_list = data.total
-      if data.added and game.started() then
-        game.add_player(data.added)
-      end
-    end
-  },
-  start_game = {
-    event = function()
-      game.load(id, client_list)
-    end
-  },
-
-  start_turn = {
-    event = function()
-      game.network_func.start_turn()
-    end
-  },
-  end_turn = {
-    event = function()
-      game.network_func.end_turn()
-    end
-  },
-  timer = {
-    event = function(data)
-      timer = data
-    end
-  },
-  new_move = {
-    schema = {"player", "x", "y"},
-    event = function(data)
-      players[data.player].x_move = data.x
-      players[data.player].y_move = data.y
-    end
-  },
-  new_pos = {
-    schema = {"player", "x", "y"},
-    event = function(data)
-      players[data.player].grid_x = data.x
-      players[data.player].grid_y = data.y
-      if not players[data.player].resolved then
-        movement.resolve(players[data.player])
-      end
-    end
-  },
-}
 
 client_func.load = function()
-  client = sock.newClient("localhost", 25565)
-  client_func.load_hooks()
-  client:connect()
+  client_func.test_for_servers()
+  gui.remove_all()
+  gui.new_textbox("username", 0, 0, 256, 16, "Username", textboxes, "username")
+  gui.new_button("refresh", 192, 16, 64, 16, "Refresh", client_func.refresh_test)
+  gui.new_button("main_menu", 64, 0, 128, 16, "Main Menu", client_func.main_menu)
+  client_func.hide_advanced()
 end
 
 client_func.update = function(dt)
-  client:update()
+  if client then
+    client:update()
+  end
+  for i, v in ipairs(ip_test) do
+    v:update()
+  end
 end
 
 client_func.draw = function()
-  love.graphics.print(client_func.get_status(), 0, 12)
-  love.graphics.print(tostring(id), 0, 24)
-  love.graphics.print("client list:", 0, 36)
-  for i, v in ipairs(client_list) do
-    love.graphics.print(v, 0, (i+3)*12)
+  if client then
+    for i, v in ipairs(client_list) do
+      love.graphics.print(client_info[v].username, 0, 32+(i-1)*12)
+    end
+  else
+    love.graphics.print("Servers open on LAN:", 0, 16)
+    for i, v in ipairs(servers) do
+      love.graphics.printf(v.info.username, 0, 32+(i-1)*32, 256, "left")
+      love.graphics.printf("ping: "..tostring(ip_test[v.num]:getRoundTripTime()), 0, 32+(i-1)*32, 256, "right")
+      love.graphics.printf(v.info.desc, 0, 32+(i-.5)*32, 256, "left")
+      love.graphics.printf("players: "..tostring(v.info.client_num), 0, 32+(i-.5)*32, 256, "right")
+    end
   end
 end
 
 client_func.quit = function()
   if client then
-    client:disconnectNow()
+    client:disconnectNow(1)
+    client = nil
+  else
+    client_func.stop_test()
+  end
+end
+
+client_func.main_menu = function()
+  gui.remove_all()
+  client_func.stop_test()
+  state = ""
+  network.load()
+end
+
+client_func.leave_server = function()
+  client:disconnectNow(1)
+  client = nil
+  client_func.load()
+end
+
+client_func.show_advanced = function()
+  gui.remove_button("advanced")
+  gui.new_textbox("ip_port", 0, 0, 128, 16, "I.P.", textboxes, "ip_port")
+  gui.new_button("join", 128, 0, 64, 16, "Join", client_func.direct_connect)
+  gui.new_button("hide", 192, 0, 64, 16, "Hide", client_func.hide_advanced)
+  client_func.set_advanced_pos()
+end
+
+client_func.hide_advanced = function()
+  gui.remove_textbox("ip_port")
+  gui.remove_button("join")
+  gui.remove_button("hide")
+  gui.new_button("advanced", 0, 0, 256, 16, "Connect Manually", client_func.show_advanced)
+  client_func.set_advanced_pos()
+end
+
+client_func.set_advanced_pos = function()
+  local y = 32+(#servers)*32
+  gui.edit_button("advanced", "y", y)
+  gui.edit_textbox("ip_port", "y", y)
+  gui.edit_button("join", "y", y)
+  gui.edit_button("hide", "y", y)
+  gui.edit_button("main_menu", "y", y+16)
+end
+
+client_func.direct_connect = function()
+  local ip, port = network.decode_ip_port(textboxes.ip_port, "localhost")
+  client_func.join_server({ip = ip, port = port})
+end
+
+client_func.connect = function()
+  client:connect(1)
+end
+
+client_func.join_server = function(address)
+  client_func.stop_test()
+  client = sock.newClient(address.ip, address.port)
+  if pcall(client_func.connect) then
+    gui.remove_all()
+    -- make sure username has a value
+    if textboxes.username == "" then
+      textboxes.username = default_username
+    end
+
+    client_list = {}
+
+    -- event calls once connected to a server
+    client:on("connect", function()
+      if client then
+        id = client.connectId
+        client:send("client_info", {textboxes.username})
+        gui.new_button("leave", 0, 0, 128, 32, "Leave", client_func.leave_server)
+      end
+    end)
+    client:on("server_closed", function()
+      if client then
+        client:disconnectNow(1)
+        client = nil
+        client_func.load()
+      end
+    end)
+    client:setSchema("new_client", {"id", "index", "username"})
+    client:on("new_client", function(data)
+      client_list[#client_list+1] = data.id
+      client_info[data.id] = {index = data.index, username = data.username}
+    end)
+    client:on("client_quit", function(data)
+      -- remove client from client list
+      for i, v in ipairs(client_list) do
+        if v == data then
+          table.remove(client_list, i)
+          break
+        end
+      end
+      -- erase client's info
+      client_info[data] = nil
+    end)
+    client:setSchema("client_info", {"id", "username"})
+    client:on("client_info", function(data)
+      client_info[data.id].username = data.username
+    end)
+  else
     client = nil
   end
 end
 
-client_func.load_hooks = function()
-  for k, v in pairs(client_hooks) do
-    if v.schema then
-      client:setSchema(k, v.schema)
-    end
-    client:on(k, v.event)
+client_func.test_for_servers = function()
+  ip_test = {}
+  for i = 1, 255 do
+    local ip = default_ip_prefix..tostring(i)
+    ip_test[i] = sock.newClient(ip, default_port)
+    ip_test[i]:connect(0)
+    ip_test[i]:setSchema("server_info", {"username", "desc", "client_num"})
+    ip_test[i]:on("server_info", function(data)
+      local index = #servers+1
+      servers[index] = {ip = ip, num = i, info = data}
+      gui.new_button(i, 0, 32+(index-1)*32, 256, 32, "", client_func.join_server, {ip = ip, port = default_port})
+      client_func.set_advanced_pos()
+    end)
   end
 end
 
-client_func.get_status = function()
-  if client then
-    return client:getState()
-  else
-    return "nonexistant"
+client_func.stop_test = function()
+  for i, v in ipairs(ip_test) do
+    v:disconnectNow(0)
+    v = nil
   end
+  for i, v in ipairs(servers) do -- reset gui
+    gui.remove_button(v.num)
+  end
+  servers = {}
+  ip_test = {}
+  client_func.set_advanced_pos()
 end
 
-client_func.send = function(event, data)
-  client:send(event, data)
+client_func.refresh_test = function()
+  client_func.stop_test()
+  client_func.test_for_servers()
 end
 
 return client_func

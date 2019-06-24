@@ -1,39 +1,37 @@
+sock = require "sock"
 network = require "network"
-local game = require "game"
+
+local gui = require "gui"
 
 love.load = function()
+  gui.load()
   network.load()
+  love.window.setTitle("Network Testing")
 end
 
 love.update = function(dt)
   network.update(dt)
-  if game.started() then
-    game.update(dt)
-  end
+  gui.update(dt)
 end
 
 love.draw = function()
+  love.graphics.print(love.timer.getFPS(), 764, 0)
   network.draw()
-  if game.started() then
-    game.draw()
-  end
+  gui.draw()
+end
+
+love.mousepressed = function(x, y, button)
+  gui.mousepressed(x, y, button)
+end
+
+love.keypressed = function(key)
+  gui.keypressed(key)
+end
+
+love.textinput = function(text)
+  gui.textinput(text)
 end
 
 love.quit = function()
   network.quit()
-end
-
-love.keypressed = function(key)
-  network.keypressed(key)
-  if key == "1" and network.get_state() ~= "server"then
-    network.set_state("server")
-  elseif key == "2" and network.get_state() ~= "client" then
-    network.set_state("client")
-  end
-end
-
-love.mousepressed = function(x, y, button)
-  if game.started() then
-    game.mousepressed(x, y, button)
-  end
 end

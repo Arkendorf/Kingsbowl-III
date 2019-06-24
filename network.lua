@@ -1,13 +1,17 @@
-local sock = require "sock"
 local server_func = require "server"
 local client_func = require "client"
-local game = require "game"
+local gui = require "gui"
 
 local network = {}
 
-local state = "press 1 for server or 2 for client"
+default_username = "Placeholder"
+default_ip_prefix = "192.168.1."
+default_port = 25565
+state = ""
 
 network.load = function()
+  gui.new_button("host", 0, 0, 128, 32, "Host", network.start_server)
+  gui.new_button("join", 128, 0, 128, 32, "Join", network.start_client)
 end
 
 network.update = function(dt)
@@ -19,8 +23,6 @@ network.update = function(dt)
 end
 
 network.draw = function()
-  love.graphics.print(state)
-
   if state == "server" then
     server_func.draw()
   elseif state == "client" then
@@ -36,36 +38,37 @@ network.quit = function()
   end
 end
 
-network.keypressed = function(key)
-  if state == "server" then
-    server_func.keypressed(key)
+network.start_server = function()
+  gui.remove_all()
+  state = "server"
+  server_func.load()
+end
+
+network.start_client = function()
+  gui.remove_all()
+  state = "client"
+  client_func.load()
+end
+
+network.decode_ip_port = function(ip_port, default_ip)
+  local ip = "*"
+  if default_ip then
+    ip = default_ip
   end
-end
-
-network.set_state = function(str)
-  state = str
-  if state == "server" then
-    server_func.load()
-    client_func.quit()
-  elseif state == "client" then
-    client_func.load()
-    server_func.quit()
-  end
-end
-
-network.get_state = function()
-  return state
-end
-
-network.send = function(event, data, server_only)
-  if state == "server" then
-    server_func.send(event, data)
-    if game.network_func[event] then
-      game.network_func[event](data)
+  local new_ip = ip_port
+  local port = default_port
+  local port_pos = string.find(ip_port, ":") -- search for a given port
+  if port_pos then
+    new_ip = string.sub(ip_port, 1, port_pos-1)
+    local new_port = tonumber(string.sub(ip_port, port_pos+1, -1))
+    if new_port then
+      port = new_port
     end
-  elseif state == "client" and not server_only then
-    client_func.send(event, data)
   end
+  if new_ip ~= "" then
+    ip = new_ip
+  end
+  return ip, port
 end
 
 return network
