@@ -1,12 +1,11 @@
 local gui = require "gui"
+local menu = require "menu"
 
 client_func = {}
 
 local ip_test = {}
 local servers = {}
-local client = nil
-local client_list = {}
-local client_info = {}
+client = nil
 local id = 0
 local textboxes = {ip_port = "", username = ""}
 
@@ -31,9 +30,7 @@ end
 
 client_func.draw = function()
   if client then
-    for i, v in ipairs(client_list) do
-      love.graphics.print(client_info[v].username, 0, 32+(i-1)*12)
-    end
+    menu.draw()
   else
     love.graphics.print("Servers open on LAN:", 0, 16)
     for i, v in ipairs(servers) do
@@ -111,7 +108,7 @@ client_func.join_server = function(address)
       textboxes.username = default_username
     end
 
-    client_list = {}
+    menu.reset_info()
 
     -- event calls once connected to a server
     client:on("connect", function()
@@ -121,33 +118,26 @@ client_func.join_server = function(address)
         gui.new_button("leave", 0, 0, 128, 32, "Leave", client_func.leave_server)
       end
     end)
-    client:on("server_closed", function()
+    client:on("kick", function()
       if client then
         client:disconnectNow(1)
         client = nil
         client_func.load()
       end
     end)
-    client:setSchema("new_client", {"id", "index", "username"})
+    client:setSchema("new_client", {"id", "index", "username", "team"})
     client:on("new_client", function(data)
-      client_list[#client_list+1] = data.id
-      client_info[data.id] = {index = data.index, username = data.username}
+      menu.add_client(data.id, data.index, data.username, data.team)
     end)
     client:on("client_quit", function(data)
-      -- remove client from client list
-      for i, v in ipairs(client_list) do
-        if v == data then
-          table.remove(client_list, i)
-          break
-        end
-      end
-      -- erase client's info
-      client_info[data] = nil
+      menu.remove_client(data)
     end)
     client:setSchema("client_info", {"id", "username"})
     client:on("client_info", function(data)
-      client_info[data.id].username = data.username
+      menu.update_client(data.id, data.username)
     end)
+
+    menu.load()
   else
     client = nil
   end

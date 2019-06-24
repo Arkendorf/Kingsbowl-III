@@ -1,13 +1,13 @@
 local gui = require "gui"
+local menu = require "menu"
 
 local server_func = {}
 
-local server = nil
-local client_list = {}
-local client_info = {}
+server = nil
 local id = 0
 local textboxes = {ip_port = "", desc = "", username = ""}
 local default_desc = "Server"
+local team_info = {}
 
 server_func.load = function()
   ip_port = ""
@@ -27,15 +27,13 @@ end
 
 server_func.draw = function()
   if server then
-    for i, v in ipairs(client_list) do
-      love.graphics.print(client_info[v].username, 0, 32+(i-1)*12)
-    end
+    menu.draw()
   end
 end
 
 server_func.quit = function()
   if server then
-    server:sendToAll("server_closed")
+    server:sendToAll("kick")
     server:update()
     server:destroy()
     server = nil
@@ -58,6 +56,49 @@ server_func.start_server = function()
   if pcall(function() server_func.create_server(network.decode_ip_port(textboxes.ip_port)) end) then -- attempt to initialize server
     gui.remove_all()
     gui.new_button("leave", 0, 0, 128, 32, "Leave", server_func.leave_server)
+
+    -- make sure username and description have a value
+    if textboxes.username == "" then
+      textboxes.username = default_username
+    end
+    if textboxes.desc == "" then
+      textboxes.desc = default_desc
+    end
+
+    -- set up client for server
+    menu.reset_info()
+    menu.add_client(0, 0, textboxes.username, 1)
+
+    -- event calls for server
+    server:on("connect", function(data, client)
+      if data == 0 then -- client is checking for an active server
+        server:sendToPeer(server:getPeerByIndex(client:getIndex()), "server_info", {textboxes.username, textboxes.desc, #menu.get_client_list()})
+      elseif data == 1 then -- client has decided to join server
+        local index = client:getIndex()
+        local team = menu.choose_team()
+        menu.add_client(client.connectId, index, "", team)
+        server:sendToAllBut(client, "new_client", {client.connectId, index, "", team})
+        local peer = server:getPeerByIndex(index)
+        for i, v in ipairs(menu.get_client_list()) do
+          local info = menu.get_client_info(v)
+          server:sendToPeer(peer, "new_client", {v, info.index, info.username, info.team})
+        end
+      end
+    end)
+    server:on("disconnect", function(data, client)
+      if data == 1 then -- make sure it's a genuine player who left
+        menu.remove_client(client.connectId)
+        -- inform other clients of departure
+        server:sendToAll("client_quit", client.connectId)
+      end
+    end)
+    server:setSchema("client_info", {"username"})
+    server:on("client_info", function(data, client)
+      menu.update_client(client.connectId, data.username)
+      server:sendToAll("client_info", {client.connectId, data.username})
+    end)
+
+    menu.load()
   else -- if attempt produces error
     server = nil
   end
@@ -77,54 +118,6 @@ end
 
 server_func.create_server = function(ip, port)
   server = sock.newServer(ip, port)
-  -- make sure username and description have a value
-  if textboxes.username == "" then
-    textboxes.username = default_username
-  end
-  if textboxes.desc == "" then
-    textboxes.desc = default_desc
-  end
-
-  -- set up client for server
-  client_list = {0}
-  client_info[0] = {index = 0, username = textboxes.username}
-
-  -- event calls for server
-  server:on("connect", function(data, client)
-    if data == 0 then -- client is checking for an active server
-      server:sendToPeer(server:getPeerByIndex(client:getIndex()), "server_info", {client_info[0].username, textboxes.desc, #client_list})
-    elseif data == 1 then -- client has decided to join server
-      local index = client:getIndex()
-      client_list[#client_list+1] = client.connectId
-      client_info[client.connectId] = {index = index, username = ""}
-      server:sendToAllBut(client, "new_client", {client.connectId, index, ""})
-      local peer = server:getPeerByIndex(index)
-      for i, v in ipairs(client_list) do
-        server:sendToPeer(peer, "new_client", {v, client_info[v].index, client_info[v].username})
-      end
-    end
-  end)
-  server:on("disconnect", function(data, client)
-    if data == 1 then -- make sure it's a genuine player who left
-      -- remove client from client list
-      for i, v in ipairs(client_list) do
-        if v == client.connectId then
-          table.remove(client_list, i)
-          break
-        end
-      end
-    end
-    -- erase client's info
-    client_info[client.connectId] = nil
-    -- inform other clients of departure
-    server:sendToAll("client_quit", client.connectId)
-  end)
-  server:setSchema("client_info", {"username"})
-  server:on("client_info", function(data, client)
-    client_info[client.connectId].username = data.username
-    server:sendToAll("client_info", {client.connectId, data.username})
-  end
-  )
 end
 
 return server_func
