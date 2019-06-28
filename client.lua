@@ -6,7 +6,7 @@ client_func = {}
 local ip_test = {}
 local servers = {}
 client = nil
-local id = 0
+id = 0
 local textboxes = {ip_port = "", username = ""}
 
 

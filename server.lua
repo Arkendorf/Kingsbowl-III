@@ -4,7 +4,7 @@ local menu = require "menu"
 local server_func = {}
 
 server = nil
-local id = 0
+id = 0
 local textboxes = {ip_port = "", desc = "", username = ""}
 local default_desc = "Server"
 local team_info = {}

@@ -1,6 +1,7 @@
 local server_func = require "server"
 local client_func = require "client"
 local gui = require "gui"
+local menu = require "menu"
 
 local network = {}
 
@@ -69,6 +70,42 @@ network.decode_ip_port = function(ip_port, default_ip)
     ip = new_ip
   end
   return ip, port
+end
+
+network.server_send = function(event, data)
+  if state == "server" and server then
+    server:sendToAll(event, data)
+  end
+end
+
+network.client_send = function(event, data)
+  if state == "client" and client then
+    client:send(event, data)
+  end
+end
+
+network.server_send_client = function(id, event, data)
+  if state == "server" and server then
+    server:sendToPeer(server:getPeerByIndex(menu.get_client_info(id).index), event, data)
+  end
+end
+
+network.server_send_except = function(id, event, data)
+  if state == "server" and server then
+    server:sendToAllBut(server:getClientByConnectId(id), event, data)
+  end
+end
+
+network.server_send_team = function(team, event, data)
+  if state == "server" and server then
+    for i, v in ipairs(menu.get_client_list()) do
+      if v ~= 0 then
+        if menu.get_client_info(v).team == team then
+          network.server_send_client(v, event, data)
+        end
+      end
+    end
+  end
 end
 
 return network

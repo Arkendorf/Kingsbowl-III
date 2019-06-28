@@ -1,4 +1,5 @@
 local gui = require "gui"
+local game = require "game"
 
 local menu = {}
 
@@ -18,6 +19,9 @@ menu.load = function()
       menu.decrease_team_size(client_info[data.id].team)
       menu.increase_team_size(data.team)
       client_info[data.id].team = data.team
+    end)
+    client:on("start_game", function()
+      game.load(client_list, client_info, team_info)
     end)
   end
 end
@@ -153,9 +157,10 @@ menu.open_settings = function()
 end
 
 menu.start_game = function()
-  if team_info[1].size > 0 and team_info[2].size > 0 then
-    -- start game here
-  end
+  -- if team_info[1].size > 0 and team_info[2].size > 0 then
+    game.load(client_list, client_info, team_info)
+    server:sendToAll("start_game")
+  -- end
 end
 
 return menu
