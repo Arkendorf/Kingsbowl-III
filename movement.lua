@@ -1,12 +1,14 @@
-common = require "common"
+local common = require "common"
 
 local movement = {}
+
+local max_dist = 3.5
 
 movement.load = function()
   if state == "server" then
     server:setSchema("new_pos", {"x", "y"})
     server:on("new_pos", function(data, client)
-      if resolve then
+      if resolve or not movement.valid(client.connectId, data.x, data.y) then
         network.server_send_client(client.connectId, "new_pos", {client.connectId, players[client.connectId].new_x, players[client.connectId].new_y})
       else
         players[client.connectId].new_x = data.x
@@ -44,6 +46,15 @@ movement.update = function(dt)
 end
 
 movement.draw = function()
+  if not resolve then
+    for y = -math.ceil(max_dist), math.ceil(max_dist) do
+      for x = -math.ceil(max_dist), math.ceil(max_dist) do
+        if movement.valid(id, players[id].tile_x+x, players[id].tile_y+y) then
+          love.graphics.rectangle("line", (players[id].tile_x+x)*tile_size+4, (players[id].tile_y+y)*tile_size+4, tile_size-8, tile_size-8)
+        end
+      end
+    end
+  end
   for k, v in pairs(players) do
     love.graphics.setColor(team_info[v.team].color)
     love.graphics.rectangle("fill", v.x*tile_size, v.y*tile_size, tile_size, tile_size)
@@ -57,11 +68,30 @@ end
 
 movement.mousepressed = function(x, y, button)
   if not resolve then
-    players[id].new_x = math.floor(x/tile_size)
-    players[id].new_y = math.floor(y/tile_size)
-    network.server_send_team(players[id].team, "new_pos", {id, players[id].new_x, players[id].new_y})
-    network.client_send("new_pos", {players[id].new_x, players[id].new_y})
+    local tile_x = math.floor(x/tile_size)
+    local tile_y = math.floor(y/tile_size)
+    if movement.valid(id, tile_x, tile_y) then
+      players[id].new_x = tile_x
+      players[id].new_y = tile_y
+      network.server_send_team(players[id].team, "new_pos", {id, tile_x, tile_y})
+      network.client_send("new_pos", {tile_x, tile_y})
+    end
   end
+end
+
+movement.valid = function(id, x, y)
+  local player = players[id]
+  if common.dist(player.tile_x, player.tile_y, x, y) > max_dist then
+    return false
+  end
+  for k, v in pairs(players) do
+    if v.team == player.team and k ~= id then
+      if x == v.new_x and y == v.new_y then
+        return false
+      end
+    end
+  end
+  return true
 end
 
 movement.resolve_moves = function()
@@ -71,12 +101,12 @@ movement.resolve_moves = function()
 end
 
 movement.resolve_player = function(id)
-  local v = players[id]
-  v.path = movement.get_path(v.tile_x, v.tile_y, v.new_x, v.new_y)
-  local dist = common.dist(v.tile_x, v.tile_y, v.new_x, v.new_y)
-  v.xv = (v.new_x-v.tile_x)/dist
-  v.yv = (v.new_y-v.tile_y)/dist
-  v.speed = dist/resolve_time
+  local player = players[id]
+  player.path = movement.get_path(player.tile_x, player.tile_y, player.new_x, player.new_y)
+  local dist = common.dist(player.tile_x, player.tile_y, player.new_x, player.new_y)
+  player.xv = (player.new_x-player.tile_x)/dist
+  player.yv = (player.new_y-player.tile_y)/dist
+  player.speed = dist/resolve_time
 end
 
 movement.start_moves = function()
