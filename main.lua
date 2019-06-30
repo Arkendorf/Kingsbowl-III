@@ -39,6 +39,9 @@ end
 
 love.keypressed = function(key)
   gui.keypressed(key)
+  if game_start then
+    game.keypressed(key)
+  end
 end
 
 love.textinput = function(text)
