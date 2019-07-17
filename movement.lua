@@ -45,7 +45,7 @@ movement.valid = function(x1, y1, x2, y2, max_dist)
 end
 
 movement.prepare = function(player, step, step_time)
-  if #player.path >= step then
+  if movement.moving(player, step) then
     local x_dist = (player.path[step].x - player.tile_x)
     local y_dist = (player.path[step].y - player.tile_y)
     player.xv = x_dist / step_time
@@ -54,7 +54,7 @@ movement.prepare = function(player, step, step_time)
 end
 
 movement.finish = function(player, step)
-  if #player.path >= step then
+  if movement.moving(player, step) then
     player.tile_x = player.path[step].x
     player.tile_y = player.path[step].y
     player.x = player.tile_x
@@ -65,6 +65,18 @@ movement.finish = function(player, step)
     if step >= #player.path then
       player.path = {}
     end
+  end
+end
+
+movement.moving = function(player, step)
+  return #player.path >= step
+end
+
+movement.collision = function(player1, player2, step)
+  if movement.moving(player2, step) then
+    return (player1.path[step].x == player2.path[step].x and player1.path[step].y == player2.path[step].y)
+  else
+    return (player1.path[step].x == player2.tile_x and player1.path[step].y == player2.tile_y)
   end
 end
 

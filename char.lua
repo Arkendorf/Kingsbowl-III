@@ -1,4 +1,5 @@
 local movement = require "movement"
+local rules = require "rules"
 
 local char = {}
 
@@ -111,7 +112,19 @@ char.path_collision = function(id, path, team)
 end
 
 char.prepare = function(step, step_time)
+  -- collision and path modification
   for k, v in pairs(players) do
+    if movement.moving(v, step) then -- player is moving, and thus can be moved
+      for l, w in pairs(players) do -- if moving, check for collisions with other players
+        if v.team ~= w.team then -- make sure collision is happening between opposite teams (saves calculations)
+          if v.team == rules.get_offense() or not movement.moving(w, step) then
+            if movement.collision(v, w, step) then -- finally check for an actual collision
+              v.path = {}
+            end
+          end
+        end
+      end
+    end
     movement.prepare(v, step, step_time)
   end
 end
