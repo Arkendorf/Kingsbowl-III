@@ -2,6 +2,8 @@ local gui = require "gui"
 local char = require "char"
 local movement = require "movement"
 local field = require "field"
+local turn = require "turn"
+
 
 local game = {}
 
@@ -16,15 +18,18 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info)
 
   char.load(menu_client_list, menu_client_info, menu_team_info)
   movement.load()
+  turn.load()
 end
 
 game.update = function(dt)
   char.update(dt)
+  turn.update(dt)
 end
 
 game.draw = function()
   char.draw()
   field.draw()
+  turn.draw()
 end
 
 game.keypressed = function(key)

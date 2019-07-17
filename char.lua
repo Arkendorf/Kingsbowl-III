@@ -5,6 +5,7 @@ local char = {}
 local players = {}
 local action = "move"
 local move_dist = 3.5
+local resolve = false
 
 char.load = function(menu_client_list, menu_client_info, menu_team_info)
   if state == "server" then
@@ -24,18 +25,22 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
 
   players = {}
   for i, v in ipairs(menu_client_list) do
-    players[v] = {username = menu_client_info[v].username, team = menu_client_info[v].team, tile_x = 3+i, tile_y = 3+i, path = {}}
+    players[v] = {username = menu_client_info[v].username, team = menu_client_info[v].team, tile_x = 3+i, tile_y = 3+i, path = {}, x = 3+i, y = 3+i, xv = 0, yv = 0}
   end
 
   action = "move"
+  resolve = false
 end
 
 char.update = function(dt)
+  for k, v in pairs(players) do
+    movement.update_player(v, dt)
+  end
 end
 
 char.draw = function()
   for k, v in pairs(players) do
-    love.graphics.rectangle("fill", v.tile_x*tile_size, v.tile_y*tile_size, tile_size, tile_size)
+    love.graphics.rectangle("fill", v.x*tile_size, v.y*tile_size, tile_size, tile_size)
     for i, tile in ipairs(v.path) do
       love.graphics.rectangle("line", tile.x*tile_size, tile.y*tile_size, tile_size, tile_size)
     end
@@ -51,12 +56,14 @@ char.keypressed = function(key)
 end
 
 char.mousepressed = function(x, y, button)
-  if action == "move" then
-    local tile_x = math.floor(x/tile_size)
-    local tile_y = math.floor(y/tile_size)
-    if char.set_path(id, tile_x, tile_y) then
-      network.server_send("new_tile", {id, tile_x, tile_y})
-      network.client_send("new_tile", {tile_x, tile_y})
+  if not resolve then
+    if action == "move" then
+      local tile_x = math.floor(x/tile_size)
+      local tile_y = math.floor(y/tile_size)
+      if char.set_path(id, tile_x, tile_y) then
+        network.server_send("new_tile", {id, tile_x, tile_y})
+        network.client_send("new_tile", {tile_x, tile_y})
+      end
     end
   end
 end
@@ -101,6 +108,29 @@ char.path_collision = function(id, path, team)
     end
   end
   return false
+end
+
+char.prepare = function(step, step_time)
+  for k, v in pairs(players) do
+    movement.prepare(v, step, step_time)
+  end
+end
+
+char.finish = function(step)
+  if step > 0 then
+    for k, v in pairs(players) do
+      movement.finish(v, step)
+    end
+  end
+end
+
+char.start_resolve = function()
+  resolve = true
+end
+
+char.end_resolve = function(step)
+  char.finish(step)
+  resolve = false
 end
 
 return char

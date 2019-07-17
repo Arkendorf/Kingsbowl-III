@@ -5,7 +5,9 @@ local movement = {}
 movement.load = function()
 end
 
-movement.update_player = function(player)
+movement.update_player = function(player, dt)
+  player.x = player.x + player.xv * dt
+  player.y = player.y + player.yv * dt
 end
 
 
@@ -32,6 +34,7 @@ movement.get_path = function(x1, y1, x2, y2)
         path[#path+1] = {x = x1+math.floor(slope*i+.5), y = y1+i}
       end
     end
+    table.remove(path, 1) -- first tile in path is just the current location
 
     return path
   end
@@ -39,6 +42,30 @@ end
 
 movement.valid = function(x1, y1, x2, y2, max_dist)
   return movement.dist(x1, y1, x2, y2) <= max_dist
+end
+
+movement.prepare = function(player, step, step_time)
+  if #player.path >= step then
+    local x_dist = (player.path[step].x - player.tile_x)
+    local y_dist = (player.path[step].y - player.tile_y)
+    player.xv = x_dist / step_time
+    player.yv = y_dist / step_time
+  end
+end
+
+movement.finish = function(player, step)
+  if #player.path >= step then
+    player.tile_x = player.path[step].x
+    player.tile_y = player.path[step].y
+    player.x = player.tile_x
+    player.y = player.tile_y
+    player.xv = 0
+    player.yv = 0
+
+    if step >= #player.path then
+      player.path = {}
+    end
+  end
 end
 
 return movement
