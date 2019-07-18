@@ -5,9 +5,9 @@ local movement = {}
 movement.load = function()
 end
 
-movement.update_player = function(player, dt)
-  player.x = player.x + player.xv * dt
-  player.y = player.y + player.yv * dt
+movement.update_object = function(object, dt)
+  object.x = object.x + object.xv * dt
+  object.y = object.y + object.yv * dt
 end
 
 
@@ -18,65 +18,69 @@ movement.dist = function(x1, y1, x2, y2)
 end
 
 movement.get_path = function(x1, y1, x2, y2)
-  if field.in_bounds(x2, y2) then
-    local path = {}
+  local path = {}
 
-    local x_dif = (x2-x1)
-    local y_dif = (y2-y1)
-    if math.abs(x_dif) >= math.abs(y_dif) then
-      local slope = y_dif/x_dif
-      for i = 0, x_dif, math.abs(x_dif)/x_dif do
-        path[#path+1] = {x = x1+i, y = y1+math.floor(slope*i+.5)}
-      end
-    else
-      local slope = x_dif/y_dif
-      for i = 0, y_dif, math.abs(y_dif)/y_dif do
-        path[#path+1] = {x = x1+math.floor(slope*i+.5), y = y1+i}
-      end
+  local x_dif = (x2-x1)
+  local y_dif = (y2-y1)
+  if math.abs(x_dif) >= math.abs(y_dif) then
+    local slope = y_dif/x_dif
+    for i = 0, x_dif, math.abs(x_dif)/x_dif do
+      path[#path+1] = {x = x1+i, y = y1+math.floor(slope*i+.5)}
     end
-    table.remove(path, 1) -- first tile in path is just the current location
-
-    return path
+  else
+    local slope = x_dif/y_dif
+    for i = 0, y_dif, math.abs(y_dif)/y_dif do
+      path[#path+1] = {x = x1+math.floor(slope*i+.5), y = y1+i}
+    end
   end
+  table.remove(path, 1) -- first tile in path is just the current location
+
+  return path
+end
+
+movement.cancel = function(object)
+  object.path = {}
 end
 
 movement.valid = function(x1, y1, x2, y2, max_dist)
-  return movement.dist(x1, y1, x2, y2) <= max_dist
+  return (movement.dist(x1, y1, x2, y2) <= max_dist and field.in_bounds(x2, y2))
 end
 
-movement.prepare = function(player, step, step_time)
-  if movement.moving(player, step) then
-    local x_dist = (player.path[step].x - player.tile_x)
-    local y_dist = (player.path[step].y - player.tile_y)
-    player.xv = x_dist / step_time
-    player.yv = y_dist / step_time
+movement.prepare = function(object, step, step_time)
+  if movement.can_move(object, step) then
+    local x_dist = (object.path[step].x - object.tile_x)
+    local y_dist = (object.path[step].y - object.tile_y)
+    object.xv = x_dist / step_time
+    object.yv = y_dist / step_time
   end
 end
 
-movement.finish = function(player, step)
-  if movement.moving(player, step) then
-    player.tile_x = player.path[step].x
-    player.tile_y = player.path[step].y
-    player.x = player.tile_x
-    player.y = player.tile_y
-    player.xv = 0
-    player.yv = 0
+movement.finish = function(object, step)
+  if step > 0 then
+    if movement.can_move(object, step) then
+      object.tile_x = object.path[step].x
+      object.tile_y = object.path[step].y
+      object.x = object.tile_x
+      object.y = object.tile_y
+      object.xv = 0
+      object.yv = 0
 
-    if step >= #player.path then
-      player.path = {}
+      if step >= #object.path then
+        object.path = {}
+      end
     end
   end
 end
 
-movement.moving = function(player, step)
-  return #player.path >= step
+movement.can_move = function(object, step)
+  return #object.path >= step
 end
 
-movement.collision = function(player1, player2, step)
-  if movement.moving(player2, step) then
-    return (player1.path[step].x == player2.path[step].x and player1.path[step].y == player2.path[step].y)
+movement.collision = function(object1, object2, step)
+  if movement.can_move(object2, step) then
+    return (object1.path[step].x == object2.path[step].x and object1.path[step].y == object2.path[step].y)
   else
-    return (player1.path[step].x == player2.tile_x and player1.path[step].y == player2.tile_y)
+    return (object1.path[step].x == object2.tile_x and object1.path[step].y == object2.tile_y)
   end
 end
 

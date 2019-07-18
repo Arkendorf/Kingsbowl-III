@@ -1,5 +1,6 @@
 local movement = require "movement"
 local rules = require "rules"
+local abilities = require "abilities"
 
 local char = {}
 
@@ -13,14 +14,27 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
     server:setSchema("new_tile", {"x", "y"})
     server:on("new_tile", function(data, client)
       if char.set_path(client.connectId, data.x, data.y) then
+        abilities.cancel(client.connectId, players[client.connectId])
         network.server_send_except(client.connectId, "new_tile", {client.connectId, data.x, data.y})
+      end
+    end)
+    server:setSchema("ability", {"x", "y"})
+    server:on("ability", function(data, client)
+      if abilities.use(client.connectId, players[client.connectId], tile_x, tile_y) then
+        movement.cancel(players[client.connectId])
+        network.server_send_except(client.connectId, "ability", {client.connectId, data.x, data.y})
       end
     end)
   elseif state == "client" then
     client:setSchema("new_tile", {"id", "x", "y"})
     client:on("new_tile", function(data)
-      local path = movement.get_path(players[data.id].tile_x, players[data.id].tile_y, data.x, data.y)
-      players[data.id].path = path
+      abilities.cancel(data.id, players[data.id])
+      char.set_path(data.id, data.x, data.y)
+    end)
+    client:setSchema("ability", {"id", "x", "y"})
+    client:on("ability", function(data)
+      movement.cancel(players[data.id])
+      abilities.use(data.id, players[data.id], data.x, data.y)
     end)
   end
 
@@ -35,7 +49,7 @@ end
 
 char.update = function(dt)
   for k, v in pairs(players) do
-    movement.update_player(v, dt)
+    movement.update_object(v, dt)
   end
 end
 
@@ -46,6 +60,7 @@ char.draw = function()
       love.graphics.rectangle("line", tile.x*tile_size, tile.y*tile_size, tile_size, tile_size)
     end
   end
+  love.graphics.print(action, 0, 12)
 end
 
 char.keypressed = function(key)
@@ -58,12 +73,19 @@ end
 
 char.mousepressed = function(x, y, button)
   if not resolve then
+    local tile_x = math.floor(x/tile_size)
+    local tile_y = math.floor(y/tile_size)
     if action == "move" then
-      local tile_x = math.floor(x/tile_size)
-      local tile_y = math.floor(y/tile_size)
       if char.set_path(id, tile_x, tile_y) then
+        abilities.cancel(id, players[id])
         network.server_send("new_tile", {id, tile_x, tile_y})
         network.client_send("new_tile", {tile_x, tile_y})
+      end
+    elseif action == "ability" then
+      if abilities.use(id, players[id], tile_x, tile_y) then
+        movement.cancel(players[id])
+        network.server_send("ability", {id, tile_x, tile_y})
+        network.client_send("ability", {tile_x, tile_y})
       end
     end
   end
@@ -114,10 +136,10 @@ end
 char.prepare = function(step, step_time)
   -- collision and path modification
   for k, v in pairs(players) do
-    if movement.moving(v, step) then -- player is moving, and thus can be moved
+    if movement.can_move(v, step) then -- player is moving, and thus can be moved
       for l, w in pairs(players) do -- if moving, check for collisions with other players
         if v.team ~= w.team then -- make sure collision is happening between opposite teams (saves calculations)
-          if v.team == rules.get_offense() or not movement.moving(w, step) then
+          if v.team == rules.get_offense() or not movement.can_move(w, step) then
             if movement.collision(v, w, step) then -- finally check for an actual collision
               v.path = {}
             end
@@ -130,10 +152,8 @@ char.prepare = function(step, step_time)
 end
 
 char.finish = function(step)
-  if step > 0 then
-    for k, v in pairs(players) do
-      movement.finish(v, step)
-    end
+  for k, v in pairs(players) do
+    movement.finish(v, step)
   end
 end
 

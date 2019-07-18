@@ -1,4 +1,5 @@
 local char = require "char"
+local football = require "football"
 
 local turn = {}
 
@@ -41,7 +42,7 @@ turn.update = function(dt)
           network.server_send("new_step", new_step)
         end
       else
-        local step_num = char.step_num()
+        local step_num = math.max(char.step_num(), football.step_num())
         turn.resolve(step_num)
         network.server_send("resolve", step_num)
       end
@@ -59,21 +60,41 @@ turn.new_step = function(new_step)
   step = new_step
   timer = step_time
 
-  char.finish(step - 1)
+  turn.finish(step-1)
+  turn.prepare(step, step_time)
+end
+
+turn.prepare = function(step, step_time)
   char.prepare(step, step_time)
+  football.prepare(step, step_time)
+end
+
+turn.finish = function(step)
+  char.finish(step)
+  football.finish(step)
 end
 
 turn.complete = function()
   resolve = false
   timer = turn_time
+  turn.end_resolve(step)
+end
+
+turn.end_resolve = function(step)
   char.end_resolve(step)
+  football.end_resolve(step)
 end
 
 turn.resolve = function(step_num)
   max_step = step_num
   resolve = true
+  turn.start_resolve()
   turn.new_step(1)
+end
+
+turn.start_resolve = function()
   char.start_resolve()
+  football.start_resolve()
 end
 
 return turn
