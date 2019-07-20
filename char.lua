@@ -1,6 +1,7 @@
 local movement = require "movement"
 local rules = require "rules"
 local abilities = require "abilities"
+local football = require "football"
 
 local char = {}
 
@@ -134,8 +135,8 @@ char.path_collision = function(id, path, team)
 end
 
 char.prepare = function(step, step_time)
-  -- collision and path modification
   for k, v in pairs(players) do
+    -- collision and path modification
     if movement.can_move(v, step) then -- player is moving, and thus can be moved
       for l, w in pairs(players) do -- if moving, check for collisions with other players
         if v.team ~= w.team then -- make sure collision is happening between opposite teams (saves calculations)
@@ -147,12 +148,18 @@ char.prepare = function(step, step_time)
         end
       end
     end
+    -- actual movement
     movement.prepare(v, step, step_time)
   end
 end
 
 char.finish = function(step)
+  local ball = football.get_ball()
   for k, v in pairs(players) do
+    -- ball catching
+    if movement.collision(ball, v, step) then -- ball and player are colliding
+      football.catch(k, v)
+    end
     movement.finish(v, step)
   end
 end

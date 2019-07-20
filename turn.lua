@@ -60,7 +60,9 @@ turn.new_step = function(new_step)
   step = new_step
   timer = step_time
 
-  turn.finish(step-1)
+  if step > 1 then
+    turn.finish(step-1)
+  end
   turn.prepare(step, step_time)
 end
 

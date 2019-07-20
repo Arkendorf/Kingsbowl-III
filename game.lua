@@ -37,6 +37,7 @@ game.draw = function()
   field.draw()
   turn.draw()
   football.draw()
+  rules.draw()
 end
 
 game.keypressed = function(key)

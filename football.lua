@@ -1,4 +1,5 @@
 local movement = require "movement"
+local rules = require "rules"
 
 local football = {}
 
@@ -14,13 +15,12 @@ football.update = function(dt)
 end
 
 football.draw = function()
-  if ball.visible or football.ball_active() then
+  if ball.visible then
     love.graphics.circle("fill", (ball.x+.5)*tile_size, (ball.y+.5)*tile_size, tile_size/2, tile_size)
     for i, tile in ipairs(ball.full_path) do
       love.graphics.circle("line", (tile.x+.5)*tile_size, (tile.y+.5)*tile_size, tile_size/2, tile_size)
     end
   end
-  love.graphics.print(#ball.path, 0, 24)
 end
 
 football.throw = function(x1, y1, x2, y2)
@@ -35,7 +35,9 @@ football.throw = function(x1, y1, x2, y2)
 end
 
 football.reset = function()
-  ball.visible = false
+  if not ball.thrown then
+    ball.visible = false
+  end
 end
 
 football.ball_range = function(x1, y1, x2, y2)
@@ -66,6 +68,11 @@ end
 football.finish = function(step)
   if football.ball_active() then
     movement.finish(ball, step)
+    ball.tile = ball.tile+1
+    if ball.tile >= #ball.full_path then -- incomplete
+      rules.incomplete()
+      ball.caught = true
+    end
   end
 end
 
@@ -81,7 +88,6 @@ football.start_resolve = function()
       break
     end
   end
-  ball.tile = ball.tile+ball.range
 end
 
 football.end_resolve = function(step)
@@ -93,6 +99,18 @@ football.step_num = function()
     return math.min((#ball.full_path-ball.tile), ball.range)
   else
     return 0
+  end
+end
+
+football.get_ball = function()
+  return ball
+end
+
+football.catch = function(id, player)
+  if not ball.caught then
+    ball.caught = true
+    ball.carrier = id
+    ball.visible = false
   end
 end
 

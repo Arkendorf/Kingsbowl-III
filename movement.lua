@@ -56,18 +56,16 @@ movement.prepare = function(object, step, step_time)
 end
 
 movement.finish = function(object, step)
-  if step > 0 then
-    if movement.can_move(object, step) then
-      object.tile_x = object.path[step].x
-      object.tile_y = object.path[step].y
-      object.x = object.tile_x
-      object.y = object.tile_y
-      object.xv = 0
-      object.yv = 0
+  if movement.can_move(object, step) then
+    object.tile_x = object.path[step].x
+    object.tile_y = object.path[step].y
+    object.x = object.tile_x
+    object.y = object.tile_y
+    object.xv = 0
+    object.yv = 0
 
-      if step >= #object.path then
-        object.path = {}
-      end
+    if step >= #object.path then
+      object.path = {}
     end
   end
 end
@@ -77,11 +75,19 @@ movement.can_move = function(object, step)
 end
 
 movement.collision = function(object1, object2, step)
-  if movement.can_move(object2, step) then
-    return (object1.path[step].x == object2.path[step].x and object1.path[step].y == object2.path[step].y)
-  else
-    return (object1.path[step].x == object2.tile_x and object1.path[step].y == object2.tile_y)
+  local x1 = object1.tile_x
+  local y1 = object1.tile_y
+  if movement.can_move(object1, step) then
+    x1 = object1.path[step].x
+    y1 = object1.path[step].y
   end
+  local x2 = object2.tile_x
+  local y2 = object2.tile_y
+  if movement.can_move(object2, step) then
+    x2 = object2.path[step].x
+    y2 = object2.path[step].y
+  end
+  return (x1 == x2 and y1 == y2)
 end
 
 return movement
