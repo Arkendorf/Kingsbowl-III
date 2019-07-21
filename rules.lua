@@ -51,16 +51,16 @@ rules.catch = function(player)
   end
 end
 
-rules.incomplete = function(players)
-  rules.end_down(players)
+rules.incomplete = function()
+  rules.end_down()
 end
 
-rules.tackle = function(id, player, players)
+rules.tackle = function(id, player)
   scrimmage = player.tile_x
-  rules.end_down(players)
+  rules.end_down()
 end
 
-rules.end_down = function(players)
+rules.end_down = function()
   down = down + 1
   if down > 4 then
     rules.turnover()
@@ -99,7 +99,7 @@ rules.set_tile = function(id, player, tile_num, tile)
   player.tile_y = tile.y
   player.x = player.tile_x
   player.y = player.tile_y
-  if tile_num == 1 then -- if player is standing in qb position, make them qb
+  if tile_num == 1 and player.team == offense then -- if player is standing in qb position, make them qb
     qb = id
   end
 end
@@ -131,7 +131,7 @@ rules.set_lineup = function(team)
   local sign = (team-1.5)*2
 
   local field_w, field_h = field.get_dimensions()
-  local y = math.floor((field_h-lineup_h)/2)
+  local y = math.floor((field_h-lineup_h)/2)-1
   local x = lineup_buffer+team-1 -- team 2 has an extra offset of one to account for the scrimmage marker being inbetween tiles but saved as one
 
   lineup[1] = {x = (x+1)*sign, y = y+center_y}

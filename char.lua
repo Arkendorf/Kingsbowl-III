@@ -8,7 +8,7 @@ local char = {}
 
 local players = {}
 local action = "move"
-local move_dist = 3.5
+local move_dist = 10
 local resolve = false
 local pos_select = false
 local end_down = false
@@ -57,7 +57,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
     players[v] = {username = menu_client_info[v].username, team = menu_client_info[v].team, tile_x = 3+i, tile_y = 3+i, path = {}, x = 3+i, y = 3+i, xv = 0, yv = 0}
   end
 
-  char.end_down()
+  char.pos_prepare()
   resolve = false
 end
 
@@ -185,7 +185,7 @@ char.finish = function(step)
   for k, v in pairs(players) do
     -- ball incomplete
     if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
-      rules.incomplete(players)
+      rules.incomplete()
       end_down = true
       ball.caught = true
     end
@@ -201,7 +201,7 @@ char.finish = function(step)
           if movement.collision(v, w, step) then -- finally check for an actual collision
             v.path = {}
             v.dead = true
-            rules.tackle(k, v, players)
+            rules.tackle(k, v)
             end_down = true
             break
           end
@@ -210,6 +210,10 @@ char.finish = function(step)
     end
     movement.finish(v, step)
   end
+  if end_down then
+    char.end_down()
+  end
+  return end_down
 end
 
 char.start_resolve = function()
@@ -225,23 +229,30 @@ char.start_resolve = function()
 end
 
 char.end_resolve = function(step)
-  char.finish(step)
   resolve = false
   if pos_select then
     action = "move"
     pos_select = false
   elseif end_down then
-    char.end_down()
+    char.pos_prepare()
     football.clear()
     end_down = false
   end
+  return end_down
 end
 
 char.end_down = function()
+  for k, v in pairs(players) do
+    v.path = {}
+    v.xv = 0
+    v.yv = 0
+  end
+end
+
+char.pos_prepare = function()
   action = "position"
   pos_select = true
   for k, v in pairs(players) do
-    v.path = {}
     v.tile_x = math.huge
     v.tile_y = math.huge
     v.x = v.tile_x

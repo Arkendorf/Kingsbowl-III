@@ -92,10 +92,6 @@ football.start_resolve = function()
   end
 end
 
-football.end_resolve = function(step)
-  football.finish(step)
-end
-
 football.step_num = function()
   if ball.visible or football.ball_active() then
     return math.min((#ball.full_path-ball.tile), ball.range)

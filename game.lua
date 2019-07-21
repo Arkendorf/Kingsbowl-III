@@ -26,6 +26,7 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info)
   abilities.load()
   football.load()
   cam.load()
+  field.load()
 end
 
 game.update = function(dt)
@@ -38,8 +39,8 @@ end
 game.draw = function()
   love.graphics.push()
   love.graphics.translate(game.get_offset())
-  char.draw()
   field.draw()
+  char.draw()
   football.draw()
   rules.draw()
   love.graphics.pop()
