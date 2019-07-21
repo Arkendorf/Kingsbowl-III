@@ -10,4 +10,8 @@ field.in_bounds = function(x, y)
   return (x >= 0 and x <= field_w and y >= 0 and y <= field_h)
 end
 
+field.get_dimensions = function()
+  return field_w, field_h
+end
+
 return field

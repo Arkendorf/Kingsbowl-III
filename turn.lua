@@ -72,8 +72,8 @@ turn.prepare = function(step, step_time)
 end
 
 turn.finish = function(step)
-  char.finish(step)
   football.finish(step)
+  char.finish(step)
 end
 
 turn.complete = function()

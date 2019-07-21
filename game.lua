@@ -6,6 +6,7 @@ local turn = require "turn"
 local rules = require "rules"
 local abilities = require "abilities"
 local football = require "football"
+local cam = require "cam"
 
 local game = {}
 
@@ -18,26 +19,33 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info)
   end
   game_start = true
 
+  rules.load(menu_client_list, menu_client_info, menu_team_info)
   char.load(menu_client_list, menu_client_info, menu_team_info)
   movement.load()
   turn.load()
-  rules.load(menu_client_list, menu_client_info, menu_team_info)
   abilities.load()
   football.load()
+  cam.load()
 end
 
 game.update = function(dt)
   char.update(dt)
   turn.update(dt)
   football.update(dt)
+  cam.update(dt)
 end
 
 game.draw = function()
+  love.graphics.push()
+  love.graphics.translate(game.get_offset())
   char.draw()
   field.draw()
-  turn.draw()
   football.draw()
   rules.draw()
+  love.graphics.pop()
+
+  turn.draw()
+
 end
 
 game.keypressed = function(key)
@@ -45,10 +53,17 @@ game.keypressed = function(key)
 end
 
 game.mousepressed = function(x, y, button)
-  char.mousepressed(x, y, button)
+  local offset_x, offset_y = game.get_offset()
+  char.mousepressed(x-offset_x, y-offset_y, button)
 end
 
 game.quit = function()
+end
+
+game.get_offset = function()
+  local w, h = love.graphics.getDimensions()
+  local camera = cam.get()
+  return -camera.x+w/2, -camera.y+h/2
 end
 
 

@@ -40,6 +40,12 @@ football.reset = function()
   end
 end
 
+football.clear = function()
+  ball.thrown = false
+  ball.caught = false
+  ball.visible = false
+end
+
 football.ball_range = function(x1, y1, x2, y2)
   local x_dif = (x2-x1)
   local y_dif = (y2-y1)
@@ -69,10 +75,6 @@ football.finish = function(step)
   if football.ball_active() then
     movement.finish(ball, step)
     ball.tile = ball.tile+1
-    if ball.tile >= #ball.full_path then -- incomplete
-      rules.incomplete()
-      ball.caught = true
-    end
   end
 end
 
@@ -112,6 +114,7 @@ football.catch = function(id, player)
     ball.carrier = id
     ball.visible = false
   end
+  rules.catch(player)
 end
 
 return football
