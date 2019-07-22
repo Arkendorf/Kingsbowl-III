@@ -20,8 +20,8 @@ turn.load = function()
     client:on("new_step", function(data)
       turn.new_step(data)
     end)
-    client:on("complete", function()
-      turn.complete()
+    client:on("complete", function(data)
+      turn.complete(data)
     end)
   end
 
@@ -36,7 +36,7 @@ turn.update = function(dt)
       if resolve then
         if step >= max_step then
           turn.complete(max_step)
-          network.server_send("complete")
+          network.server_send("complete", max_step)
         else
           local new_step = step+1
           turn.new_step(new_step)
@@ -44,13 +44,8 @@ turn.update = function(dt)
         end
       else
         local step_num = math.max(char.step_num(), football.step_num())
-        if step_num > 0 then -- if something is moving, create steps
-          turn.resolve(step_num)
-          network.server_send("resolve", step_num)
-        else -- otherwise, go right back to gathering input
-          turn.complete(0)
-          network.server_send("complete")
-        end
+        turn.resolve(step_num)
+        network.server_send("resolve", step_num)
       end
     else
       timer = 0
@@ -107,7 +102,11 @@ turn.resolve = function(step_num)
   max_step = step_num
   resolve = true
   turn.start_resolve()
-  turn.new_step(1)
+  if max_step > 0 then -- if something is moving
+    turn.new_step(1)
+  else -- if nothing is moving, go right back to input phase
+    turn.complete(0)
+  end
 end
 
 turn.start_resolve = function()

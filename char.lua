@@ -166,7 +166,7 @@ char.prepare = function(step, step_time)
     -- collision and path modification
     if movement.can_move(v, step) and not v.dead then -- player is moving and alive, and thus can be moved
       for l, w in pairs(players) do -- if moving, check for collisions with other players
-        if v.team ~= w.team and not w.dead and not w.carrier then -- make sure collision is happening between opposite teams (saves calculations), and that opponent isn't dead
+        if v.team ~= w.team and not w.dead and not char.tackleable(l, w) then -- make sure collision is happening between opposite teams (saves calculations), and that opponent isn't dead
           if v.team == rules.get_offense() or not movement.can_move(w, step) then
             if movement.collision(v, w, step) then -- finally check for an actual collision
               v.path = {}
@@ -183,21 +183,15 @@ end
 char.finish = function(step)
   local ball = football.get_ball()
   for k, v in pairs(players) do
-    -- ball incomplete
-    if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
-      rules.incomplete()
-      end_down = true
-      ball.caught = true
-    end
     -- ball catching
-    if movement.collision(ball, v, step) then -- ball and player are colliding
+    if football.ball_active() and movement.collision(ball, v, step) then -- ball and player are colliding
       football.catch(k, v)
       v.carrier = true
     end
     -- tackling
-    if v.carrier then
-      for l, w in pairs(players) do -- if moving, check for collisions with other players
-        if v.team ~= w.team then -- make sure collision is happening between opposite teams (saves calculations)
+    if char.tackleable(k, v) then -- only ball carrier or qb with ball can be tackled
+      for l, w in pairs(players) do -- check for collisions with other players
+        if v.team ~= w.team and not w.dead then -- make sure collision is happening between opposite teams (saves calculations), and not a dead player
           if movement.collision(v, w, step) then -- finally check for an actual collision
             v.path = {}
             v.dead = true
@@ -210,10 +204,20 @@ char.finish = function(step)
     end
     movement.finish(v, step)
   end
+  -- ball incomplete
+  if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
+    rules.incomplete()
+    end_down = true
+    ball.caught = true
+  end
   if end_down then
     char.end_down()
   end
   return end_down
+end
+
+char.tackleable = function(id, player)
+  return (not player.dead and (player.carrier or (not football.get_ball().thrown and id == rules.get_qb())))
 end
 
 char.start_resolve = function()

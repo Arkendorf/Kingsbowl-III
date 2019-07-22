@@ -35,6 +35,8 @@ rules.draw = function()
       love.graphics.rectangle("line", (v.x+scrimmage)*tile_size, v.y*tile_size, tile_size, tile_size)
     end
   end
+  love.graphics.print(offense, (scrimmage+1)*tile_size, (field_h/2*tile_size)-100)
+  love.graphics.print(down, (scrimmage+1)*tile_size, (field_h/2*tile_size)-88)
 end
 
 rules.get_offense = function()
@@ -74,7 +76,7 @@ rules.end_down = function()
 end
 
 rules.turnover = function()
-  down = 1
+  down = 0
   if offense == 1 then
     offense = 2
   else
