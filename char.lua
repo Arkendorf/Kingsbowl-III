@@ -8,7 +8,7 @@ local char = {}
 
 local players = {}
 local action = "move"
-local move_dist = 10
+local move_dist = math.huge
 local resolve = false
 local pos_select = false
 local end_down = false
@@ -186,7 +186,7 @@ char.prepare = function(step, step_time)
     -- collision and path modification
     if movement.can_move(v, step) and not char.tackleable(k, v) then -- player is moving and alive, and thus can be moved
       for l, w in pairs(players) do -- if moving, check for collisions with other players
-        if v.team ~= w.team and not w.dead then -- make sure collision is happening between opposite teams (saves calculations), and that opponent isn't dead
+        if v.team ~= w.team and not char.tackleable(l, w) then -- make sure collision is happening between opposite teams (saves calculations)
           if v.team == rules.get_offense() or not movement.can_move(w, step) then
             if movement.collision(v, w, step) then -- finally check for an actual collision
               v.path = {}
@@ -208,9 +208,8 @@ char.finish = function(step)
       football.catch(k, v)
       v.carrier = true
     end
-    -- tackling
-    char.check_tackle(k, v, step)
-    movement.finish(v, step)
+    char.check_tackle(k, v, step) -- tackling
+    movement.finish(v, step) -- finish move
   end
   -- ball incomplete
   if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
@@ -281,7 +280,8 @@ char.end_resolve = function(step)
     football.clear()
     end_down = false
   end
-  for k, v in pairs(players) do -- reset abilities
+  for k, v in pairs(players) do -- reset path and abilities
+    v.path = {}
     v.item.active = false
   end
   return end_down

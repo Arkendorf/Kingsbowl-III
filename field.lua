@@ -1,6 +1,6 @@
 local field = {}
 
-local field_w = 50
+local field_w = 60
 local field_h = 27
 local canvas = 0
 
@@ -29,7 +29,7 @@ field.draw_canvas = function(canvas)
       else
         love.graphics.setColor(.2, .2, .2)
       end
-      love.graphics.print(y, x*tile_size+2, y*tile_size+2)
+      love.graphics.print(x, x*tile_size+2, y*tile_size+2)
     end
   end
   love.graphics.setColor(1, 1, 1)

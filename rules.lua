@@ -58,8 +58,20 @@ rules.incomplete = function()
 end
 
 rules.tackle = function(id, player)
-  scrimmage = player.tile_x
+  rules.set_scrimmage(player.tile_x)
   rules.end_down()
+end
+
+rules.set_scrimmage = function(x)
+  scrimmage = x
+  local field_w = field.get_dimensions()
+  local scrim_min = math.floor(field_w/12)-1
+  local scrim_max = math.floor(field_w/12*11)-1
+  if scrimmage > scrim_max then
+    scrimmage = scrim_max
+  elseif scrimmage < scrim_min then
+    scrimmage = scrim_min
+  end
 end
 
 rules.end_down = function()
