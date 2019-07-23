@@ -12,6 +12,7 @@ local move_dist = math.huge
 local resolve = false
 local pos_select = false
 local end_down = false
+local end_info = {type = "", player = 0}
 
 char.load = function(menu_client_list, menu_client_info, menu_team_info)
   if state == "server" then
@@ -195,6 +196,13 @@ char.prepare = function(step, step_time)
         end
       end
     end
+    -- check for td
+    if movement.can_move(v, step) and char.tackleable(k, v) then
+      if rules.check_td(v, step) then
+        end_info.type = "touchdown"
+        end_down = true
+      end
+    end
     -- actual movement
     movement.prepare(v, step, step_time)
   end
@@ -213,7 +221,7 @@ char.finish = function(step)
   end
   -- ball incomplete
   if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
-    rules.incomplete()
+    end_info.type = "incomplete"
     end_down = true
     ball.caught = true
   end
@@ -230,7 +238,8 @@ char.check_tackle = function(id, player, step)
         if movement.collision(player, w, step) or (w.item.active and movement.collision(w.item, player, step)) then -- finally check for an actual collision
           player.path = {}
           player.dead = true
-          rules.tackle(id, player)
+          end_info.type = "tackle"
+          end_info.player = player
           end_down = true
           break
         end
@@ -273,9 +282,10 @@ end
 char.end_resolve = function(step)
   resolve = false
   if pos_select then
-    action = "move"
     pos_select = false
+    action = "move"
   elseif end_down then
+    rules[end_info.type](end_info.player)
     char.pos_prepare()
     football.clear()
     end_down = false

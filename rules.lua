@@ -9,6 +9,8 @@ local down = 1
 local scrimmage = 0
 local lineup_h = 7
 local lineup_buffer = 1
+local score = {0, 0}
+local intercept = false
 
 rules.load = function(menu_client_list, menu_client_info, menu_team_info)
   offense = 1
@@ -50,6 +52,7 @@ end
 rules.catch = function(player)
   if player.team ~= offense then
     rules.turnover()
+    intercept = true
   end
 end
 
@@ -57,16 +60,19 @@ rules.incomplete = function()
   rules.end_down()
 end
 
-rules.tackle = function(id, player)
+rules.tackle = function(player)
   rules.set_scrimmage(player.tile_x)
+  rules.end_down()
+end
+
+rules.touchdown = function()
+  rules.reset()
   rules.end_down()
 end
 
 rules.set_scrimmage = function(x)
   scrimmage = x
-  local field_w = field.get_dimensions()
-  local scrim_min = math.floor(field_w/12)-1
-  local scrim_max = math.floor(field_w/12*11)-1
+  local scrim_min, scrim_max = rules.get_endzones()
   if scrimmage > scrim_max then
     scrimmage = scrim_max
   elseif scrimmage < scrim_min then
@@ -75,9 +81,14 @@ rules.set_scrimmage = function(x)
 end
 
 rules.end_down = function()
-  down = down + 1
-  if down > 4 then
-    rules.turnover()
+  if intercept then -- if ball was just intercepted, set down to 1
+    down = 1
+    intercept = false
+  else
+    down = down + 1
+    if down > 4 then
+      rules.turnover()
+    end
   end
   qb = 0
   for team = 1, 2 do -- reset lineup positioning
@@ -87,13 +98,32 @@ rules.end_down = function()
   end
 end
 
+rules.reset = function()
+  rules.turnover()
+  local field_w = field.get_dimensions()
+  scrimmage = math.floor(field_w/12*6)-1
+end
+
 rules.turnover = function()
-  down = 0
   if offense == 1 then
     offense = 2
   else
     offense = 1
   end
+end
+
+rules.get_endzones = function()
+  local field_w = field.get_dimensions()
+  return math.floor(field_w/12)-1, math.floor(field_w/12*11)-1
+end
+
+rules.check_td = function(player, step)
+  local min, max = rules.get_endzones()
+  if (player.team == 1 and player.path[step].x > max) or (player.team == 2 and player.path[step].x <= min) then
+    score[player.team] = score[player.team] + 7
+    return true
+  end
+  return false
 end
 
 rules.set_position = function(id, player, tile_x, tile_y)
