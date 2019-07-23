@@ -2,9 +2,6 @@ local field = require "field"
 
 local movement = {}
 
-movement.load = function()
-end
-
 movement.update_object = function(object, dt)
   object.x = object.x + object.xv * dt
   object.y = object.y + object.yv * dt

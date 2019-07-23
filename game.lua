@@ -21,7 +21,6 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info)
 
   rules.load(menu_client_list, menu_client_info, menu_team_info)
   char.load(menu_client_list, menu_client_info, menu_team_info)
-  movement.load()
   turn.load()
   abilities.load()
   football.load()

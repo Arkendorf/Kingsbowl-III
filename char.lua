@@ -8,7 +8,7 @@ local char = {}
 
 local players = {}
 local action = "move"
-local move_dist = math.huge
+local move_dist = 10
 local resolve = false
 local pos_select = false
 local end_down = false
@@ -21,6 +21,11 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
       if char.set_path(client.connectId, data.x, data.y) then
         abilities.cancel(client.connectId, players[client.connectId])
         network.server_send_except(client.connectId, "new_tile", {client.connectId, data.x, data.y})
+      elseif #players[client.connectId].path > 0 then
+        local tile = players[client.connectId].path[#players[client.connectId].path]
+        network.server_send_client(client.connectId, "new_tile", {client.connectId, tile.x, tile.y})
+      else
+        network.server_send_client(client.connectId, "clear_path", client.connectId)
       end
     end)
     server:setSchema("ability", {"x", "y"})
@@ -28,12 +33,22 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
       if char.use_ability(client.connectId, data.x, data.y) then
         movement.cancel(players[client.connectId])
         network.server_send_except(client.connectId, "ability", {client.connectId, data.x, data.y})
+      elseif players[client.connectId].item.active then
+        local item = players[client.connectId].item
+        network.server_send_client(client.connectId, "ability", {client.connectId, item.tile_x, item.tile_y})
+      else
+        network.server_send_client(client.connectId, "stop_ability", client.connectId)
       end
     end)
     server:setSchema("position", {"x", "y"})
     server:on("position", function(data, client)
       if rules.set_position(client.connectId, players[client.connectId], data.x, data.y) then
         network.server_send_except(client.connectId, "position", {client.connectId, data.x, data.y})
+      elseif players[client.connectId].tile_x ~= math.huge or players[client.connectId].tile_y ~= math.huge then
+        local player = players[client.connectId]
+        network.server_send_client(client.connectId, "position", {client.connectId, player.tile_x, player.tile_y})
+      else
+        network.server_send_client(client.connectId, "reset_position", client.connectId)
       end
     end)
   elseif state == "client" then
@@ -42,14 +57,26 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
       abilities.cancel(data.id, players[data.id])
       char.set_path(data.id, data.x, data.y)
     end)
+    client:on("clear_path", function(data)
+      players[data].path = {}
+    end)
     client:setSchema("ability", {"id", "x", "y"})
     client:on("ability", function(data)
       movement.cancel(players[data.id])
       char.use_ability(data.id, data.x, data.y)
     end)
+    client:on("stop_path", function(data)
+      players[data].item.active = false
+    end)
     client:setSchema("position", {"id", "x", "y"})
     client:on("position", function(data)
       rules.set_position(data.id, players[data.id], data.x, data.y)
+    end)
+    client:on("reset_position", function(data)
+      players[data].tile_x = math.huge
+      players[data].tile_y = math.huge
+      players[data].x = players[data].tile_x
+      players[data].y = players[data].tile_y
     end)
   end
 
