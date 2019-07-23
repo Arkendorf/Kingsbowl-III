@@ -10,27 +10,32 @@ end
 abilities.use = function(id, player, x, y)
   if abilities.valid(player.tile_x, player.tile_y, x, y) then
     local type = abilities.type(id, player)
-    return abilities.start[type](id, player, x, y)
+    if type then -- ball carrier cannot use an ability
+      return abilities.start[type](id, player, x, y)
+    else
+      return false
+    end
   else
-    abilities.cancel()
+    abilities.cancel(id, player)
     return false
   end
 end
 
 abilities.cancel = function(id, player)
   local type = abilities.type(id, player)
-  abilities.reset[type](id, player)
+  if type then
+    abilities.reset[type](id, player)
+  end
 end
 
 abilities.type = function(id, player)
   local qb = rules.get_qb()
   local offense = rules.get_offense()
-  if qb == id then
+  local ball = football.get_ball()
+  if qb == id and not ball.thrown then
     return "throw"
-  elseif player.team == offense then
-    return "shield"
-  else
-    return "sword"
+  elseif not player.carrier then
+    return "item"
   end
 end
 
@@ -44,15 +49,12 @@ abilities.start.throw = function(id, player, x, y)
   return false
 end
 
-abilities.start.shield = function(id, player, x, y)
+abilities.start.item = function(id, player, x, y)
   if abilities.adjacent(player.tile_x, player.tile_y, x, y) then
-  else
-    return false
-  end
-end
-
-abilities.start.sword = function(id, player, x, y)
-  if abilities.adjacent(player.tile_x, player.tile_y, x, y) then
+    player.item.tile_x = x
+    player.item.tile_y = y
+    player.item.active = true
+    return true
   else
     return false
   end
@@ -64,18 +66,19 @@ abilities.reset.throw = function(id, player)
   football.reset()
 end
 
-abilities.reset.sword = function(id, player)
+abilities.reset.item = function(id, player)
+  player.item.active = false
 end
 
-abilities.reset.shield = function(id, player)
-end
 
 abilities.valid = function(x1, y1, x2, y2)
   return field.in_bounds(x2, y2) and not (x1 == x2 and y1 == y2)
 end
 
 abilities.adjacent = function(x1, y1, x2, y2)
-  return (math.abs(x2-x1) == 1 or math.abs(y2-y1) == 1)
+  local x_dif = x2-x1
+  local y_dif = y2-y1
+  return (x_dif >= -1 and x_dif <= 1 and y_dif >= -1 and y_dif <= 1)
 end
 
 return abilities
