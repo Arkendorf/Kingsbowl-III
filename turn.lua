@@ -1,5 +1,7 @@
 local char = require "char"
 local football = require "football"
+local rules = require "rules"
+local results = require "results"
 
 local turn = {}
 
@@ -10,10 +12,11 @@ local resolve = false
 local step = 0
 local max_step = 0
 local down_delay = false
+local max_turns = 60
+local turns_left = 0
 
 turn.load = function()
-  if state == "server" then
-  elseif state == "client" then
+  if network_state == "client" then
     client:on("resolve", function(data)
       turn.resolve(data)
     end)
@@ -23,20 +26,26 @@ turn.load = function()
     client:on("complete", function(data)
       turn.complete(data)
     end)
+    client:on("results", function()
+      state = "results"
+      results.load(char.get_players(), rules.get_info())
+    end)
   end
 
   timer = turn_time
   resolve = false
+  turns_left = max_turns
 end
 
 turn.update = function(dt)
   timer = timer - dt
   if timer < 0 then
-    if state == "server" then
+    if network_state == "server" then
       if resolve then
         if step >= max_step then
           turn.complete(max_step)
           network.server_send("complete", max_step)
+          turn.check_end()
         else
           local new_step = step+1
           turn.new_step(new_step)
@@ -46,6 +55,9 @@ turn.update = function(dt)
         local step_num = math.max(char.step_num(), football.step_num())
         turn.resolve(step_num)
         network.server_send("resolve", step_num)
+        if step_num <= 0 then
+          turn.check_end()
+        end
       end
     else
       timer = 0
@@ -55,6 +67,7 @@ end
 
 turn.draw = function()
   love.graphics.print(timer)
+  love.graphics.print(turns_left, 0, 12)
 end
 
 turn.new_step = function(new_step)
@@ -90,6 +103,21 @@ turn.complete = function(step)
     resolve = false
     timer = turn_time
     char.end_resolve(step)
+    turn.increment()
+  end
+end
+
+turn.increment = function()
+  if turns_left > 0 then
+    turns_left = turns_left - 1
+  end
+end
+
+turn.check_end = function()
+  if turns_left <= 0 then -- rules.get_score(1) ~= rules.get_score(2)
+    network.server_send("results")
+    state = "results"
+    results.load(char.get_players(), rules.get_info())
   end
 end
 

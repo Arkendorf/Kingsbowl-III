@@ -19,7 +19,7 @@ local end_down = false
 local end_info = {type = "", player = 0}
 
 char.load = function(menu_client_list, menu_client_info, menu_team_info)
-  if state == "server" then
+  if network_state == "server" then
     server:setSchema("new_tile", {"x", "y"})
     server:on("new_tile", function(data, client)
       if char.set_path(client.connectId, data.x, data.y) then
@@ -55,7 +55,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
         network.server_send_client(client.connectId, "reset_position", client.connectId)
       end
     end)
-  elseif state == "client" then
+  elseif network_state == "client" then
     client:setSchema("new_tile", {"id", "x", "y"})
     client:on("new_tile", function(data)
       abilities.cancel(data.id, players[data.id])
@@ -211,6 +211,10 @@ char.path_collision = function(id, path, team)
     end
   end
   return false
+end
+
+char.get_players = function()
+  return players
 end
 
 char.prepare = function(step, step_time)

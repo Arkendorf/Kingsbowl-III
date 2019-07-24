@@ -13,11 +13,12 @@ local game = {}
 tile_size = 32
 
 game.load = function(menu_client_list, menu_client_info, menu_team_info)
+  state = "game"
   gui.remove_all()
-  if state == "server" then
-  elseif state == "client" then
+  if network_state == "server" then
+    local callback = server:on("connect")
+    server:removeCallback(connect)
   end
-  game_start = true
 
   rules.load(menu_client_list, menu_client_info, menu_team_info)
   char.load(menu_client_list, menu_client_info, menu_team_info)

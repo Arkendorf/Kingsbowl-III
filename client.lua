@@ -29,16 +29,12 @@ client_func.update = function(dt)
 end
 
 client_func.draw = function()
-  if client then
-    menu.draw()
-  else
-    love.graphics.print("Servers open on LAN:", 0, 16)
-    for i, v in ipairs(servers) do
-      love.graphics.printf(v.info.username, 0, 32+(i-1)*32, 256, "left")
-      love.graphics.printf("ping: "..tostring(ip_test[v.num]:getRoundTripTime()), 0, 32+(i-1)*32, 256, "right")
-      love.graphics.printf(v.info.desc, 0, 32+(i-.5)*32, 256, "left")
-      love.graphics.printf("players: "..tostring(v.info.client_num), 0, 32+(i-.5)*32, 256, "right")
-    end
+  love.graphics.print("Servers open on LAN:", 0, 16)
+  for i, v in ipairs(servers) do
+    love.graphics.printf(v.info.username, 0, 32+(i-1)*32, 256, "left")
+    love.graphics.printf("ping: "..tostring(ip_test[v.num]:getRoundTripTime()), 0, 32+(i-1)*32, 256, "right")
+    love.graphics.printf(v.info.desc, 0, 32+(i-.5)*32, 256, "left")
+    love.graphics.printf("players: "..tostring(v.info.client_num), 0, 32+(i-.5)*32, 256, "right")
   end
 end
 
@@ -54,7 +50,7 @@ end
 client_func.main_menu = function()
   gui.remove_all()
   client_func.stop_test()
-  state = ""
+  network_state = ""
   network.load()
 end
 
@@ -62,6 +58,7 @@ client_func.leave_server = function()
   client:disconnectNow(1)
   client = nil
   client_func.load()
+  state = "network"
 end
 
 client_func.show_advanced = function()
@@ -102,6 +99,8 @@ client_func.join_server = function(address)
   client_func.stop_test()
   client = sock.newClient(address.ip, address.port)
   if pcall(client_func.connect) then
+    state = "menu"
+
     gui.remove_all()
     -- make sure username has a value
     if textboxes.username == "" then
@@ -120,9 +119,7 @@ client_func.join_server = function(address)
     end)
     client:on("kick", function()
       if client then
-        client:disconnectNow(1)
-        client = nil
-        client_func.load()
+        client_func.leave_server()
       end
     end)
     client:setSchema("new_client", {"id", "index", "username", "team"})
@@ -155,6 +152,10 @@ client_func.test_for_servers = function()
       servers[index] = {ip = ip, num = i, info = data}
       gui.new_button(i, 0, 32+(index-1)*32, 256, 32, "", client_func.join_server, {ip = ip, port = default_port})
       client_func.set_advanced_pos()
+    end)
+    ip_test[i]:on("start_game", function(data)
+      ip_test[i]:disconnect(0)
+      client_func.refresh_test()
     end)
   end
 end

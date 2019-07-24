@@ -9,7 +9,6 @@ local down = 1
 local scrimmage = 0
 local lineup_h = 7
 local lineup_buffer = 1
-local score = {0, 0}
 local intercept = false
 
 rules.load = function(menu_client_list, menu_client_info, menu_team_info)
@@ -17,12 +16,8 @@ rules.load = function(menu_client_list, menu_client_info, menu_team_info)
   down = 1
   scrimmage = math.floor(field.get_dimensions()/2)
   team_info = menu_team_info
-  -- team_info[1].list = {}
-  -- team_info[2].list = {}
-  -- for i, v in ipairs(menu_client_list) do
-  --   local team = menu_client_info[v].team
-  --   team_info[team].list[#team_info[team].list+1] = v
-  -- end
+  team_info[1].score = 0
+  team_info[2].score = 0
 
   rules.set_lineup(1)
   rules.set_lineup(2)
@@ -47,6 +42,14 @@ end
 
 rules.get_qb = function()
   return qb
+end
+
+rules.get_score = function(team)
+  return team_info[team].score
+end
+
+rules.get_info = function()
+  return team_info
 end
 
 rules.catch = function(player)
@@ -120,7 +123,7 @@ end
 rules.check_td = function(player, step)
   local min, max = rules.get_endzones()
   if (player.team == 1 and player.path[step].x > max) or (player.team == 2 and player.path[step].x <= min) then
-    score[player.team] = score[player.team] + 7
+    team_info[player.team].score = team_info[player.team].score + 7
     return true
   end
   return false

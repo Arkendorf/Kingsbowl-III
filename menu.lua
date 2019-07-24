@@ -9,11 +9,11 @@ local team_info = {}
 local settings = false
 
 menu.load = function()
-  if state == "server" then
+  if network_state == "server" then
     gui.new_button("start", 128, 0, 128, 32, "Start Game", menu.start_game)
     menu.close_settings()
     menu.create_client_buttons()
-  elseif state == "client" then
+  elseif network_state == "client" then
     client:setSchema("team_swap", {"id", "team"})
     client:on("team_swap", function(data)
       menu.decrease_team_size(client_info[data.id].team)
@@ -28,11 +28,13 @@ end
 
 menu.draw = function()
   if not settings then
+    love.graphics.print(team_info[1].name, 0, 32)
+    love.graphics.print(team_info[2].name, 128, 32)
     local team_order = {0, 0}
     for i, v in ipairs(client_list) do
       local team = client_info[v].team
       love.graphics.setColor(team_info[team].color)
-      love.graphics.print(client_info[v].username, (team-1)*128, 32+team_order[team]*16)
+      love.graphics.print(client_info[v].username, (team-1)*128, 44+team_order[team]*16)
       team_order[team] = team_order[team] + 1
     end
   end
@@ -43,7 +45,7 @@ menu.add_client = function(id, index, username, team)
   menu.increase_team_size(team)
   client_list[#client_list+1] = id
   client_info[id] = {index = index, username = username, team = team}
-  if state == "server" and not settings then
+  if network_state == "server" and not settings then
     menu.reset_client_buttons()
   end
 end
@@ -76,7 +78,7 @@ end
 
 menu.reset_info = function()
   client_list = {}
-  team_info = {{size = 0, color = {255, 0, 0}}, {size = 0, color = {0, 0, 255}}}
+  team_info = {{size = 0, color = {255, 0, 0}, name = "Team 1"}, {size = 0, color = {0, 0, 255}, name = "Team 2"}}
 end
 
 menu.choose_team = function()
@@ -122,9 +124,9 @@ menu.create_client_buttons = function()
   local team_order = {0, 0}
   for i, v in ipairs(client_list) do
     local team = client_info[v].team
-    gui.new_button("swap"..tostring(v), 64+(team-1)*128, 32+team_order[team]*16, 32, 16, "Swap", menu.swap_team, {id = v})
+    gui.new_button("swap"..tostring(v), 64+(team-1)*128, 44+team_order[team]*16, 32, 16, "Swap", menu.swap_team, {id = v})
     if v ~= 0 then
-      gui.new_button("kick"..tostring(v), 96+(team-1)*128, 32+team_order[team]*16, 32, 16, "Kick", menu.kick, {id = v})
+      gui.new_button("kick"..tostring(v), 96+(team-1)*128, 44+team_order[team]*16, 32, 16, "Kick", menu.kick, {id = v})
     end
     team_order[team] = team_order[team] + 1
   end
