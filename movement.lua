@@ -5,6 +5,12 @@ local movement = {}
 movement.update_object = function(object, dt)
   object.x = object.x + object.xv * dt
   object.y = object.y + object.yv * dt
+  if math.abs(object.x-object.tile_x) >= 1 then
+    object.xv = 0
+  end
+  if math.abs(object.y-object.tile_y) >= 1 then
+    object.yv = 0
+  end
 end
 
 

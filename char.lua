@@ -5,10 +5,14 @@ local football = require "football"
 local cam = require "cam"
 
 local char = {}
-
 local players = {}
 local action = "move"
-local move_dist = 10
+local move_dist = {
+  qb = 2.5,
+  carrier = 2.5,
+  defense = 3,
+  offense = 3.5
+}
 local resolve = false
 local pos_select = false
 local end_down = false
@@ -168,7 +172,7 @@ char.use_ability = function(id, tile_x, tile_y)
 end
 
 char.set_path = function(id, tile_x, tile_y)
-  if movement.valid(players[id].tile_x, players[id].tile_y, tile_x, tile_y, move_dist) then
+  if movement.valid(players[id].tile_x, players[id].tile_y, tile_x, tile_y, move_dist[char.get_state(id, players[id])]) then
     local path = movement.get_path(players[id].tile_x, players[id].tile_y, tile_x, tile_y)
     if path then
       if not char.path_collision(id, path, players[id].team) then
@@ -341,6 +345,18 @@ char.pos_prepare = function()
     v.x = v.tile_x
     v.y = v.tile_y
     v.dead = false
+  end
+end
+
+char.get_state = function(id, player)
+  if id == rules.get_qb() and not football.get_ball().thrown then
+    return "qb"
+  elseif player.carrier then
+    return "carrier"
+  elseif player.team == rules.get_offense() then
+    return "offense"
+  else
+    return "defense"
   end
 end
 
