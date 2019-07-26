@@ -12,7 +12,7 @@ local resolve = false
 local step = 0
 local max_step = 0
 local down_delay = false
-local max_turns = 60
+local max_turns = 200
 local turns_left = 0
 
 turn.load = function()

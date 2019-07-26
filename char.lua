@@ -8,10 +8,10 @@ local char = {}
 local players = {}
 local action = "move"
 local move_dist = {
-  qb = 2.5,
-  carrier = 2.5,
-  defense = 3,
-  offense = 3.5
+  qb = 12.5,
+  carrier = 12.5,
+  defense = 13,
+  offense = 13.5
 }
 local resolve = false
 local pos_select = false
@@ -106,17 +106,15 @@ end
 
 char.draw = function()
   for k, v in pairs(players) do
-    if not v.dead then
-      love.graphics.rectangle("fill", v.x*tile_size, v.y*tile_size, tile_size, tile_size)
-      for i, tile in ipairs(v.path) do
-        love.graphics.rectangle("line", tile.x*tile_size, tile.y*tile_size, tile_size, tile_size)
-      end
-      if v.item.active then
-        if v.team == rules.get_offense() then
-          love.graphics.circle("fill", (v.item.tile_x+.5)*tile_size, (v.item.tile_y+.5)*tile_size, tile_size/2-4, tile_size)
-        else
-          love.graphics.rectangle("fill", v.item.tile_x*tile_size+4, v.item.tile_y*tile_size+4, tile_size-8, tile_size-8)
-        end
+    love.graphics.rectangle("fill", v.x*tile_size, v.y*tile_size, tile_size, tile_size)
+    for i, tile in ipairs(v.path) do
+      love.graphics.rectangle("line", tile.x*tile_size, tile.y*tile_size, tile_size, tile_size)
+    end
+    if v.item.active then
+      if v.team == rules.get_offense() then
+        love.graphics.circle("fill", (v.item.tile_x+.5)*tile_size, (v.item.tile_y+.5)*tile_size, tile_size/2-4, tile_size)
+      else
+        love.graphics.rectangle("fill", v.item.tile_x*tile_size+4, v.item.tile_y*tile_size+4, tile_size-8, tile_size-8)
       end
     end
   end
@@ -218,27 +216,33 @@ char.get_players = function()
 end
 
 char.prepare = function(step, step_time)
-  for k, v in pairs(players) do
-    -- collision and path modification
-    if movement.can_move(v, step) and not char.tackleable(k, v) then -- player is moving and alive, and thus can be moved
-      for l, w in pairs(players) do -- if moving, check for collisions with other players
-        if v.team ~= w.team and not char.tackleable(l, w) then -- make sure collision is happening between opposite teams (saves calculations)
-          if v.team == rules.get_offense() or not movement.can_move(w, step) then
-            if movement.collision(v, w, step) then -- finally check for an actual collision
+  local collision = true
+  while collision do -- adjust paths based on collisions
+    collision = false
+    for k, v in pairs(players) do
+      if movement.can_move(v, step) then
+        for l, w in pairs(players) do
+          if v.team ~= w.team then
+            if movement.collision(v, w, step) then
+              collision = true
+              movement.bounce(v, step, step_time)
               v.path = {}
+              if char.tackleable(k, v) then
+                char.tackle(v)
+              end
+              if char.tackleable(l, w) then
+                char.tackle(w)
+              end
             end
           end
         end
       end
     end
-    -- check for td
-    if movement.can_move(v, step) and char.tackleable(k, v) then
-      if rules.check_td(v, step) then
-        end_info.type = "touchdown"
-        end_down = true
-      end
-    end
-    -- actual movement
+  end
+  for k, v in pairs(players) do -- check to see if ball holder is tackled by an item
+    char.check_tackle(k, v)
+  end
+  for k, v in pairs(players) do -- actual movement
     movement.prepare(v, step, step_time)
   end
 end
@@ -251,32 +255,42 @@ char.finish = function(step)
       football.catch(k, v)
       v.carrier = true
     end
-    char.check_tackle(k, v, step) -- tackling
+    -- ball incomplete
+    if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
+      end_info.type = "incomplete"
+      end_down = true
+      ball.caught = true
+    end
+    -- check for td
+    if movement.can_move(v, step) and char.tackleable(k, v) then
+      if rules.check_td(v, step) then
+        end_info.type = "touchdown"
+        end_down = true
+      end
+    end
     movement.finish(v, step) -- finish move
   end
-  -- ball incomplete
-  if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
-    end_info.type = "incomplete"
-    end_down = true
-    ball.caught = true
-  end
+
   if end_down then
     char.end_down()
   end
   return end_down
 end
 
-char.check_tackle = function(id, player, step)
-  if char.tackleable(id, player) then -- only ball carrier or qb with ball can be tackled
-    for l, w in pairs(players) do -- check for collisions with other players
-      if player.team ~= w.team and not w.dead then -- make sure collision is happening between opposite teams (saves calculations), and not a dead player
-        if movement.collision(player, w, step) or (w.item.active and movement.collision(w.item, player, step)) then -- finally check for an actual collision
-          player.path = {}
-          player.dead = true
-          end_info.type = "tackle"
-          end_info.player = player
-          end_down = true
-          break
+char.tackle = function(player)
+  player.path = {}
+  player.dead = true
+  end_info.type = "tackle"
+  end_info.player = player
+  end_down = true
+end
+
+char.check_tackle = function(id, player)
+  if char.tackleable(id, player) then
+    for l, w in pairs(players) do
+      if player.team ~= w.team then
+        if w.item.active and movement.collision(w.item, player, step) then
+          char.tackle(player)
         end
       end
     end
@@ -309,8 +323,8 @@ char.start_resolve = function()
       end
     end
   end
-  for k, v in pairs(players) do -- check for initial tackle
-    char.check_tackle(k, v, 0)
+  for k, v in pairs(players) do --check for initial item tackle
+    char.check_tackle(k, v)
   end
 end
 

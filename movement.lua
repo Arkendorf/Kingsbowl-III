@@ -5,11 +5,15 @@ local movement = {}
 movement.update_object = function(object, dt)
   object.x = object.x + object.xv * dt
   object.y = object.y + object.yv * dt
-  if math.abs(object.x-object.tile_x) >= 1 then
-    object.xv = 0
+  if object.xa and object.ya then
+    object.xv = object.xv + object.xa * dt
+    object.yv = object.yv + object.ya * dt
   end
-  if math.abs(object.y-object.tile_y) >= 1 then
+  if math.abs(object.x-object.tile_x) >= 1 or math.abs(object.y-object.tile_y) >= 1 then
+    object.xv = 0
     object.yv = 0
+    object.xa = 0
+    object.ya = 0
   end
 end
 
@@ -49,12 +53,23 @@ movement.valid = function(x1, y1, x2, y2, max_dist)
   return (movement.dist(x1, y1, x2, y2) <= max_dist and field.in_bounds(x2, y2))
 end
 
+movement.bounce = function(object, step, step_time)
+  local x_dist = (object.path[step].x - object.tile_x)
+  local y_dist = (object.path[step].y - object.tile_y)
+  object.xv = x_dist * 2 / step_time
+  object.yv = y_dist * 2 / step_time
+  object.xa = x_dist * -4 / (step_time * step_time)
+  object.ya = y_dist * -4 / (step_time * step_time)
+end
+
 movement.prepare = function(object, step, step_time)
   if movement.can_move(object, step) then
     local x_dist = (object.path[step].x - object.tile_x)
     local y_dist = (object.path[step].y - object.tile_y)
     object.xv = x_dist / step_time
     object.yv = y_dist / step_time
+    object.xa = 0
+    object.ya = 0
   end
 end
 
