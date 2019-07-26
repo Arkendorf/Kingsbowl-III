@@ -220,18 +220,20 @@ char.prepare = function(step, step_time)
   while collision do -- adjust paths based on collisions
     collision = false
     for k, v in pairs(players) do
-      if movement.can_move(v, step) then
+      if movement.can_move(v, step) then -- players can only be bounced if they are moving
         for l, w in pairs(players) do
-          if v.team ~= w.team then
-            if movement.collision(v, w, step) then
-              collision = true
-              movement.bounce(v, step, step_time)
-              v.path = {}
-              if char.tackleable(k, v) then
-                char.tackle(v)
-              end
-              if char.tackleable(l, w) then
-                char.tackle(w)
+          if v.team ~= w.team and not w.dead then -- players can only collide with non-dead members of the opposite team
+            if v.team ~= rules.get_offense() or not movement.can_move(w, step) then -- only defense can be bounced, unless offense is colliding with stationary player
+              if movement.collision(v, w, step) then
+                collision = true
+                movement.bounce(v, step, step_time)
+                v.path = {}
+                if char.tackleable(k, v) then
+                  char.tackle(v)
+                end
+                if char.tackleable(l, w) then
+                  char.tackle(w)
+                end
               end
             end
           end

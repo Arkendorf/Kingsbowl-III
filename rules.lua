@@ -91,6 +91,7 @@ rules.end_down = function()
     down = down + 1
     if down > 4 then
       rules.turnover()
+      down = 1
     end
   end
   qb = 0
