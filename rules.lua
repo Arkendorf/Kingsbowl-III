@@ -12,6 +12,12 @@ local lineup_buffer = 1
 local intercept = false
 
 rules.load = function(menu_client_list, menu_client_info, menu_team_info)
+  if network_state == "client" then
+    client:setSchema("td", {"team", "score"})
+    client:on("td", function(data)
+      team_info[data.team].score = data.score
+    end)
+  end
   offense = 1
   down = 1
   scrimmage = math.floor(field.get_dimensions()/2)
@@ -125,6 +131,7 @@ rules.check_td = function(player, step)
   local min, max = rules.get_endzones()
   if (player.team == 1 and player.path[step].x > max) or (player.team == 2 and player.path[step].x <= min) then
     team_info[player.team].score = team_info[player.team].score + 7
+    network.server_send("td", {player.team, team_info[player.team].score})
     return true
   end
   return false

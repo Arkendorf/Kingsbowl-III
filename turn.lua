@@ -30,6 +30,9 @@ turn.load = function()
       state = "results"
       results.load(char.get_players(), rules.get_info())
     end)
+    client:on('timer', function(data)
+      timer = data
+    end)
   end
 
   timer = turn_time
@@ -91,6 +94,7 @@ turn.finish = function(step)
   football.finish(step)
   if char.finish(step) and not down_delay then
     turn.delay_down()
+    network.server_send("timer", timer)
   end
 end
 
@@ -103,6 +107,7 @@ turn.complete = function(step)
     resolve = false
     timer = turn_time
     char.end_resolve(step)
+    football.end_resolve(step)
     turn.increment()
   end
 end
@@ -123,7 +128,7 @@ end
 
 turn.delay_down = function()
   down_delay = true
-  timer = timer + step_time * 3
+  timer = step_time * 3
 end
 
 turn.resolve = function(step_num)

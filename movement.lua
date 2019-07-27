@@ -10,31 +10,22 @@ movement.update_object = function(object, dt)
     object.yv = object.yv + object.ya * dt
   end
   if object.goal_x and object.goal_y then -- limits have been established
-    local x_dir, y_dir = 0, 0
-    if object.xa ~= 0 or object.ya ~= 0 then
-      x_dir = movement.dir(object.xa)
-      y_dir = movement.dir(object.ya)
-    else
-      x_dir = movement.dir(object.xv)
-      y_dir = movement.dir(object.yv)
+    local x_dir = object.xv
+    local y_dir = object.yv
+    if object.xa ~= 0 or object.ya ~= 0 then -- use the sign of acceleration if it exists instead of velocity
+      x_dir = object.xa
+      y_dir = object.ya
     end
-    -- if object.x * x_dir > object.goal_x * x_dir
-  end
-  if math.abs(object.x-object.tile_x) >= 1 or math.abs(object.y-object.tile_y) >= 1 then
-    object.xv = 0
-    object.yv = 0
-    object.xa = 0
-    object.ya = 0
-  end
-end
-
-movement.dir = function(num)
-  if num > 0 then
-    return 1
-  elseif num < 0 then
-    return -1
-  else
-    return 0
+    if (x_dir > 0 and object.x > object.goal_x) or (x_dir < 0  and object.x < object.goal_x) then -- if x position exceeds limit, then stop movement
+      object.x = object.goal_x
+      object.xv = 0
+      object.xa = 0
+    end
+    if (y_dir > 0 and object.y > object.goal_y) or (y_dir < 0  and object.y < object.goal_y) then -- if y position exceeds limit, then stop movement
+      object.y = object.goal_y
+      object.yv = 0
+      object.ya = 0
+    end
   end
 end
 
@@ -73,14 +64,11 @@ movement.valid = function(x1, y1, x2, y2, max_dist)
   return (movement.dist(x1, y1, x2, y2) <= max_dist and field.in_bounds(x2, y2))
 end
 
-movement.setup = function(object, step)
-  object.goal_x = object.path[step].x
-  object.goal_y = object.path[step].y
-  return (object.goal_x - object.tile_x), (object.goal_y - object.tile_y)
-end
-
 movement.bounce = function(object, step, step_time)
-  local x_dist, y_dist = movement.setup(object, step)
+  object.goal_x = object.tile_x
+  object.goal_y = object.tile_y
+  local x_dist = object.path[step].x - object.tile_x
+  local y_dist = object.path[step].y - object.tile_y
   object.xv = x_dist * 2 / step_time
   object.yv = y_dist * 2 / step_time
   object.xa = x_dist * -4 / (step_time * step_time)
@@ -89,7 +77,10 @@ end
 
 movement.prepare = function(object, step, step_time)
   if movement.can_move(object, step) then
-    local x_dist, y_dist = movement.setup(object, step)
+    object.goal_x = object.path[step].x
+    object.goal_y = object.path[step].y
+    local x_dist = object.goal_x - object.tile_x
+    local y_dist = object.goal_y - object.tile_y
     object.xv = x_dist / step_time
     object.yv = y_dist / step_time
     object.xa = 0

@@ -82,6 +82,11 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
       players[data].x = players[data].tile_x
       players[data].y = players[data].tile_y
     end)
+    client:setSchema("char_tile", {"id", "x", "y"})
+    client:on("char_tile", function(data)
+      players[data.id].tile_x = data.x
+      players[data.id].tile_y = data.y
+    end)
   end
 
   players = {}
@@ -257,12 +262,6 @@ char.finish = function(step)
       football.catch(k, v)
       v.carrier = true
     end
-    -- ball incomplete
-    if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
-      end_info.type = "incomplete"
-      end_down = true
-      ball.caught = true
-    end
     -- check for td
     if movement.can_move(v, step) and char.tackleable(k, v) then
       if rules.check_td(v, step) then
@@ -271,6 +270,13 @@ char.finish = function(step)
       end
     end
     movement.finish(v, step) -- finish move
+    network.server_send("char_tile", {k, v.tile_x, v.tile_y})
+  end
+  -- ball incomplete
+  if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
+    end_info.type = "incomplete"
+    end_down = true
+    ball.caught = true
   end
 
   if end_down then
@@ -332,6 +338,11 @@ end
 
 char.end_resolve = function(step)
   resolve = false
+  for k, v in pairs(players) do -- reset path and abilities
+    v.path = {}
+    v.item.active = false
+    network.server_send("char_tile", {k, v.tile_x, v.tile_y})
+  end
   if pos_select then
     pos_select = false
     action = "move"
@@ -340,10 +351,6 @@ char.end_resolve = function(step)
     char.pos_prepare()
     football.clear()
     end_down = false
-  end
-  for k, v in pairs(players) do -- reset path and abilities
-    v.path = {}
-    v.item.active = false
   end
   return end_down
 end

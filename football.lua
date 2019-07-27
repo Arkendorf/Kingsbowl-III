@@ -7,6 +7,13 @@ local move_dist = 4
 local ball = {}
 
 football.load = function()
+  if network_state == "client" then
+    client:setSchema("ball_tile", {"x", "y"})
+    client:on("ball_tile", function(data)
+      ball.tile_x = data.x
+      ball.tile_y = data.y
+    end)
+  end
   ball = {tile_x = 0, tile_y = 0, x = 0, y = 0, thrown = false, caught = false, full_path = {}, path = {}, range = 0, xv = 0, yv = 0, tile = 0, visible = false}
 end
 
@@ -72,10 +79,11 @@ football.prepare = function(step, step_time)
 end
 
 football.finish = function(step)
-  if football.ball_active() then
+  if football.ball_active() and movement.can_move(ball, step) then
     movement.finish(ball, step)
     ball.tile = ball.tile+1
   end
+  network.server_send("ball_tile", {ball.tile_x, ball.tile_y})
 end
 
 football.start_resolve = function()
@@ -90,6 +98,10 @@ football.start_resolve = function()
       break
     end
   end
+end
+
+football.end_resolve = function()
+  network.server_send("ball_tile", {ball.tile_x, ball.tile_y})
 end
 
 football.step_num = function()
