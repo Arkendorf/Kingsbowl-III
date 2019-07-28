@@ -17,6 +17,9 @@ rules.load = function(menu_client_list, menu_client_info, menu_team_info)
     client:on("td", function(data)
       team_info[data.team].score = data.score
     end)
+    client:on("qb", function(data)
+      qb = data
+    end)
   end
   offense = 1
   down = 1
@@ -130,8 +133,10 @@ end
 rules.check_td = function(player, step)
   local min, max = rules.get_endzones()
   if (player.team == 1 and player.path[step].x > max) or (player.team == 2 and player.path[step].x <= min) then
-    team_info[player.team].score = team_info[player.team].score + 7
-    network.server_send("td", {player.team, team_info[player.team].score})
+    if network_state == "server" then -- server has final say on touchdowns
+      team_info[player.team].score = team_info[player.team].score + 7
+      network.server_send("td", {player.team, team_info[player.team].score})
+    end
     return true
   end
   return false
@@ -156,6 +161,7 @@ rules.set_tile = function(id, player, tile_num, tile)
   player.y = player.tile_y
   if tile_num == 1 and player.team == offense then -- if player is standing in qb position, make them qb
     qb = id
+    network.server_send("qb", qb)
   end
 end
 

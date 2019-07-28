@@ -2,7 +2,7 @@ local movement = require "movement"
 local rules = require "rules"
 local abilities = require "abilities"
 local football = require "football"
-local cam = require "cam"
+local camera = require "camera"
 
 local char = {}
 local players = {}
@@ -95,6 +95,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
   end
 
   char.pos_prepare()
+  football.visible(players[id].team)
   resolve = false
 end
 
@@ -103,27 +104,46 @@ char.update = function(dt)
     movement.update_object(v, dt)
   end
   if pos_select then
-    cam.scrimmage()
+    camera.scrimmage()
   else
-    cam.player(players[id])
+    camera.player(players[id])
   end
 end
 
 char.draw = function()
-  for k, v in pairs(players) do
-    love.graphics.rectangle("fill", v.x*tile_size, v.y*tile_size, tile_size, tile_size)
-    for i, tile in ipairs(v.path) do
-      love.graphics.rectangle("line", tile.x*tile_size, tile.y*tile_size, tile_size, tile_size)
+  for k, v in pairs(players) do -- draw stationary players first
+    if #v.path <= 0 then
+      char.draw_char(k, v)
     end
-    if v.item.active then
-      if v.team == rules.get_offense() then
-        love.graphics.circle("fill", (v.item.tile_x+.5)*tile_size, (v.item.tile_y+.5)*tile_size, tile_size/2-4, tile_size)
+  end
+  for k, v in pairs(players) do -- draw moving players first
+    if #v.path > 0 then
+      if players[id].team == v.team then -- if on the same team, draw path
+        for i, tile in ipairs(v.path) do
+          love.graphics.rectangle("line", tile.x*tile_size, tile.y*tile_size, tile_size, tile_size)
+        end
+      end
+      char.draw_char(k, v)
+    end
+  end
+  for k, v in pairs(players) do -- draw items
+    if v.item.active and (players[id].team == v.team or resolve) then
+      local quad = "item"..tostring(abilities.direction(v))
+      if resolve then
+        art.draw_quad(v.item.type, quad, v.item.tile_x, v.item.tile_y)
       else
-        love.graphics.rectangle("fill", v.item.tile_x*tile_size+4, v.item.tile_y*tile_size+4, tile_size-8, tile_size-8)
+        art.draw_quad(v.item.type, quad, v.item.tile_x, v.item.tile_y, 1, 1, 1, "outline")
       end
     end
   end
-  love.graphics.print(action, 0, 12)
+end
+
+char.draw_char = function(k, v)
+  if pos_select then
+    art.draw_img("helmet", v.x, v.y, 1, 1, 1, "outline")
+  else
+    art.draw_img("helmet", v.x, v.y)
+  end
 end
 
 char.keypressed = function(key)
@@ -233,10 +253,10 @@ char.prepare = function(step, step_time)
                 collision = true
                 movement.bounce(v, step, step_time)
                 v.path = {}
-                if char.tackleable(k, v) then
+                if char.tackleable(k, v, step) then
                   char.tackle(v)
                 end
-                if char.tackleable(l, w) then
+                if char.tackleable(l, w, step) then
                   char.tackle(w)
                 end
               end
@@ -247,7 +267,7 @@ char.prepare = function(step, step_time)
     end
   end
   for k, v in pairs(players) do -- check to see if ball holder is tackled by an item
-    char.check_tackle(k, v)
+    char.check_tackle(k, v, step)
   end
   for k, v in pairs(players) do -- actual movement
     movement.prepare(v, step, step_time)
@@ -263,7 +283,7 @@ char.finish = function(step)
       v.carrier = true
     end
     -- check for td
-    if movement.can_move(v, step) and char.tackleable(k, v) then
+    if movement.can_move(v, step) and char.tackleable(k, v, step) then
       if rules.check_td(v, step) then
         end_info.type = "touchdown"
         end_down = true
@@ -293,8 +313,8 @@ char.tackle = function(player)
   end_down = true
 end
 
-char.check_tackle = function(id, player)
-  if char.tackleable(id, player) then
+char.check_tackle = function(id, player, step)
+  if char.tackleable(id, player, step) then
     for l, w in pairs(players) do
       if player.team ~= w.team then
         if w.item.active and movement.collision(w.item, player, step) then
@@ -305,8 +325,19 @@ char.check_tackle = function(id, player)
   end
 end
 
-char.tackleable = function(id, player)
-  return (not player.dead and (player.carrier or (not football.get_ball().thrown and id == rules.get_qb())))
+char.tackleable = function(id, player, step)
+  if (not player.dead and (player.carrier or (not football.get_ball().thrown and id == rules.get_qb()))) then
+    for k, v in pairs(players) do
+      if v.team == player.team and k ~= id then
+        if v.item.active and movement.collision(v.item, player, step) then
+          return false
+        end
+      end
+    end
+    return true
+  else
+    return false
+  end
 end
 
 char.start_resolve = function()
@@ -332,7 +363,7 @@ char.start_resolve = function()
     end
   end
   for k, v in pairs(players) do --check for initial item tackle
-    char.check_tackle(k, v)
+    char.check_tackle(k, v, 0)
   end
 end
 
@@ -350,6 +381,7 @@ char.end_resolve = function(step)
     rules[end_info.type](end_info.player)
     char.pos_prepare()
     football.clear()
+    football.visible(players[id].team)
     end_down = false
   end
   return end_down

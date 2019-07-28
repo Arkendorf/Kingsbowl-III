@@ -14,7 +14,7 @@ football.load = function()
       ball.tile_y = data.y
     end)
   end
-  ball = {tile_x = 0, tile_y = 0, x = 0, y = 0, thrown = false, caught = false, full_path = {}, path = {}, range = 0, xv = 0, yv = 0, tile = 0, visible = false}
+  ball = {tile_x = 0, tile_y = 0, x = 0, y = 0, thrown = false, caught = false, full_path = {}, path = {}, range = 0, xv = 0, yv = 0, tile = 0, primed = false, preview = false}
 end
 
 football.update = function(dt)
@@ -22,7 +22,7 @@ football.update = function(dt)
 end
 
 football.draw = function()
-  if ball.visible then
+  if (ball.thrown or (ball.primed and ball.preview)) and not ball.caught then
     love.graphics.circle("fill", (ball.x+.5)*tile_size, (ball.y+.5)*tile_size, tile_size/2, tile_size)
     for i, tile in ipairs(ball.full_path) do
       love.graphics.circle("line", (tile.x+.5)*tile_size, (tile.y+.5)*tile_size, tile_size/2, tile_size)
@@ -38,19 +38,20 @@ football.throw = function(x1, y1, x2, y2)
   ball.x = x1
   ball.y = y1
   ball.tile = 0
-  ball.visible = true
+  ball.primed = true
 end
 
 football.reset = function()
   if not ball.thrown then
-    ball.visible = false
+    ball.primed = false
   end
 end
 
 football.clear = function()
   ball.thrown = false
   ball.caught = false
-  ball.visible = false
+  ball.primed = false
+  ball.preview = false
 end
 
 football.ball_range = function(x1, y1, x2, y2)
@@ -87,7 +88,7 @@ football.finish = function(step)
 end
 
 football.start_resolve = function()
-  if ball.visible and not ball.thrown then
+  if ball.primed and not ball.thrown then
     ball.thrown = true
   end
   ball.path = {}
@@ -99,13 +100,18 @@ football.start_resolve = function()
     end
   end
 end
-
 football.end_resolve = function()
   network.server_send("ball_tile", {ball.tile_x, ball.tile_y})
 end
 
+football.visible = function(team)
+  if team == rules.get_offense() then
+    ball.preview = true
+  end
+end
+
 football.step_num = function()
-  if ball.visible or football.ball_active() then
+  if ball.primed or football.ball_active() then
     return math.min((#ball.full_path-ball.tile), ball.range)
   else
     return 0
@@ -120,7 +126,7 @@ football.catch = function(id, player)
   if not ball.caught then
     ball.caught = true
     ball.carrier = id
-    ball.visible = false
+    ball.primed = false
   end
   rules.catch(player)
 end

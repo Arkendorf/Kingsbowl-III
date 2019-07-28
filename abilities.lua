@@ -7,6 +7,10 @@ local abilities = {}
 abilities.load = function()
 end
 
+-- abilities.update = function(player)
+--   local item = player.item
+-- end
+
 abilities.use = function(id, player, x, y)
   if abilities.valid(player.tile_x, player.tile_y, x, y) then
     local type = abilities.type(id, player)
@@ -54,6 +58,11 @@ abilities.start.item = function(id, player, x, y)
     player.item.tile_x = x
     player.item.tile_y = y
     player.item.active = true
+    if player.team == rules.get_offense() then
+      player.item.type = "shield"
+    else
+      player.item.type = "sword"
+    end
     return true
   else
     return false
@@ -79,6 +88,19 @@ abilities.adjacent = function(x1, y1, x2, y2)
   local x_dif = x2-x1
   local y_dif = y2-y1
   return (x_dif >= -1 and x_dif <= 1 and y_dif >= -1 and y_dif <= 1)
+end
+
+abilities.direction = function(player)
+  if player.item.active then
+    local x = player.item.tile_x - player.tile_x + 1
+    local y = player.item.tile_y - player.tile_y + 1
+    local dir = y*3+x+1
+    if dir > 5 then
+      return dir-1
+    else
+      return dir
+    end
+  end
 end
 
 return abilities

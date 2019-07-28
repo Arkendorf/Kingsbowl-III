@@ -6,7 +6,7 @@ local turn = require "turn"
 local rules = require "rules"
 local abilities = require "abilities"
 local football = require "football"
-local cam = require "cam"
+local camera = require "camera"
 
 local game = {}
 
@@ -21,11 +21,11 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info)
   end
 
   rules.load(menu_client_list, menu_client_info, menu_team_info)
+  football.load()
   char.load(menu_client_list, menu_client_info, menu_team_info)
   turn.load()
   abilities.load()
-  football.load()
-  cam.load()
+  camera.load()
   field.load()
 end
 
@@ -33,7 +33,7 @@ game.update = function(dt)
   char.update(dt)
   turn.update(dt)
   football.update(dt)
-  cam.update(dt)
+  camera.update(dt)
 end
 
 game.draw = function()
@@ -63,8 +63,8 @@ end
 
 game.get_offset = function()
   local w, h = love.graphics.getDimensions()
-  local camera = cam.get()
-  return -camera.x+w/2, -camera.y+h/2
+  local cam= camera.get()
+  return math.floor(-cam.x+w/2), math.floor(-cam.y+h/2)
 end
 
 

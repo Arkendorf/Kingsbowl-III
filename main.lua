@@ -1,5 +1,6 @@
 sock = require "sock"
 network = require "network"
+art = require "art"
 
 local menu = require "menu"
 local gui = require "gui"
@@ -10,6 +11,7 @@ state = "network"
 reset = false
 
 love.load = function()
+  art.load("art")
   gui.load()
 
   state = "network"
