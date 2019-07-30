@@ -45,4 +45,15 @@ art.clear_effects = function()
   love.graphics.setShader()
 end
 
+art.direction = function(x1, y1, x2, y2)
+  local x = x2 - x1 + 1
+  local y = y2 - y1 + 1
+  local dir = y*3+x+1
+  if dir > 5 then
+    return dir-1
+  else
+    return dir
+  end
+end
+
 return art

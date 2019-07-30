@@ -14,7 +14,7 @@ local intercept = false
 rules.load = function(menu_client_list, menu_client_info, menu_team_info)
   if network_state == "client" then
     client:setSchema("td", {"team", "score"})
-    client:on("td", function(data)
+    client:on("score", function(data)
       team_info[data.team].score = data.score
     end)
     client:on("qb", function(data)
@@ -72,8 +72,8 @@ rules.incomplete = function()
   rules.end_down()
 end
 
-rules.tackle = function(player)
-  rules.set_scrimmage(player.tile_x)
+rules.tackle = function(x)
+  rules.set_scrimmage(x)
   rules.end_down()
 end
 
@@ -135,7 +135,7 @@ rules.check_td = function(player, step)
   if (player.team == 1 and player.path[step].x > max) or (player.team == 2 and player.path[step].x <= min) then
     if network_state == "server" then -- server has final say on touchdowns
       team_info[player.team].score = team_info[player.team].score + 7
-      network.server_send("td", {player.team, team_info[player.team].score})
+      network.server_send("score", {player.team, team_info[player.team].score})
     end
     return true
   end
@@ -155,10 +155,15 @@ end
 rules.set_tile = function(id, player, tile_num, tile)
   tile.taken = true
   tile.host = id
-  player.tile_x = tile.x+scrimmage
-  player.tile_y = tile.y
-  player.x = player.tile_x
-  player.y = player.tile_y
+  local tile_x = tile.x+scrimmage
+  local tile_y = tile.y
+  if network_state == "server" then
+    player.tile_x = tile_x
+    player.tile_y = tile_y
+    network.server_send("char_tile", {id, tile_x, tile_y})
+  end
+  player.x = tile_x
+  player.y = tile_y
   if tile_num == 1 and player.team == offense then -- if player is standing in qb position, make them qb
     qb = id
     network.server_send("qb", qb)
@@ -172,6 +177,18 @@ rules.give_position = function(id, player)
       break
     end
   end
+end
+
+rules.prepare_position = function(id, player)
+  tile_x = math.huge
+  tile_y = math.huge
+  if network_state == "server" then
+    player.tile_x = tile_x
+    player.tile_y = tile_y
+    network.server_send("char_tile", {id, tile_x, tile_y})
+  end
+  player.x = tile_x
+  player.y = tile_y
 end
 
 rules.ensure_qb = function(players)

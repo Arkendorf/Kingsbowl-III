@@ -22,10 +22,19 @@ football.update = function(dt)
 end
 
 football.draw = function()
-  if (ball.thrown or (ball.primed and ball.preview)) and not ball.caught then
-    love.graphics.circle("fill", (ball.x+.5)*tile_size, (ball.y+.5)*tile_size, tile_size/2, tile_size)
-    for i, tile in ipairs(ball.full_path) do
-      love.graphics.circle("line", (tile.x+.5)*tile_size, (tile.y+.5)*tile_size, tile_size/2, tile_size)
+  if not ball.caught then
+    local visible = false
+    if ball.thrown then
+      art.draw_quad("arrow", "item"..tostring(ball.dir), ball.x, ball.y)
+      visible = true
+    elseif ball.primed and ball.preview then
+      art.draw_quad("arrow", "item"..tostring(ball.dir), ball.x, ball.y, 1, 1, 1, "outline")
+      visible = true
+    end
+    if visible then
+      for i, tile in ipairs(ball.full_path) do
+        love.graphics.circle("line", (tile.x+.5)*tile_size, (tile.y+.5)*tile_size, tile_size/2, tile_size)
+      end
     end
   end
 end
@@ -33,11 +42,15 @@ end
 football.throw = function(x1, y1, x2, y2)
   ball.full_path = movement.get_path(x1, y1, x2, y2)
   ball.range = football.ball_range(x1, y1, x2, y2)
-  ball.tile_x = x1
-  ball.tile_y = y1
+  if network_state == "server" then
+    ball.tile_x = x1
+    ball.tile_y = y1
+    network.server_send("ball_tile", {x1, y1})
+  end
   ball.x = x1
   ball.y = y1
   ball.tile = 0
+  ball.dir = tostring(art.direction(x1, y1, ball.full_path[1].x, ball.full_path[1].y))
   ball.primed = true
 end
 
@@ -52,6 +65,7 @@ football.clear = function()
   ball.caught = false
   ball.primed = false
   ball.preview = false
+  movement.cancel(ball)
 end
 
 football.ball_range = function(x1, y1, x2, y2)
@@ -74,17 +88,17 @@ football.thrown = function()
 end
 
 football.prepare = function(step, step_time)
-  if football.ball_active() then
-    movement.prepare(ball, step, step_time)
+  if football.ball_active() and movement.can_move(ball, step) then
+    movement.prepare(ball, ball.tile_x, ball.tile_y, ball.path[step].x, ball.path[step].y, step_time)
   end
 end
 
 football.finish = function(step)
   if football.ball_active() and movement.can_move(ball, step) then
     movement.finish(ball, step)
+    network.server_send("ball_tile", {ball.tile_x, ball.tile_y})
     ball.tile = ball.tile+1
   end
-  network.server_send("ball_tile", {ball.tile_x, ball.tile_y})
 end
 
 football.start_resolve = function()
@@ -99,9 +113,6 @@ football.start_resolve = function()
       break
     end
   end
-end
-football.end_resolve = function()
-  network.server_send("ball_tile", {ball.tile_x, ball.tile_y})
 end
 
 football.visible = function(team)

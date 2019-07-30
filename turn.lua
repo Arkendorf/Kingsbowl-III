@@ -81,18 +81,20 @@ turn.new_step = function(new_step)
     turn.finish(step-1)
   end
   if not down_delay then
-    turn.prepare(step, step_time)
+    if turn.prepare(step) then -- returns true if collision has occured, which may alter the amount of steps needed
+      max_step = math.max(char.step_num(), football.step_num())
+    end
   end
 end
 
-turn.prepare = function(step, step_time)
+turn.prepare = function(step)
   football.prepare(step, step_time)
-  char.prepare(step, step_time)
+  return char.prepare(step, step_time, max_step)
 end
 
 turn.finish = function(step)
   football.finish(step)
-  if char.finish(step) and not down_delay then
+  if not down_delay and char.finish(step, step_time, max_step) then
     turn.delay_down()
     network.server_send("timer", timer)
   end
@@ -100,14 +102,13 @@ end
 
 turn.complete = function(step)
   football.finish(step)
-  if char.finish(step) and not down_delay then
+  if not down_delay and char.finish(step, step_time, max_step) then
     turn.delay_down()
   else
     down_delay = false
     resolve = false
     timer = turn_time
-    char.end_resolve(step)
-    football.end_resolve(step)
+    char.end_resolve(step, step_time)
     turn.increment()
   end
 end
@@ -144,7 +145,7 @@ end
 
 turn.start_resolve = function()
   football.start_resolve()
-  char.start_resolve()
+  char.start_resolve(step_time)
 end
 
 return turn

@@ -9,24 +9,15 @@ movement.update_object = function(object, dt)
     object.xv = object.xv + object.xa * dt
     object.yv = object.yv + object.ya * dt
   end
-  if object.goal_x and object.goal_y then -- limits have been established
-    local x_dir = object.xv
-    local y_dir = object.yv
-    if object.xa ~= 0 or object.ya ~= 0 then -- use the sign of acceleration if it exists instead of velocity
-      x_dir = object.xa
-      y_dir = object.ya
-    end
-    if (x_dir > 0 and object.x > object.goal_x) or (x_dir < 0  and object.x < object.goal_x) then -- if x position exceeds limit, then stop movement
+  if object.limit_x and object.limit_y then -- limits have been established
+    if object.x > math.max(object.goal_x, object.limit_x) or object.x < math.min(object.goal_x, object.limit_x) or object.y > math.max(object.goal_y, object.limit_y) or object.y < math.min(object.goal_y, object.limit_y) then
       object.x = object.goal_x
-      object.xv = 0
-      object.xa = 0
-    end
-    if (y_dir > 0 and object.y > object.goal_y) or (y_dir < 0  and object.y < object.goal_y) then -- if y position exceeds limit, then stop movement
       object.y = object.goal_y
-      object.yv = 0
-      object.ya = 0
+      movement.stop(object)
+      return true
     end
   end
+  return false
 end
 
 movement.dist = function(x1, y1, x2, y2)
@@ -58,42 +49,72 @@ end
 
 movement.cancel = function(object)
   object.path = {}
+  object.x = object.tile_x
+  object.y = object.tile_y
+end
+
+movement.stop = function(object)
+  object.limit_x = nil
+  object.limit_y = nil
+  object.xv = 0
+  object.yv = 0
+  object.xa = 0
+  object.ya = 0
 end
 
 movement.valid = function(x1, y1, x2, y2, max_dist)
   return (movement.dist(x1, y1, x2, y2) <= max_dist and field.in_bounds(x2, y2))
 end
 
-movement.bounce = function(object, step, step_time)
-  object.goal_x = object.tile_x
-  object.goal_y = object.tile_y
-  local x_dist = object.path[step].x - object.tile_x
-  local y_dist = object.path[step].y - object.tile_y
-  object.xv = x_dist * 2 / step_time
-  object.yv = y_dist * 2 / step_time
-  object.xa = x_dist * -4 / (step_time * step_time)
-  object.ya = y_dist * -4 / (step_time * step_time)
+movement.bounce = function(object, x1, y1, x2, y2, step_time, h)
+  object.goal_x = x1
+  object.goal_y = y1
+  object.limit_x = x2
+  object.limit_y = y2
+  local x_dist = x2 - x1
+  local y_dist = y2 - y1
+  object.xv = x_dist * 4 * h / step_time
+  object.yv = y_dist * 4 * h / step_time
+  object.xa = x_dist * -8 * h / (step_time * step_time)
+  object.ya = y_dist * -8 * h / (step_time * step_time)
 end
 
-movement.prepare = function(object, step, step_time)
-  if movement.can_move(object, step) then
-    object.goal_x = object.path[step].x
-    object.goal_y = object.path[step].y
-    local x_dist = object.goal_x - object.tile_x
-    local y_dist = object.goal_y - object.tile_y
-    object.xv = x_dist / step_time
-    object.yv = y_dist / step_time
-    object.xa = 0
-    object.ya = 0
-  end
+movement.lerp = function(object, x1, y1, x2, y2, step_time)
+  object.goal_x = x2
+  object.goal_y = y2
+  object.limit_x = x1
+  object.limit_y = y1
+  local x_dist = x2 - x1
+  local y_dist = y2 - y1
+  object.xv = x_dist * 2 / step_time
+  object.yv = y_dist * 2 / step_time
+  object.xa = x_dist * -2 / (step_time * step_time)
+  object.ya = y_dist * -2 / (step_time * step_time)
+end
+
+movement.prepare = function(object, x1, y1, x2, y2, step_time)
+  object.goal_x = x2
+  object.goal_y = y2
+  object.limit_x = x1
+  object.limit_y = y1
+  local x_dist = x2 - x1
+  local y_dist = y2 - y1
+  object.xv = x_dist / step_time
+  object.yv = y_dist / step_time
+  object.xa = 0
+  object.ya = 0
 end
 
 movement.finish = function(object, step)
   if movement.can_move(object, step) then
-    object.tile_x = object.path[step].x
-    object.tile_y = object.path[step].y
-    object.x = object.tile_x
-    object.y = object.tile_y
+    local tile_x = object.path[step].x
+    local tile_y = object.path[step].y
+    if network_state == "server" then
+      object.tile_x = tile_x
+      object.tile_y = tile_y
+    end
+    object.x = tile_x
+    object.y = tile_y
 
     if step >= #object.path then
       object.path = {}

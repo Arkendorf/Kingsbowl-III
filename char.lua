@@ -20,72 +20,97 @@ local end_info = {type = "", player = 0}
 
 char.load = function(menu_client_list, menu_client_info, menu_team_info)
   if network_state == "server" then
-    server:setSchema("new_tile", {"x", "y"})
-    server:on("new_tile", function(data, client)
-      if char.set_path(client.connectId, data.x, data.y) then
+    server:setSchema("path", {"x", "y"})
+    server:on("path", function(data, client)
+      if char.set_path(client.connectId, data.x, data.y) then-- double check that the client's path is valid
         abilities.cancel(client.connectId, players[client.connectId])
-        network.server_send_except(client.connectId, "new_tile", {client.connectId, data.x, data.y})
-      elseif #players[client.connectId].path > 0 then
+        network.server_send_except(client.connectId, "path", {client.connectId, data.x, data.y})
+      elseif #players[client.connectId].path > 0 then -- if not valid, check to see what the clients previous path was, and send it back
         local tile = players[client.connectId].path[#players[client.connectId].path]
-        network.server_send_client(client.connectId, "new_tile", {client.connectId, tile.x, tile.y})
-      else
+        network.server_send_client(client.connectId, "path", {client.connectId, tile.x, tile.y})
+      else -- if client had no previous path, tell them to clear their path
         network.server_send_client(client.connectId, "clear_path", client.connectId)
       end
     end)
     server:setSchema("ability", {"x", "y"})
     server:on("ability", function(data, client)
-      if char.use_ability(client.connectId, data.x, data.y) then
+      if char.use_ability(client.connectId, data.x, data.y) then -- double check that the client can use an ability
         movement.cancel(players[client.connectId])
         network.server_send_except(client.connectId, "ability", {client.connectId, data.x, data.y})
-      elseif players[client.connectId].item.active then
+      elseif players[client.connectId].item.active then -- if not valid, check to see if the clients ability was active beforehand, and send them that value
         local item = players[client.connectId].item
         network.server_send_client(client.connectId, "ability", {client.connectId, item.tile_x, item.tile_y})
-      else
+      else -- if their ability wasn't active, tell them to stop their ability
         network.server_send_client(client.connectId, "stop_ability", client.connectId)
       end
     end)
     server:setSchema("position", {"x", "y"})
     server:on("position", function(data, client)
-      if rules.set_position(client.connectId, players[client.connectId], data.x, data.y) then
+      if rules.set_position(client.connectId, players[client.connectId], data.x, data.y) then -- check if client's position is valid
         network.server_send_except(client.connectId, "position", {client.connectId, data.x, data.y})
-      elseif players[client.connectId].tile_x ~= math.huge or players[client.connectId].tile_y ~= math.huge then
+      elseif players[client.connectId].tile_x ~= math.huge or players[client.connectId].tile_y ~= math.huge then -- if it isn't send client's old position if it exists
         local player = players[client.connectId]
         network.server_send_client(client.connectId, "position", {client.connectId, player.tile_x, player.tile_y})
-      else
+      else -- if client has not previously selected a position, tell them to reset their position
         network.server_send_client(client.connectId, "reset_position", client.connectId)
       end
     end)
   elseif network_state == "client" then
-    client:setSchema("new_tile", {"id", "x", "y"})
-    client:on("new_tile", function(data)
+    client:setSchema("path", {"id", "x", "y"})
+    client:on("path", function(data)
       abilities.cancel(data.id, players[data.id])
       char.set_path(data.id, data.x, data.y)
     end)
     client:on("clear_path", function(data)
-      players[data].path = {}
+      movement.cancel(players[data])
     end)
     client:setSchema("ability", {"id", "x", "y"})
     client:on("ability", function(data)
       movement.cancel(players[data.id])
       char.use_ability(data.id, data.x, data.y)
     end)
-    client:on("stop_path", function(data)
-      players[data].item.active = false
+    client:on("stop_ability", function(data)
+      abilities.cancel(data, players[data])
     end)
     client:setSchema("position", {"id", "x", "y"})
     client:on("position", function(data)
       rules.set_position(data.id, players[data.id], data.x, data.y)
     end)
     client:on("reset_position", function(data)
-      players[data].tile_x = math.huge
-      players[data].tile_y = math.huge
-      players[data].x = players[data].tile_x
-      players[data].y = players[data].tile_y
+      rules.prepare_position(data, players[data])
     end)
     client:setSchema("char_tile", {"id", "x", "y"})
     client:on("char_tile", function(data)
       players[data.id].tile_x = data.x
       players[data.id].tile_y = data.y
+    end)
+    client:on("pos_select", function(data)
+      pos_select = data
+    end)
+    client:setSchema("tackle", {"id", "tackle_id", "step_time", "sheath"})
+    client:on("tackle", function(data)
+      char.tackle(players[data.id], players[data.tackle_id], data.step_time)
+      abilities.flourish(players[data.tackle_id], data.step_time, data.sheath)
+      char.end_down(data.step_time)
+    end)
+    client:on("catch", function(data)
+      football.catch(data, players[data])
+      players[data].carrier = true
+    end)
+    client:on("touchdown", function(data)
+      end_info.type = "touchdown"
+      end_down = true
+      char.end_down(data)
+    end)
+    client:on("incomplete", function(data)
+      char.incomplete()
+      char.end_down(data)
+    end)
+    client:on("start_select", function()
+      char.start_select()
+    end)
+    client:on("finish_select", function()
+      char.finish_select()
     end)
   end
 
@@ -102,6 +127,9 @@ end
 char.update = function(dt)
   for k, v in pairs(players) do
     movement.update_object(v, dt)
+    if v.item.visible then
+      abilities.update_item(v, dt)
+    end
   end
   if pos_select then
     camera.scrimmage()
@@ -127,14 +155,7 @@ char.draw = function()
     end
   end
   for k, v in pairs(players) do -- draw items
-    if v.item.active and (players[id].team == v.team or resolve) then
-      local quad = "item"..tostring(abilities.direction(v))
-      if resolve then
-        art.draw_quad(v.item.type, quad, v.item.tile_x, v.item.tile_y)
-      else
-        art.draw_quad(v.item.type, quad, v.item.tile_x, v.item.tile_y, 1, 1, 1, "outline")
-      end
-    end
+    abilities.draw_item(v, players[id].team, resolve)
   end
 end
 
@@ -163,8 +184,8 @@ char.mousepressed = function(x, y, button)
     if action == "move" then
       if char.set_path(id, tile_x, tile_y) then
         abilities.cancel(id, players[id])
-        network.server_send("new_tile", {id, tile_x, tile_y})
-        network.client_send("new_tile", {tile_x, tile_y})
+        network.server_send("path", {id, tile_x, tile_y})
+        network.client_send("path", {tile_x, tile_y})
       end
     elseif action == "ability" then
       if char.use_ability(id, tile_x, tile_y) then
@@ -213,6 +234,9 @@ char.step_num = function()
     if #v.path > num then
       num = #v.path
     end
+    if v.item.active and num <= 0 then
+      num = 1
+    end
   end
   return num
 end
@@ -220,15 +244,19 @@ end
 char.path_collision = function(id, path, team)
   local step_num = char.step_num()
   for k, v in pairs(players) do
-    if id ~= k and v.team == team and #v.path > 0 then
-      for i = 1, step_num do
-        if v.path[i] and path[i] then
-          if v.path[i].x == path[i].x and v.path[i].y == path[i].y then -- check for overlapping intermediate steps in path
-            return true
+    if id ~= k and v.team == team then
+      if #v.path > 0 then
+        for i = 1, step_num do
+          if v.path[i] and path[i] then
+            if v.path[i].x == path[i].x and v.path[i].y == path[i].y then -- check for overlapping intermediate steps in path
+              return true
+            end
           end
         end
-      end
-      if v.path[#v.path].x == path[#path].x and v.path[#v.path].y == path[#path].y then -- check for overlapping final destinations
+        if v.path[#v.path].x == path[#path].x and v.path[#v.path].y == path[#path].y then -- check for overlapping final destinations
+          return true
+        end
+      elseif v.tile_x == path[#path].x and v.tile_y == path[#path].y then -- if teammate is stationary and wont move, make sure path doesn't end up on that tile
         return true
       end
     end
@@ -240,7 +268,8 @@ char.get_players = function()
   return players
 end
 
-char.prepare = function(step, step_time)
+char.prepare = function(step, step_time, max_step)
+  local step_change = false
   local collision = true
   while collision do -- adjust paths based on collisions
     collision = false
@@ -250,15 +279,16 @@ char.prepare = function(step, step_time)
           if v.team ~= w.team and not w.dead then -- players can only collide with non-dead members of the opposite team
             if v.team ~= rules.get_offense() or not movement.can_move(w, step) then -- only defense can be bounced, unless offense is colliding with stationary player
               if movement.collision(v, w, step) then
+                if char.tackleable(k, v, step) and not char.shielded(k, v, step, step_time, max_step) then
+                  char.tackle(v, w, step_time)
+                elseif char.tackleable(l, w, step) and not char.shielded(l, w, step, step_time, max_step) then
+                  char.tackle(w, v, step_time)
+                else
+                  movement.bounce(v, v.tile_x, v.tile_y, v.path[step].x, v.path[step].y, step_time, .5)
+                end
+                movement.cancel(v)
                 collision = true
-                movement.bounce(v, step, step_time)
-                v.path = {}
-                if char.tackleable(k, v, step) then
-                  char.tackle(v)
-                end
-                if char.tackleable(l, w, step) then
-                  char.tackle(w)
-                end
+                step_change = true
               end
             end
           end
@@ -266,51 +296,72 @@ char.prepare = function(step, step_time)
       end
     end
   end
-  for k, v in pairs(players) do -- check to see if ball holder is tackled by an item
-    char.check_tackle(k, v, step)
-  end
   for k, v in pairs(players) do -- actual movement
-    movement.prepare(v, step, step_time)
+    if movement.can_move(v, step) then
+      movement.prepare(v, v.tile_x, v.tile_y, v.path[step].x, v.path[step].y, step_time)
+    end
   end
+  return step_change
 end
 
-char.finish = function(step)
+char.finish = function(step, step_time, max_step)
   local ball = football.get_ball()
   for k, v in pairs(players) do
-    -- ball catching
-    if football.ball_active() and movement.collision(ball, v, step) then -- ball and player are colliding
-      football.catch(k, v)
-      v.carrier = true
-    end
-    -- check for td
-    if movement.can_move(v, step) and char.tackleable(k, v, step) then
-      if rules.check_td(v, step) then
-        end_info.type = "touchdown"
-        end_down = true
+    movement.finish(v, step) -- finish move
+    if network_state == "server" then
+      network.server_send("char_tile", {k, v.tile_x, v.tile_y})
+      -- check for item tackle
+      local tackle_id, tackler = char.check_tackle(k, v, step, step_time)
+      if tackle_id then
+        abilities.flourish(tackler, step_time, step >= max_step)
+        network.server_send("tackle", {k, tackle_id, step_time, step >= max_step})
+      end
+      -- ball catching
+      if football.ball_active() and movement.collision(ball, v, step) then -- ball and player are colliding
+        football.catch(k, v)
+        v.carrier = true
+        network.server_send("catch", k)
+      end
+      -- check for td
+      if movement.can_move(v, step) and char.tackleable(k, v, step) then
+        if rules.check_td(v, step) then
+          end_info.type = "touchdown"
+          end_down = true
+          network.server_send("touchdown", step_time)
+        end
       end
     end
-    movement.finish(v, step) -- finish move
-    network.server_send("char_tile", {k, v.tile_x, v.tile_y})
   end
   -- ball incomplete
-  if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
-    end_info.type = "incomplete"
-    end_down = true
-    ball.caught = true
+  if network_state == "server" then
+    if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
+      char.incomplete()
+      network.server_send("incomplete", step_time)
+    end
   end
 
   if end_down then
-    char.end_down()
+    char.end_down(step_time)
   end
   return end_down
 end
 
-char.tackle = function(player)
-  player.path = {}
+char.incomplete = function()
+  end_info.type = "incomplete"
+  end_down = true
+  local ball = football.get_ball()
+  ball.caught = true
+end
+
+char.tackle = function(player, tackler, step_time)
+  movement.cancel(player)
   player.dead = true
   end_info.type = "tackle"
-  end_info.player = player
+  end_info.x = player.tile_x
   end_down = true
+  if not tackler.item.active then
+    abilities.stab(player, tackler, step_time)
+  end
 end
 
 char.check_tackle = function(id, player, step)
@@ -318,29 +369,34 @@ char.check_tackle = function(id, player, step)
     for l, w in pairs(players) do
       if player.team ~= w.team then
         if w.item.active and movement.collision(w.item, player, step) then
-          char.tackle(player)
+          char.tackle(player, w)
+          return l, w
         end
       end
     end
   end
+  return false
 end
 
 char.tackleable = function(id, player, step)
-  if (not player.dead and (player.carrier or (not football.get_ball().thrown and id == rules.get_qb()))) then
-    for k, v in pairs(players) do
-      if v.team == player.team and k ~= id then
-        if v.item.active and movement.collision(v.item, player, step) then
-          return false
-        end
-      end
-    end
-    return true
-  else
-    return false
-  end
+  return (not player.dead and (player.carrier or (not football.get_ball().thrown and id == rules.get_qb())))
 end
 
-char.start_resolve = function()
+char.shielded = function(id, player, step, step_time, max_step)
+  for k, v in pairs(players) do
+    if v.team == player.team and k ~= id then
+      if v.item.active and movement.collision(v.item, player, step) then
+        if step > 1 then
+          abilities.flourish(v, step_time, step >= max_step)
+        end
+        return true
+      end
+    end
+  end
+  return false
+end
+
+char.start_resolve = function(step_time)
   resolve = true
   if pos_select then -- assign positions and qb if not selected
     for k, v in pairs(players) do
@@ -350,59 +406,55 @@ char.start_resolve = function()
     end
     rules.ensure_qb(players) -- make sure each team has a qb
   end
-  for k, v in pairs(players) do -- resolve items
-    if v.item.active then
-      for l, w in pairs(players) do
-        if w.item.active and v.team ~= w.team then -- items can collide
-          if v.item.tile_x == w.item.tile_x and v.item.tile_y == w.item.tile_y then -- items occupy same tile, cancel out
-            v.item.active = false
-            w.item.active = false
-          end
-        end
-      end
-    end
-  end
+  abilities.collide(players, step_time)
   for k, v in pairs(players) do --check for initial item tackle
     char.check_tackle(k, v, 0)
   end
 end
 
-char.end_resolve = function(step)
+char.end_resolve = function(step, step_time)
   resolve = false
   for k, v in pairs(players) do -- reset path and abilities
-    v.path = {}
-    v.item.active = false
-    network.server_send("char_tile", {k, v.tile_x, v.tile_y})
+    movement.cancel(v)
+    abilities.reset.item(v, step_time)
   end
-  if pos_select then
-    pos_select = false
-    action = "move"
-  elseif end_down then
-    rules[end_info.type](end_info.player)
-    char.pos_prepare()
-    football.clear()
-    football.visible(players[id].team)
-    end_down = false
+  if network_state == "server" then
+    if pos_select then
+      char.finish_select()
+      network.server_send("finish_select")
+    elseif end_down then
+      char.start_select()
+      network.server_send("start_select")
+    end
   end
-  return end_down
 end
 
-char.end_down = function()
+char.start_select = function()
+  rules[end_info.type](end_info.x)
+  char.pos_prepare()
+  football.clear()
+  football.visible(players[id].team)
+  end_down = false
+end
+
+char.finish_select = function()
+  pos_select = false
+  action = "move"
+end
+
+char.end_down = function(step_time)
   for k, v in pairs(players) do
-    v.path = {}
-    v.xv = 0
-    v.yv = 0
+    movement.cancel(v)
+    abilities.reset.item(v, step_time)
+    v.carrier = false
   end
 end
 
 char.pos_prepare = function()
-  action = "position"
   pos_select = true
+  action = "position"
   for k, v in pairs(players) do
-    v.tile_x = math.huge
-    v.tile_y = math.huge
-    v.x = v.tile_x
-    v.y = v.tile_y
+    rules.prepare_position(k, v)
     v.dead = false
   end
 end
