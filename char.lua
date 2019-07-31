@@ -157,7 +157,7 @@ end
 char.draw_paths = function()
   for k, v in pairs(players) do -- draw paths
     if not resolve and players[id].team == v.team then -- if on the same team, draw path
-      movement.draw_path(v.tile_x, v.tile_y, v.path)
+      movement.draw_path(v.tile_x, v.tile_y, v.path, colors.white[1], colors.white[2], colors.white[3])
     end
   end
   if not resolve then
@@ -180,7 +180,7 @@ end
 
 char.draw_char = function(k, v)
   if pos_select then
-    art.draw_img("helmet", v.x, v.y, 1, 1, 1, "outline")
+    art.draw_img("helmet", v.x, v.y, colors.white[1], colors.white[2], colors.white[3], "outline")
   else
     art.draw_img("helmet", v.x, v.y)
   end
@@ -250,17 +250,17 @@ char.preview_path = function(id, tile_x, tile_y)
       local collide = char.path_collision(id, path, players[id].team)
       if collide then
         path[collide].icon = 3
-        movement.draw_path(players[id].tile_x, players[id].tile_y, path, 1, .2, .2)
+        movement.draw_path(players[id].tile_x, players[id].tile_y, path, colors.red[1], colors.red[2], colors.red[3])
       else
         local intersect = football.path_intersect(path)
         if intersect then
           path[intersect].icon = 2
         end
-        movement.draw_path(players[id].tile_x, players[id].tile_y, path, .2, 1, .2)
+        movement.draw_path(players[id].tile_x, players[id].tile_y, path, colors.green[1], colors.green[2], colors.green[3])
       end
     end
   else
-    art.path_icon(4, tile_x, tile_y, 1, .2, .2)
+    art.path_icon(4, tile_x, tile_y, colors.red[1], colors.red[2], colors.red[3])
     art.path_border(players[id].tile_x, players[id].tile_y, dist, movement.valid)
   end
 end

@@ -24,7 +24,7 @@ abilities.draw_item = function(player, team, resolve)
   end
   if player.item.active and team == player.team and not resolve then
     local quad = art.direction(player.tile_x, player.tile_y, player.item.new_x, player.item.new_y)
-    art.draw_quad(player.item.type, art.quad.item[quad], player.item.new_x, player.item.new_y, 1, 1, 1, "outline")
+    art.draw_quad(player.item.type, art.quad.item[quad], player.item.new_x, player.item.new_y, colors.white[1], colors.white[2], colors.white[3], "outline")
   end
 end
 
@@ -73,11 +73,11 @@ end
 abilities.preview_throw = function(player, x, y)
   if abilities.valid(player.tile_x, player.tile_y, x, y) then
     local path = movement.get_path(player.tile_x, player.tile_y, x, y)
-    movement.draw_path(player.tile_x, player.tile_y, path, .2, 1, .2)
+    movement.draw_path(player.tile_x, player.tile_y, path, colors.green[1], colors.green[2], colors.green[3])
     local quad = art.direction(player.tile_x, player.tile_y, path[1].x, path[1].y)
-    art.draw_quad("arrow", art.quad.item[quad], player.tile_x, player.tile_y, .2, 1, .2, "outline")
+    art.draw_quad("arrow", art.quad.item[quad], player.tile_x, player.tile_y, colors.green[1], colors.green[2], colors.green[3], "outline")
   else
-    art.path_icon(4, x, y, 1, .2, .2)
+    art.path_icon(4, x, y, colors.red[1], colors.red[2], colors.red[3])
   end
 end
 
@@ -86,15 +86,15 @@ abilities.preview_item = function(id, player, players, x, y)
     if not abilities.overlap(id, player, players, x, y) then
       local quad = art.direction(player.tile_x, player.tile_y, x, y)
       if player.team == rules.get_offense() then
-        art.draw_quad("shield", art.quad.item[quad], x, y, .2, 1, .2, "outline")
+        art.draw_quad("shield", art.quad.item[quad], x, y, colors.green[1], colors.green[2], colors.green[3], "outline")
       else
-        art.draw_quad("sword", art.quad.item[quad], x, y, .2, 1, .2, "outline")
+        art.draw_quad("sword", art.quad.item[quad], x, y, colors.green[1], colors.green[2], colors.green[3], "outline")
       end
     else
-      art.path_icon(3, x, y, 1, .2, .2)
+      art.path_icon(3, x, y, colors.red[1], colors.red[2], colors.red[3])
     end
   else
-    art.path_icon(4, x, y, 1, .2, .2)
+    art.path_icon(4, x, y, colors.red[1], colors.red[2], colors.red[3])
     art.path_border(player.tile_x, player.tile_y, 1.5, abilities.adjacent)
   end
 end

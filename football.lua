@@ -29,11 +29,11 @@ football.draw = function()
       art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y)
       visible = true
     elseif ball.primed and ball.preview then
-      art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y, 1, 1, 1, "outline")
+      art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y, colors.white[1], colors.white[2], colors.white[3], "outline")
       visible = true
     end
     if visible and not resolve then
-      movement.draw_path(ball.tile_x, ball.tile_y, ball.path)
+      movement.draw_path(ball.tile_x, ball.tile_y, ball.path, colors.white[1], colors.white[2], colors.white[3])
       if ball.tile+ball.range >= #ball.full_path then -- if final tile of full path will be reached this turn, add icon to path
         ball.path[#ball.path].icon = 1
       else -- otherwise, draw the icon seperately

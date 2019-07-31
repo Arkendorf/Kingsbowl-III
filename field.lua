@@ -2,37 +2,71 @@ local field = {}
 
 local field_w = 60
 local field_h = 27
-local canvas = 0
+local canvas = false
+local interval = math.floor(field_w/12)
+local yard_mark_y = {1, field_h, math.ceil(field_h/2-interval), math.ceil(field_h/2+interval)}
+local number_y = {interval, field_h-interval}
 
 field.load = function()
-  canvas = love.graphics.newCanvas(field_w*tile_size, field_h*tile_size)
+  canvas = love.graphics.newCanvas((field_w+2)*tile_size, (field_h+2)*tile_size)
   field.draw_canvas(canvas)
 end
 
 field.draw = function()
-  love.graphics.draw(canvas)
+  love.graphics.draw(canvas, -tile_size, -tile_size)
 end
 
 field.draw_canvas = function(canvas)
   love.graphics.setCanvas(canvas)
-  for x = 0, field_w-1 do
-    for y = 0, field_h-1 do
-      local type = ((x+y)/2-math.floor((x+y)/2))*2
-      if type == 1 then
-        love.graphics.setColor(.2, .2, .2)
-      else
-        love.graphics.setColor(.1, .1, .1)
-      end
-      love.graphics.rectangle("fill", x*tile_size, y*tile_size, tile_size, tile_size)
-      if type == 1 then
-        love.graphics.setColor(.1, .1, .1)
-      else
-        love.graphics.setColor(.2, .2, .2)
-      end
-      love.graphics.print(x*2-10, x*tile_size+2, y*tile_size+2)
+  for x = 1, field_w do -- draw basic tiles
+    for y = 1, field_h do
+      local type = 1+((x+y)/2-math.floor((x+y)/2))*2
+      art.draw_quad("tiles", art.quad.tiles[type], x, y)
     end
   end
-  love.graphics.setColor(1, 1, 1)
+  for x = interval+1, field_w-interval do -- draw yard intervals
+    for i, y in ipairs(yard_mark_y) do
+      art.draw_quad("markings", art.quad.markings[4], x, y)
+    end
+  end
+  for i = 1, 10 do -- draw 5 yard intervals
+    local x = math.ceil((i+.5) * interval)
+    for y = 1, field_h do
+      art.draw_quad("markings", art.quad.markings[3], x, y)
+    end
+  end
+  for i = 1, 11 do -- draw 10 yard intervals
+    local x = i * interval
+    for y = 1, field_h do
+      art.draw_quad("markings", art.quad.markings[1], x, y)
+      art.draw_quad("markings", art.quad.markings[2], x+1, y)
+    end
+  end
+  for i = 1, 9 do -- draw yard numbers
+    local x = (i + 1) * interval
+    for j, y in ipairs(number_y) do
+      if i <= 5 then
+        art.draw_quad("markings", art.quad.markings[12+i], x, y)
+        art.draw_quad("markings", art.quad.markings[19], x-1, y)
+      else
+        art.draw_quad("markings", art.quad.markings[22-i], x, y)
+        art.draw_quad("markings", art.quad.markings[20], x+2, y)
+      end
+      art.draw_quad("markings", art.quad.markings[18], x+1, y)
+    end
+  end
+  for x = 1, field_w do -- draw field borders on top and bottom
+    art.draw_quad("markings", art.quad.markings[5], x, 0)
+    art.draw_quad("markings", art.quad.markings[6], x, field_h+1)
+  end
+  for y = 1, field_h do
+    art.draw_quad("markings", art.quad.markings[7], 0, y)
+    art.draw_quad("markings", art.quad.markings[8], field_w+1, y)
+  end
+  art.draw_quad("markings", art.quad.markings[9], 0, 0) -- corners
+  art.draw_quad("markings", art.quad.markings[10], field_w+1, 0)
+  art.draw_quad("markings", art.quad.markings[11], field_w+1, field_h+1)
+  art.draw_quad("markings", art.quad.markings[12], 0, field_h+1)
   love.graphics.setCanvas()
 end
 
