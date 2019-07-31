@@ -3,6 +3,7 @@ local rules = require "rules"
 
 local football = {}
 
+local resolve = false
 local move_dist = 4
 local ball = {}
 
@@ -25,15 +26,19 @@ football.draw = function()
   if not ball.caught then
     local visible = false
     if ball.thrown then
-      art.draw_quad("arrow", "item"..tostring(ball.dir), ball.x, ball.y)
+      art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y)
       visible = true
     elseif ball.primed and ball.preview then
-      art.draw_quad("arrow", "item"..tostring(ball.dir), ball.x, ball.y, 1, 1, 1, "outline")
+      art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y, 1, 1, 1, "outline")
       visible = true
     end
-    if visible then
-      for i, tile in ipairs(ball.full_path) do
-        love.graphics.circle("line", (tile.x+.5)*tile_size, (tile.y+.5)*tile_size, tile_size/2, tile_size)
+    if visible and not resolve then
+      movement.draw_path(ball.tile_x, ball.tile_y, ball.path)
+      if ball.tile+ball.range >= #ball.full_path then -- if final tile of full path will be reached this turn, add icon to path
+        ball.path[#ball.path].icon = 1
+      else -- otherwise, draw the icon seperately
+        local tile = ball.full_path[#ball.full_path]
+        art.path_icon(1, tile.x, tile.y)
       end
     end
   end
@@ -50,8 +55,9 @@ football.throw = function(x1, y1, x2, y2)
   ball.x = x1
   ball.y = y1
   ball.tile = 0
-  ball.dir = tostring(art.direction(x1, y1, ball.full_path[1].x, ball.full_path[1].y))
+  ball.dir = art.direction(x1, y1, ball.full_path[1].x, ball.full_path[1].y)
   ball.primed = true
+  football.sub_path()
 end
 
 football.reset = function()
@@ -102,9 +108,13 @@ football.finish = function(step)
 end
 
 football.start_resolve = function()
+  resolve = true
   if ball.primed and not ball.thrown then
     ball.thrown = true
   end
+end
+
+football.sub_path = function()
   ball.path = {}
   for i = ball.tile+1, ball.tile+ball.range do
     if ball.full_path[i] then
@@ -113,6 +123,11 @@ football.start_resolve = function()
       break
     end
   end
+end
+
+football.end_resolve = function()
+  resolve = false
+  football.sub_path()
 end
 
 football.visible = function(team)
@@ -140,6 +155,24 @@ football.catch = function(id, player)
     ball.primed = false
   end
   rules.catch(player)
+end
+
+football.path_intersect = function(path)
+  if ball.thrown or (ball.primed and ball.preview) and not ball.caught then
+    for i, v in ipairs(path) do
+      if ball.path[i] then
+        if v.x == ball.path[i].x and v.y == ball.path[i].y then
+          return i
+        end
+      end
+    end
+    if #path < #ball.path then
+      if path[#path].x == ball.path[#ball.path].x and path[#path].y == ball.path[#ball.path].y then
+        return #path
+      end
+    end
+  end
+  return false
 end
 
 return football

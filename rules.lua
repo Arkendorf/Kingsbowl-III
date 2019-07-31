@@ -10,6 +10,7 @@ local scrimmage = 0
 local lineup_h = 7
 local lineup_buffer = 1
 local intercept = false
+local pos_select = true
 
 rules.load = function(menu_client_list, menu_client_info, menu_team_info)
   if network_state == "client" then
@@ -21,6 +22,7 @@ rules.load = function(menu_client_list, menu_client_info, menu_team_info)
       qb = data
     end)
   end
+  pos_select = true
   offense = 1
   down = 1
   scrimmage = math.floor(field.get_dimensions()/2)
@@ -30,15 +32,18 @@ rules.load = function(menu_client_list, menu_client_info, menu_team_info)
 
   rules.set_lineup(1)
   rules.set_lineup(2)
+
 end
 
 rules.draw = function()
   love.graphics.print(down, 0, 24)
   local field_w, field_h = field.get_dimensions()
   love.graphics.line((scrimmage+1)*tile_size, 0, (scrimmage+1)*tile_size, field_h*tile_size)
-  for team = 1, 2 do
-    for i, v in ipairs(team_info[team].lineup) do
-      love.graphics.rectangle("line", (v.x+scrimmage)*tile_size, v.y*tile_size, tile_size, tile_size)
+  if pos_select then
+    for team = 1, 2 do
+      for i, v in ipairs(team_info[team].lineup) do
+        love.graphics.rectangle("line", (v.x+scrimmage)*tile_size, v.y*tile_size, tile_size, tile_size)
+      end
     end
   end
   love.graphics.print(offense, (scrimmage+1)*tile_size, (field_h/2*tile_size)-100)
@@ -140,6 +145,14 @@ rules.check_td = function(player, step)
     return true
   end
   return false
+end
+
+rules.start_select = function()
+  pos_select = true
+end
+
+rules.finish_select = function()
+  pos_select = false
 end
 
 rules.set_position = function(id, player, tile_x, tile_y)

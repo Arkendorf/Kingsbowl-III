@@ -10,8 +10,6 @@ local camera = require "camera"
 
 local game = {}
 
-tile_size = 32
-
 game.load = function(menu_client_list, menu_client_info, menu_team_info)
   state = "game"
   gui.remove_all()
@@ -38,10 +36,11 @@ end
 
 game.draw = function()
   love.graphics.push()
-  love.graphics.translate(game.get_offset())
+  love.graphics.translate(camera.get_offset())
   field.draw()
   char.draw()
   football.draw()
+  char.draw_paths()
   rules.draw()
   love.graphics.pop()
 
@@ -54,18 +53,8 @@ game.keypressed = function(key)
 end
 
 game.mousepressed = function(x, y, button)
-  local offset_x, offset_y = game.get_offset()
+  local offset_x, offset_y = camera.get_offset()
   char.mousepressed(x-offset_x, y-offset_y, button)
 end
-
-game.quit = function()
-end
-
-game.get_offset = function()
-  local w, h = love.graphics.getDimensions()
-  local cam= camera.get()
-  return math.floor(-cam.x+w/2), math.floor(-cam.y+h/2)
-end
-
 
 return game

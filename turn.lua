@@ -109,6 +109,7 @@ turn.complete = function(step)
     resolve = false
     timer = turn_time
     char.end_resolve(step, step_time)
+    football.end_resolve()
     turn.increment()
   end
 end

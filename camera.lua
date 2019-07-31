@@ -33,4 +33,10 @@ camera.player = function(player)
   cam.new_y = (player.y+.5)*tile_size
 end
 
+camera.get_offset = function()
+  local w, h = love.graphics.getDimensions()
+  local cam = camera.get()
+  return math.floor(-cam.x+w/2), math.floor(-cam.y+h/2)
+end
+
 return camera

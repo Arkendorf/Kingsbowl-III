@@ -146,16 +146,35 @@ char.draw = function()
   end
   for k, v in pairs(players) do -- draw moving players first
     if #v.path > 0 then
-      if players[id].team == v.team then -- if on the same team, draw path
-        for i, tile in ipairs(v.path) do
-          love.graphics.rectangle("line", tile.x*tile_size, tile.y*tile_size, tile_size, tile_size)
-        end
-      end
       char.draw_char(k, v)
     end
   end
   for k, v in pairs(players) do -- draw items
     abilities.draw_item(v, players[id].team, resolve)
+  end
+end
+
+char.draw_paths = function()
+  for k, v in pairs(players) do -- draw paths
+    if not resolve and players[id].team == v.team then -- if on the same team, draw path
+      movement.draw_path(v.tile_x, v.tile_y, v.path)
+    end
+  end
+  if not resolve then
+    local x, y = love.mouse.getPosition()
+    local offset_x, offset_y = camera.get_offset()
+    local tile_x = math.floor((x-offset_x)/tile_size)
+    local tile_y = math.floor((y-offset_y)/tile_size)
+    tile_x, tile_y = field.cap_tile(tile_x, tile_y)
+    if action == "move" then
+      char.preview_path(id, tile_x, tile_y)
+    elseif action == "ability" then
+      if abilities.type(id, players[id]) == "throw" then
+        abilities.preview_throw(players[id], tile_x, tile_y)
+      else
+        abilities.preview_item(id, players[id], players, tile_x, tile_y)
+      end
+    end
   end
 end
 
@@ -181,6 +200,7 @@ char.mousepressed = function(x, y, button)
   if not resolve and not players[id].dead then
     local tile_x = math.floor(x/tile_size)
     local tile_y = math.floor(y/tile_size)
+    tile_x, tile_y = field.cap_tile(tile_x, tile_y)
     if action == "move" then
       if char.set_path(id, tile_x, tile_y) then
         abilities.cancel(id, players[id])
@@ -203,14 +223,8 @@ char.mousepressed = function(x, y, button)
 end
 
 char.use_ability = function(id, tile_x, tile_y)
-  if abilities.type(id, players[id]) == "item" then
-    for k, v in pairs(players) do -- make sure teammate hasn't put an item in the tile
-      if v.item.active and v.team == players[id].team then
-        if v.item.tile_x == tile_x and v.item.tile_y == tile_y then
-          return false
-        end
-      end
-    end
+  if abilities.overlap(id, players[id], players, tile_x, tile_y) then
+    return false
   end
   return abilities.use(id, players[id], tile_x, tile_y)
 end
@@ -226,6 +240,29 @@ char.set_path = function(id, tile_x, tile_y)
     end
   end
   return false
+end
+
+char.preview_path = function(id, tile_x, tile_y)
+  local dist = move_dist[char.get_state(id, players[id])]
+  if movement.valid(players[id].tile_x, players[id].tile_y, tile_x, tile_y, dist) then
+    local path = movement.get_path(players[id].tile_x, players[id].tile_y, tile_x, tile_y)
+    if #path > 0 then
+      local collide = char.path_collision(id, path, players[id].team)
+      if collide then
+        path[collide].icon = 3
+        movement.draw_path(players[id].tile_x, players[id].tile_y, path, 1, .2, .2)
+      else
+        local intersect = football.path_intersect(path)
+        if intersect then
+          path[intersect].icon = 2
+        end
+        movement.draw_path(players[id].tile_x, players[id].tile_y, path, .2, 1, .2)
+      end
+    end
+  else
+    art.path_icon(4, tile_x, tile_y, 1, .2, .2)
+    art.path_border(players[id].tile_x, players[id].tile_y, dist, movement.valid)
+  end
 end
 
 char.step_num = function()
@@ -249,15 +286,15 @@ char.path_collision = function(id, path, team)
         for i = 1, step_num do
           if v.path[i] and path[i] then
             if v.path[i].x == path[i].x and v.path[i].y == path[i].y then -- check for overlapping intermediate steps in path
-              return true
+              return i
             end
           end
         end
         if v.path[#v.path].x == path[#path].x and v.path[#v.path].y == path[#path].y then -- check for overlapping final destinations
-          return true
+          return #path
         end
       elseif v.tile_x == path[#path].x and v.tile_y == path[#path].y then -- if teammate is stationary and wont move, make sure path doesn't end up on that tile
-        return true
+        return #path
       end
     end
   end
@@ -435,11 +472,13 @@ char.start_select = function()
   football.clear()
   football.visible(players[id].team)
   end_down = false
+  rules.start_select()
 end
 
 char.finish_select = function()
   pos_select = false
   action = "move"
+  rules.finish_select()
 end
 
 char.end_down = function(step_time)

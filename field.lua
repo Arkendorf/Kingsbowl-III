@@ -29,7 +29,7 @@ field.draw_canvas = function(canvas)
       else
         love.graphics.setColor(.2, .2, .2)
       end
-      love.graphics.print(x, x*tile_size+2, y*tile_size+2)
+      love.graphics.print(x*2-10, x*tile_size+2, y*tile_size+2)
     end
   end
   love.graphics.setColor(1, 1, 1)
@@ -42,6 +42,20 @@ end
 
 field.get_dimensions = function()
   return field_w, field_h
+end
+
+field.cap_tile = function(x, y)
+  if x < 0 then -- don't let tile_x exceed field
+    x = 0
+  elseif x > field_w then
+    x = field_w
+  end
+  if y < 0 then
+    y = 0
+  elseif y > field_h then
+    y = field_h
+  end
+  return x, y
 end
 
 return field

@@ -19,12 +19,12 @@ end
 
 abilities.draw_item = function(player, team, resolve)
   if player.item.visible and abilities.adjacent(player.tile_x, player.tile_y, player.item.tile_x, player.item.tile_y) then
-    local quad = "item"..tostring(art.direction(player.tile_x, player.tile_y, player.item.tile_x, player.item.tile_y))
-    art.draw_quad(player.item.type, quad, player.item.x, player.item.y)
+    local quad = art.direction(player.tile_x, player.tile_y, player.item.tile_x, player.item.tile_y)
+    art.draw_quad(player.item.type, art.quad.item[quad], player.item.x, player.item.y)
   end
   if player.item.active and team == player.team and not resolve then
-    local quad = "item"..tostring(art.direction(player.tile_x, player.tile_y, player.item.new_x, player.item.new_y))
-    art.draw_quad(player.item.type, quad, player.item.new_x, player.item.new_y, 1, 1, 1, "outline")
+    local quad = art.direction(player.tile_x, player.tile_y, player.item.new_x, player.item.new_y)
+    art.draw_quad(player.item.type, art.quad.item[quad], player.item.new_x, player.item.new_y, 1, 1, 1, "outline")
   end
 end
 
@@ -68,6 +68,47 @@ abilities.start.throw = function(player, x, y)
     return true
   end
   return false
+end
+
+abilities.preview_throw = function(player, x, y)
+  if abilities.valid(player.tile_x, player.tile_y, x, y) then
+    local path = movement.get_path(player.tile_x, player.tile_y, x, y)
+    movement.draw_path(player.tile_x, player.tile_y, path, .2, 1, .2)
+    local quad = art.direction(player.tile_x, player.tile_y, path[1].x, path[1].y)
+    art.draw_quad("arrow", art.quad.item[quad], player.tile_x, player.tile_y, .2, 1, .2, "outline")
+  else
+    art.path_icon(4, x, y, 1, .2, .2)
+  end
+end
+
+abilities.preview_item = function(id, player, players, x, y)
+  if abilities.valid(player.tile_x, player.tile_y, x, y) and abilities.adjacent(player.tile_x, player.tile_y, x, y) then
+    if not abilities.overlap(id, player, players, x, y) then
+      local quad = art.direction(player.tile_x, player.tile_y, x, y)
+      if player.team == rules.get_offense() then
+        art.draw_quad("shield", art.quad.item[quad], x, y, .2, 1, .2, "outline")
+      else
+        art.draw_quad("sword", art.quad.item[quad], x, y, .2, 1, .2, "outline")
+      end
+    else
+      art.path_icon(3, x, y, 1, .2, .2)
+    end
+  else
+    art.path_icon(4, x, y, 1, .2, .2)
+    art.path_border(player.tile_x, player.tile_y, 1.5, abilities.adjacent)
+  end
+end
+
+abilities.overlap = function(id, player, players, x, y)
+  if abilities.type(id, player) == "item" then
+    for k, v in pairs(players) do -- make sure teammate hasn't put an item in the tile
+      if v.item.active and v.team == player.team then
+        if v.item.tile_x == x and v.item.tile_y == y then
+          return false
+        end
+      end
+    end
+  end
 end
 
 abilities.start.item = function(player, x, y)
@@ -121,7 +162,7 @@ end
 abilities.adjacent = function(x1, y1, x2, y2)
   local x_dif = x2-x1
   local y_dif = y2-y1
-  return (x_dif >= -1 and x_dif <= 1 and y_dif >= -1 and y_dif <= 1)
+  return (x_dif >= -1 and x_dif <= 1 and y_dif >= -1 and y_dif <= 1 and not (x1 == x2 and y1 == y2))
 end
 
 abilities.collide = function(players, step_time)
