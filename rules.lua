@@ -7,10 +7,14 @@ local team_info = {}
 local qb = 0
 local down = 1
 local scrimmage = 0
+local goal = 0
 local lineup_h = 7
 local lineup_buffer = 1
 local intercept = false
 local pos_select = true
+local char_team = 1
+local down_suffix = {"st", "nd", "rd", "th"}
+local yard_scale = 2
 
 rules.load = function(menu_client_list, menu_client_info, menu_team_info)
   if network_state == "client" then
@@ -24,8 +28,10 @@ rules.load = function(menu_client_list, menu_client_info, menu_team_info)
   end
   pos_select = true
   offense = 1
+  rules.set_scrimmage(math.floor(field.get_dimensions()/2)-1)
+  rules.set_goal()
+  yard_scale = 120/field.get_dimensions()
   down = 1
-  scrimmage = math.floor(field.get_dimensions()/2)-1
   team_info = menu_team_info
   team_info[1].score = 0
   team_info[2].score = 0
@@ -33,21 +39,31 @@ rules.load = function(menu_client_list, menu_client_info, menu_team_info)
   rules.set_lineup(1)
   rules.set_lineup(2)
 
+  field.set_color(team_info[1].color, team_info[2].color)
 end
 
 rules.draw = function()
   love.graphics.print(down, 0, 24)
   local field_w, field_h = field.get_dimensions()
-  love.graphics.line((scrimmage+1)*tile_size, 0, (scrimmage+1)*tile_size, field_h*tile_size)
-  if pos_select then
-    for team = 1, 2 do
-      for i, v in ipairs(team_info[team].lineup) do
-        love.graphics.rectangle("line", (v.x+scrimmage)*tile_size, v.y*tile_size, tile_size, tile_size)
-      end
-    end
+  art.rectangle(scrimmage+1-3/tile_size, 0, 6/tile_size, field_h, colors.yellow[1], colors.yellow[2], colors.yellow[3])
+  if goal then
+    art.rectangle(goal+1-3/tile_size, 0, 6/tile_size, field_h, colors.green[1], colors.green[2], colors.green[3])
   end
-  love.graphics.print(offense, (scrimmage+1)*tile_size, (field_h/2*tile_size)-100)
-  love.graphics.print(down, (scrimmage+1)*tile_size, (field_h/2*tile_size)-88)
+  if pos_select then
+    local x = scrimmage-.5
+    local y = math.ceil((field_h+lineup_h)/2)+1
+    art.draw_quad("field_info", art.quad.field_info[offense], x, y, 1, 1, 1, "color", palette[rules.get_color(offense)])
+    love.graphics.print(rules.get_play_string(), x*tile_size+18, y*tile_size+12)
+
+    local x = team_info[char_team].lineup[1].x+scrimmage
+    local y= team_info[char_team].lineup[1].y
+    art.path_border(x, y, lineup_h/2, rules.valid_pos, char_team)
+    art.path_icon(6, x, y, colors.green[1], colors.green[2], colors.green[3])
+  end
+end
+
+rules.set_team = function(team)
+  char_team = team
 end
 
 rules.get_offense = function()
@@ -66,6 +82,10 @@ rules.get_info = function()
   return team_info
 end
 
+rules.get_color = function(team)
+  return team_info[team].color
+end
+
 rules.catch = function(player)
   if player.team ~= offense then
     rules.turnover()
@@ -79,6 +99,7 @@ end
 
 rules.tackle = function(x)
   rules.set_scrimmage(x)
+  rules.set_goal()
   rules.end_down()
 end
 
@@ -94,6 +115,20 @@ rules.set_scrimmage = function(x)
     scrimmage = scrim_max
   elseif scrimmage < scrim_min then
     scrimmage = scrim_min
+  end
+end
+
+rules.set_goal = function()
+  if offense == 1 and goal < scrimmage then
+    goal = scrimmage + math.floor(field.get_dimensions()/12)
+    down = 0
+  elseif offense == 2 and goal > scrimmage then
+    goal = scrimmage - math.floor(field.get_dimensions()/12)
+    down = 0
+  end
+  local scrim_min, scrim_max = rules.get_endzones()
+  if goal > scrim_max or scrimmage < scrim_min then
+    goal = false
   end
 end
 
@@ -119,7 +154,7 @@ end
 rules.reset = function()
   rules.turnover()
   local field_w = field.get_dimensions()
-  scrimmage = math.floor(field_w/12*6)-1
+  rules.set_scrimmage(math.floor(field_w/12*6)-1)
 end
 
 rules.turnover = function()
@@ -155,14 +190,44 @@ rules.finish_select = function()
   pos_select = false
 end
 
+rules.get_play_string = function()
+  return tostring(down)..down_suffix[down].." and "..tostring(math.abs(goal-scrimmage)*yard_scale)
+end
+
+rules.get_name = function(team)
+  return team_info[team].name
+end
+
+rules.valid_pos = function(x1, y1, x2, y2, team)
+  for i, v in ipairs(team_info[team].lineup) do
+    if i > 1 then
+      if v.x == x2-scrimmage and v.y == y2 then
+        return true
+      end
+    end
+  end
+  return false
+end
+
 rules.set_position = function(id, player, tile_x, tile_y)
   for i, v in ipairs(team_info[player.team].lineup) do
     if v.x == tile_x-scrimmage and v.y == tile_y and not v.taken then
+      rules.remove_host(id, player)
       rules.set_tile(id, player, i, v)
       return true
     end
   end
   return false
+end
+
+rules.remove_host = function(id, player)
+  for i, v in ipairs(team_info[player.team].lineup) do
+    if v.host == id then
+      v.taken = false
+      v.host = false
+      break
+    end
+  end
 end
 
 rules.set_tile = function(id, player, tile_num, tile)

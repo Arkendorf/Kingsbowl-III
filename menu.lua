@@ -33,7 +33,7 @@ menu.draw = function()
     local team_order = {0, 0}
     for i, v in ipairs(client_list) do
       local team = client_info[v].team
-      love.graphics.setColor(team_info[team].color)
+      love.graphics.setColor(palette[team_info[team].color][2])
       love.graphics.print(client_info[v].username, (team-1)*128, 44+team_order[team]*16)
       team_order[team] = team_order[team] + 1
     end
@@ -78,7 +78,7 @@ end
 
 menu.reset_info = function()
   client_list = {}
-  team_info = {{size = 0, color = {255, 0, 0}, name = "Team 1"}, {size = 0, color = {0, 0, 255}, name = "Team 2"}}
+  team_info = {{size = 0, color = 1, name = "Team 1"}, {size = 0, color = 2, name = "Team 2"}}
 end
 
 menu.choose_team = function()

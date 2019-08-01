@@ -38,13 +38,14 @@ game.draw = function()
   love.graphics.push()
   love.graphics.translate(camera.get_offset())
   field.draw()
+  rules.draw()
   char.draw()
   football.draw()
   char.draw_paths()
-  rules.draw()
   love.graphics.pop()
 
-  turn.draw()
+  local w = love.graphics.getWidth()
+  turn.draw_hud(w/2, 2)
 
 end
 

@@ -5,7 +5,8 @@ local field_h = 27
 local canvas = false
 local interval = math.floor(field_w/12)
 local yard_mark_y = {1, field_h, math.ceil(field_h/2-interval), math.ceil(field_h/2+interval)}
-local number_y = {interval, field_h-interval}
+local number_y = {interval, field_h-interval+1}
+local end_zone_color = {1, 2}
 
 field.load = function()
   canvas = love.graphics.newCanvas((field_w+2)*tile_size, (field_h+2)*tile_size)
@@ -21,7 +22,13 @@ field.draw_canvas = function(canvas)
   for x = 1, field_w do -- draw basic tiles
     for y = 1, field_h do
       local type = 1+((x+y)/2-math.floor((x+y)/2))*2
-      art.draw_quad("tiles", art.quad.tiles[type], x, y)
+      if x <= interval then
+        art.draw_quad("tiles", art.quad.tiles[type+2], x, y, 1, 1, 1, "color", palette[end_zone_color[2]])
+      elseif x > field_w-interval then
+        art.draw_quad("tiles", art.quad.tiles[type+2], x, y, 1, 1, 1, "color", palette[end_zone_color[1]])
+      else
+        art.draw_quad("tiles", art.quad.tiles[type], x, y)
+      end
     end
   end
   for x = interval+1, field_w-interval do -- draw yard intervals
@@ -90,6 +97,11 @@ field.cap_tile = function(x, y)
     y = field_h
   end
   return x, y
+end
+
+field.set_color = function(color1, color2)
+  end_zone_color[1] = color1
+  end_zone_color[2] = color2
 end
 
 return field

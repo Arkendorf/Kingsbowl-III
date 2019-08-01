@@ -121,6 +121,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
 
   char.pos_prepare()
   football.visible(players[id].team)
+  rules.set_team(players[id].team)
   resolve = false
 end
 
@@ -183,6 +184,7 @@ char.draw_char = function(k, v)
     art.draw_img("helmet", v.x, v.y, colors.white[1], colors.white[2], colors.white[3], "outline")
   else
     art.draw_img("helmet", v.x, v.y)
+    art.draw_img("helmet_overlay", v.x, v.y, 1, 1, 1, "color", palette[rules.get_color(v.team)])
   end
 end
 
@@ -261,7 +263,7 @@ char.preview_path = function(id, tile_x, tile_y)
     end
   else
     art.path_icon(4, tile_x, tile_y, colors.red[1], colors.red[2], colors.red[3])
-    art.path_border(players[id].tile_x, players[id].tile_y, dist, movement.valid)
+    art.path_border(players[id].tile_x, players[id].tile_y, dist, movement.valid, dist)
   end
 end
 

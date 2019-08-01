@@ -21,6 +21,7 @@ abilities.draw_item = function(player, team, resolve)
   if player.item.visible and abilities.adjacent(player.tile_x, player.tile_y, player.item.tile_x, player.item.tile_y) then
     local quad = art.direction(player.tile_x, player.tile_y, player.item.tile_x, player.item.tile_y)
     art.draw_quad(player.item.type, art.quad.item[quad], player.item.x, player.item.y)
+    art.draw_quad(player.item.type.."_overlay", art.quad.item[quad], player.item.x, player.item.y, 1, 1, 1, "color", palette[rules.get_color(player.team)])
   end
   if player.item.active and team == player.team and not resolve then
     local quad = art.direction(player.tile_x, player.tile_y, player.item.new_x, player.item.new_y)
