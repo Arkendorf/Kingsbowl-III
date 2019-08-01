@@ -8,10 +8,10 @@ local char = {}
 local players = {}
 local action = "move"
 local move_dist = {
-  qb = 12.5,
-  carrier = 12.5,
-  defense = 13,
-  offense = 13.5
+  qb = 2.5,
+  carrier = 2.5,
+  defense = 3,
+  offense = 3.5
 }
 local resolve = false
 local pos_select = false
@@ -162,18 +162,20 @@ char.draw_paths = function()
     end
   end
   if not resolve then
-    local x, y = love.mouse.getPosition()
-    local offset_x, offset_y = camera.get_offset()
-    local tile_x = math.floor((x-offset_x)/tile_size)
-    local tile_y = math.floor((y-offset_y)/tile_size)
-    tile_x, tile_y = field.cap_tile(tile_x, tile_y)
-    if action == "move" then
-      char.preview_path(id, tile_x, tile_y)
-    elseif action == "ability" then
-      if abilities.type(id, players[id]) == "throw" then
-        abilities.preview_throw(players[id], tile_x, tile_y)
-      else
-        abilities.preview_item(id, players[id], players, tile_x, tile_y)
+    if not abilities.button_hover(1) and not abilities.button_hover(2) then
+      local x, y = love.mouse.getPosition()
+      local offset_x, offset_y = camera.get_offset()
+      local tile_x = math.floor((x-offset_x)/tile_size)
+      local tile_y = math.floor((y-offset_y)/tile_size)
+      tile_x, tile_y = field.cap_tile(tile_x, tile_y)
+      if action == "move" then
+        char.preview_path(id, tile_x, tile_y)
+      elseif action == "ability" then
+        if abilities.type(id, players[id]) == "throw" then
+          abilities.preview_throw(players[id], tile_x, tile_y)
+        else
+          abilities.preview_item(id, players[id], players, tile_x, tile_y)
+        end
       end
     end
   end
@@ -188,6 +190,10 @@ char.draw_char = function(k, v)
   end
 end
 
+char.draw_hud = function()
+  abilities.draw_hud(id, players[id], action)
+end
+
 char.keypressed = function(key)
   if not pos_select then
     if key == "1" then
@@ -199,26 +205,34 @@ char.keypressed = function(key)
 end
 
 char.mousepressed = function(x, y, button)
-  if not resolve and not players[id].dead then
-    local tile_x = math.floor(x/tile_size)
-    local tile_y = math.floor(y/tile_size)
-    tile_x, tile_y = field.cap_tile(tile_x, tile_y)
-    if action == "move" then
-      if char.set_path(id, tile_x, tile_y) then
-        abilities.cancel(id, players[id])
-        network.server_send("path", {id, tile_x, tile_y})
-        network.client_send("path", {tile_x, tile_y})
-      end
-    elseif action == "ability" then
-      if char.use_ability(id, tile_x, tile_y) then
-        movement.cancel(players[id])
-        network.server_send("ability", {id, tile_x, tile_y})
-        network.client_send("ability", {tile_x, tile_y})
-      end
-    elseif action == "position" then -- choose position to start next down
-      if rules.set_position(id, players[id], tile_x, tile_y) then
-        network.server_send("position", {id, tile_x, tile_y})
-        network.client_send("position", {tile_x, tile_y})
+  local key = abilities.mousepressed(x, y, button)
+  if key then
+    char.keypressed(key)
+  else
+    if not resolve and not players[id].dead then
+      local offset_x, offset_y = camera.get_offset()
+      x = x-offset_x
+      y = y-offset_y
+      local tile_x = math.floor(x/tile_size)
+      local tile_y = math.floor(y/tile_size)
+      tile_x, tile_y = field.cap_tile(tile_x, tile_y)
+      if action == "move" then
+        if char.set_path(id, tile_x, tile_y) then
+          abilities.cancel(id, players[id])
+          network.server_send("path", {id, tile_x, tile_y})
+          network.client_send("path", {tile_x, tile_y})
+        end
+      elseif action == "ability" then
+        if char.use_ability(id, tile_x, tile_y) then
+          movement.cancel(players[id])
+          network.server_send("ability", {id, tile_x, tile_y})
+          network.client_send("ability", {tile_x, tile_y})
+        end
+      elseif action == "position" then -- choose position to start next down
+        if rules.set_position(id, players[id], tile_x, tile_y) then
+          network.server_send("position", {id, tile_x, tile_y})
+          network.client_send("position", {tile_x, tile_y})
+        end
       end
     end
   end

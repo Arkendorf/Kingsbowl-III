@@ -58,6 +58,17 @@ art.load = function(dir)
   art.quad.scoreboard[1] = love.graphics.newQuad(0, 0, w/2, h, w, h)
   art.quad.scoreboard[2] = love.graphics.newQuad(w/2, 0, w/2, h, w, h)
 
+  art.quad.ability_icon = {}
+  art.quad.ability_icon.move = love.graphics.newQuad(0*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
+  art.quad.ability_icon.shield = love.graphics.newQuad(1*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
+  art.quad.ability_icon.sword = love.graphics.newQuad(2*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
+  art.quad.ability_icon.throw = love.graphics.newQuad(3*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
+  art.quad.ability_icon.position = love.graphics.newQuad(4*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
+  art.quad.ability_background = {}
+  for i = 1, 43 do
+    art.quad.ability_background[i] = love.graphics.newQuad((i-1)*44, 0, 44, 44, art.img.ability_background:getDimensions())
+  end
+
   colors = {}
   colors.green = {65/255, 255/255, 110/255}
   colors.red = {237/255, 76/255, 64/255}
@@ -140,6 +151,13 @@ end
 art.path_icon = function(num, x, y, r, g, b)
   art.draw_img("path_icon_border", x, y, r, g, b)
   art.draw_quad("path_icons", art.quad.path_icon[num], x+8/tile_size, y+8/tile_size, r, g, b)
+end
+
+art.ability_icon = function(type, back, x, y)
+  love.graphics.draw(art.img.ability_background, art.quad.ability_background[back], x, y)
+  love.graphics.setColor(colors.white)
+  love.graphics.draw(art.img.ability_icons, art.quad.ability_icon[type], x+6, y+6)
+  love.graphics.setColor(1, 1, 1)
 end
 
 art.path_border = function(x1, y1, radius, func, info)

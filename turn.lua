@@ -170,7 +170,9 @@ turn.draw_hud = function(x, y)
   love.graphics.printf(rules.get_play_string(), 95, 27, 68, "center")
 
   love.graphics.setCanvas()
-  love.graphics.draw(hud_canvas, x-art.img.scoreboard:getWidth()/2, y)
+
+  local w = love.graphics.getWidth()
+  love.graphics.draw(hud_canvas, w/2-art.img.scoreboard:getWidth()/2, 2)
 end
 
 return turn

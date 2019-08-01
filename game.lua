@@ -44,9 +44,8 @@ game.draw = function()
   char.draw_paths()
   love.graphics.pop()
 
-  local w = love.graphics.getWidth()
-  turn.draw_hud(w/2, 2)
-
+  turn.draw_hud()
+  char.draw_hud()
 end
 
 game.keypressed = function(key)
@@ -54,8 +53,7 @@ game.keypressed = function(key)
 end
 
 game.mousepressed = function(x, y, button)
-  local offset_x, offset_y = camera.get_offset()
-  char.mousepressed(x-offset_x, y-offset_y, button)
+  char.mousepressed(x, y, button)
 end
 
 return game
