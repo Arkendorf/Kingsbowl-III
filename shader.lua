@@ -32,6 +32,24 @@ shader.outline = love.graphics.newShader[[
           return color;
         }
       }
+      else {
+        vec4 test = Texel(texture, vec2(texture_coords.x+1.0/w, texture_coords.y));
+        if (test.a > 0.0) {
+          return color;
+        }
+        test = Texel(texture, vec2(texture_coords.x, texture_coords.y+1.0/h));
+        if (test.a > 0.0) {
+          return color;
+        }
+        test = Texel(texture, vec2(texture_coords.x-1.0/w, texture_coords.y));
+        if (test.a > 0.0) {
+          return color;
+        }
+        test = Texel(texture, vec2(texture_coords.x, texture_coords.y-1.0/h));
+        if (test.a > 0.0) {
+          return color;
+        }
+      }
       return vec4(0.0, 0.0, 0.0, 0.0);
     }
   ]]
