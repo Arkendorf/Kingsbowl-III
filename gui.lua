@@ -4,6 +4,29 @@ local buttons = {}
 local textboxes = {}
 local textbox = nil
 
+gui.load_graphics = function()
+  gui.quad = {}
+
+  gui.quad.menu = {}
+  -- for color = 1, 2 do
+  --   gui.quad.menu[color] = {}
+  --   for y = 1, 3 do
+  --     gui.quad.menu[color][y]
+  --     for x = 1, 3 do
+  --       local w = 7
+  --       if x = 2 then
+  --         w = 1
+  --       end
+  --       local h = 7
+  --       if y = 2 then
+  --         h = 1
+  --       end
+  --       gui.quad.menu[color][y][x] = love.graphics.newQuad(
+  --     end
+  --   end
+  -- end
+end
+
 gui.load = function()
   love.keyboard.setKeyRepeat(true)
 end

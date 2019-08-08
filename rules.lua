@@ -50,11 +50,6 @@ rules.draw = function()
     art.rectangle(goal+1-3/tile_size, 0, 6/tile_size, field_h, colors.green[1], colors.green[2], colors.green[3])
   end
   if pos_select then
-    -- local x = scrimmage-.5
-    -- local y = math.ceil((field_h+lineup_h)/2)+1
-    -- art.draw_quad("field_info", art.quad.field_info[offense], x, y, 1, 1, 1, "color", palette[rules.get_color(offense)])
-    -- love.graphics.print(rules.get_play_string(), x*tile_size+18, y*tile_size+12)
-
     local x = team_info[char_team].lineup[1].x+scrimmage
     local y= team_info[char_team].lineup[1].y
     art.path_border(x, y, lineup_h/2, rules.valid_pos, char_team)
@@ -191,7 +186,11 @@ rules.finish_select = function()
 end
 
 rules.get_play_string = function()
-  return tostring(down)..down_suffix[down].." and "..tostring(math.abs(goal-scrimmage)*yard_scale)
+  if goal then
+    return tostring(down)..down_suffix[down].." and "..tostring(math.abs(goal-scrimmage)*yard_scale)
+  else
+    return tostring(down)..down_suffix[down].." and Goal"
+  end
 end
 
 rules.get_name = function(team)

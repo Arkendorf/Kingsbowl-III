@@ -1,4 +1,5 @@
 local shader = require "shader"
+local gui = require "gui"
 
 local art = {}
 
@@ -9,11 +10,8 @@ art.load = function(dir)
   love.graphics.setLineWidth(2)
 
   art.img = {}
-  local files = love.filesystem.getDirectoryItems(dir)
-  for i, v in ipairs(files) do
-    local name = string.sub(v, 1, -5)
-    art.img[name] = love.graphics.newImage(dir.."/"..v)
-  end
+  art.load_folder(dir)
+  gui.load_graphics()
 
   art.quad = {}
 
@@ -96,6 +94,19 @@ art.load = function(dir)
   love.graphics.setFont(font)
 
   shader.load()
+end
+
+art.load_folder = function(dir)
+  local files = love.filesystem.getDirectoryItems(dir)
+  for i, v in ipairs(files) do
+    local name = string.sub(v, 1, -5)
+    local path = dir.."/"..v
+    if love.filesystem.getInfo(path).type == "file" then
+      art.img[name] = love.graphics.newImage(path)
+    elseif love.filesystem.getInfo(path).type == "directory" then
+      art.load_folder(path)
+    end
+  end
 end
 
 art.draw_img = function(img, x, y, r, g, b, shader_type, data)
