@@ -1,4 +1,5 @@
-field = require "field"
+local field = require "field"
+local movement = require "movement"
 
 local rules = {}
 
@@ -18,7 +19,7 @@ local yard_scale = 2
 
 rules.load = function(menu_client_list, menu_client_info, menu_team_info)
   if network_state == "client" then
-    client:setSchema("td", {"team", "score"})
+    client:setSchema("score", {"team", "score"})
     client:on("score", function(data)
       team_info[data.team].score = data.score
     end)
@@ -167,7 +168,11 @@ end
 
 rules.check_td = function(player, step)
   local min, max = rules.get_endzones()
-  if (player.team == 1 and player.path[step].x > max) or (player.team == 2 and player.path[step].x <= min) then
+  local x= player.tile_x
+  if movement.can_move(player, step) then
+    x = player.path[step].x
+  end
+  if (player.team == 1 and x > max) or (player.team == 2 and x <= min) then
     if network_state == "server" then -- server has final say on touchdowns
       team_info[player.team].score = team_info[player.team].score + 7
       network.server_send("score", {player.team, team_info[player.team].score})

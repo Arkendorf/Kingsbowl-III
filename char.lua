@@ -3,12 +3,13 @@ local rules = require "rules"
 local abilities = require "abilities"
 local football = require "football"
 local camera = require "camera"
+local field = require "field"
 
 local char = {}
 local players = {}
 local action = "move"
 local move_dist = {
-  qb = 2.5,
+  qb = 22.5,
   carrier = 2.5,
   defense = 3,
   offense = 3.5
@@ -77,7 +78,10 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
       rules.set_position(data.id, players[data.id], data.x, data.y)
     end)
     client:on("reset_position", function(data)
-      rules.prepare_position(data, players[data])
+      players[data].tile_x = math.huge
+      players[data].tile_y = math.huge
+      players[data].x = players[data].tile_x
+      players[data].y = players[data].tile_y
     end)
     client:setSchema("char_tile", {"id", "x", "y"})
     client:on("char_tile", function(data)
@@ -183,7 +187,9 @@ end
 
 char.draw_char = function(k, v)
   if pos_select then
-    art.draw_img("helmet", v.x, v.y, colors.white[1], colors.white[2], colors.white[3], "outline")
+    if v.team == players[id].team then
+      art.draw_img("helmet", v.x, v.y, colors.white[1], colors.white[2], colors.white[3], "outline")
+    end
   else
     art.draw_img("helmet", v.x, v.y)
     art.draw_img("helmet_overlay", v.x, v.y, 1, 1, 1, "color", palette[rules.get_color(v.team)])
@@ -376,7 +382,7 @@ char.finish = function(step, step_time, max_step)
         network.server_send("catch", k)
       end
       -- check for td
-      if movement.can_move(v, step) and char.tackleable(k, v, step) then
+      if char.tackleable(k, v, step) then
         if rules.check_td(v, step) then
           end_info.type = "touchdown"
           end_down = true

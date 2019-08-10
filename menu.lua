@@ -136,10 +136,12 @@ menu.decrease_team_size = function(team)
 end
 
 menu.team_color = function(data)
-  team_info[data.team].color = data.color
-  nui.edit.menu(data.team, "color", data.color)
-  nui.edit.element("settings", "name"..tostring(data.team), "color", data.color)
-  network.server_send("team_color", {data.team, data.color})
+  if not ((data.team == 1 and team_info[2].color == data.color) or (data.team == 2 and team_info[1].color == data.color)) then
+    team_info[data.team].color = data.color
+    nui.edit.menu(data.team, "color", data.color)
+    nui.edit.element("settings", "name"..tostring(data.team), "color", data.color)
+    network.server_send("team_color", {data.team, data.color})
+  end
 end
 
 menu.swap_team = function(data)

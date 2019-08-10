@@ -1,5 +1,4 @@
 local shader = require "shader"
-local gui = require "gui"
 
 local art = {}
 
@@ -12,7 +11,6 @@ art.load = function(dir)
 
   art.img = {}
   art.load_folder(dir)
-  gui.load_graphics()
 
   art.quad = {}
 

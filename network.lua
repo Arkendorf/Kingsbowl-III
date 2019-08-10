@@ -1,6 +1,5 @@
 local server_func = require "server"
 local client_func = require "client"
-local gui = require "gui"
 local nui = require "nui"
 local menu = require "menu"
 

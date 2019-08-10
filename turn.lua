@@ -117,7 +117,7 @@ turn.increment = function()
 end
 
 turn.check_end = function()
-  if turns_left <= 0 then -- rules.get_score(1) ~= rules.get_score(2)
+  if turns_left <= 0 and rules.get_score(1) ~= rules.get_score(2) then
     network.server_send("results")
     state = "results"
     results.load(char.get_players(), rules.get_info())

@@ -78,7 +78,7 @@ field.draw_canvas = function(canvas)
 end
 
 field.in_bounds = function(x, y)
-  return (x >= 0 and x <= field_w and y >= 0 and y <= field_h)
+  return (x >= 0 and x <= field_w-1 and y >= 0 and y <= field_h-1)
 end
 
 field.get_dimensions = function()
