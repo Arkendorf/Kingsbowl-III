@@ -16,7 +16,7 @@ local max_turns = 200
 local turns_left = 0
 local hud_canvas = love.graphics.newCanvas(258, 40)
 
-turn.load = function()
+turn.load = function(settings)
   if network_state == "client" then
     client:on("resolve", function(data)
       turn.resolve(data)
@@ -35,6 +35,9 @@ turn.load = function()
       timer = data
     end)
   end
+
+  turn_time = settings.turn_time
+  max_turns = settings.max_turns
 
   timer = turn_time
   resolve = false
@@ -173,6 +176,11 @@ turn.draw_hud = function(x, y)
 
   local w = love.graphics.getWidth()
   love.graphics.draw(hud_canvas, w/2-art.img.scoreboard:getWidth()/2, 2)
+end
+
+turn.get_resolve_time = function()
+  local move_dist = char.get_move_dist()
+  return step_time*(move_dist.qb+move_dist.offense)/2
 end
 
 return turn

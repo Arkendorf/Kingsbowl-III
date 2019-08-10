@@ -13,8 +13,8 @@ network_state = ""
 network.load = function()
   nui.remove.all()
   local w, h = love.graphics.getDimensions()
-  nui.add.button("", "host", w/2+16, h/2-16, 96, 32, {content = "Host", func = network.start_server})
-  nui.add.button("", "join", w/2-112, h/2-16, 96, 32, {content = "Join", func = network.start_client})
+  nui.add.button("", "host", w/2+16, h*.7, 96, 32, {content = "Host", func = network.start_server})
+  nui.add.button("", "join", w/2-112, h*.7, 96, 32, {content = "Join", func = network.start_client})
 end
 
 network.update = function(dt)
@@ -26,14 +26,16 @@ network.update = function(dt)
 end
 
 network.draw = function()
+  local w, h = love.graphics.getDimensions()
   if network_state == "server" then
     server_func.draw()
   elseif network_state == "client" then
     client_func.draw()
+  else
   end
-  local w, h = love.graphics.getDimensions()
-  love.graphics.draw(art.img.logo, (w-art.img.logo:getWidth())/2, h*.1)
-  love.graphics.draw(art.img.splash, (w-art.img.splash:getWidth())/2, h-art.img.splash:getHeight()-h*.1)
+  love.graphics.draw(art.img.logo, (w-art.img.logo:getWidth())/2, h*.2)
+
+  love.graphics.draw(art.img.splash, (w-art.img.splash:getWidth())/2, (h-art.img.splash:getHeight())/2)
 end
 
 network.quit = function()

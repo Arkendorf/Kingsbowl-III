@@ -10,7 +10,7 @@ local camera = require "camera"
 
 local game = {}
 
-game.load = function(menu_client_list, menu_client_info, menu_team_info)
+game.load = function(menu_client_list, menu_client_info, menu_team_info, menu_settings)
   state = "game"
   nui.remove.all()
   if network_state == "server" then
@@ -21,10 +21,14 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info)
   rules.load(menu_client_list, menu_client_info, menu_team_info)
   football.load()
   char.load(menu_client_list, menu_client_info, menu_team_info)
-  turn.load()
+  turn.load(menu_settings)
   abilities.load()
   camera.load()
   field.load()
+
+  local w, h = love.graphics.getDimensions()
+  nui.add.button("", "move", w/2-52, h-64, 48, 48, {func = char.keypressed, args = "1"})
+  nui.add.button("", "ability", w/2+20, h-64, 48, 48, {func = char.keypressed, args = "2"})
 end
 
 game.update = function(dt)
@@ -32,6 +36,7 @@ game.update = function(dt)
   turn.update(dt)
   football.update(dt)
   camera.update(dt)
+  char.update_hud(dt)
 end
 
 game.draw = function()
@@ -45,7 +50,6 @@ game.draw = function()
   love.graphics.pop()
 
   turn.draw_hud()
-  char.draw_hud()
 end
 
 game.keypressed = function(key)

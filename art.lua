@@ -56,14 +56,19 @@ art.load = function(dir)
   art.quad.scoreboard[2] = love.graphics.newQuad(w/2, 0, w/2, h, w, h)
 
   art.quad.ability_icon = {}
-  art.quad.ability_icon.move = love.graphics.newQuad(0*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
-  art.quad.ability_icon.shield = love.graphics.newQuad(1*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
-  art.quad.ability_icon.sword = love.graphics.newQuad(2*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
-  art.quad.ability_icon.throw = love.graphics.newQuad(3*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
-  art.quad.ability_icon.position = love.graphics.newQuad(4*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
+  local keys = {"move", "shield", "sword", "throw", "position"}
+  for i = 1, 5 do
+    art.quad.ability_icon[keys[i]] = love.graphics.newQuad((i-1)*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
+  end
+  
   art.quad.ability_background = {}
-  for i = 1, 43 do
+  for i = 1, 3 do
     art.quad.ability_background[i] = love.graphics.newQuad((i-1)*44, 0, 44, 44, art.img.ability_background:getDimensions())
+  end
+
+  art.quad.char_icon = {}
+  for i = 1, 2 do
+    art.quad.char_icon[i] = love.graphics.newQuad((i-1)*16, 0, 16, 16, art.img.char_icon:getDimensions())
   end
 
   colors = {}

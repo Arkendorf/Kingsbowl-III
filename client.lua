@@ -124,7 +124,7 @@ client_func.test_for_servers = function()
     ip_test[i]:on("server_info", function(data)
       local index = #servers+1
       servers[index] = {ip = ip, num = i, info = data}
-      nui.add.button("lan", i, 20, 66+(index-1)*32, 152, 32, {content = data.username..": "..data.client_num.."p\n"..data.desc, func = client_func.join_server, args = {ip = ip, port = default_port}})
+      nui.add.button("lan", i, 20, 66+(index-1)*32, 152, 32, {content = data.username.."\n"..data.desc, func = client_func.join_server, args = {ip = ip, port = default_port}})
     end)
     ip_test[i]:on("kick", function()
       ip_test[i]:disconnect(0)

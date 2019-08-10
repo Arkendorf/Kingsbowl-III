@@ -50,9 +50,10 @@ love.draw = function()
 end
 
 love.mousepressed = function(x, y, button)
-  nui.mousepressed(x, y, button)
-  if state == "game" then
-    game.mousepressed(x, y, button)
+  if not nui.mousepressed(x, y, button) then
+    if state == "game" then
+      game.mousepressed(x, y, button)
+    end
   end
 end
 

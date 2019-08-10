@@ -68,6 +68,7 @@ nui.info.slider = {
 }
 
 nui.load = function()
+  love.keyboard.setKeyRepeat(true)
   for k, v in pairs(nui.info) do
     nui.quad[v.mode](v)
   end
@@ -203,6 +204,7 @@ nui.mousepressed = function(x, y, button)
           for l, w in pairs(v.elements) do
             if nui.element_collide(x, y, v.x+nui.info.menu.corner, v.y+nui.info.menu.corner, v.w, v.h) then
               if nui.pressed[w.element](x, y, l, w, k, v) then
+                click = true
                 break
               end
             end
@@ -211,6 +213,7 @@ nui.mousepressed = function(x, y, button)
       end
     end
   end
+  return click
 end
 
 nui.pressed = {}
@@ -536,6 +539,9 @@ nui.draw_element.text = function(text, menu)
   local str = ""
   if text.table then
     str = tostring(text.table[text.index])
+    if text.suffix then
+      str = str..text.suffix
+    end
   else
     str = text.text
   end

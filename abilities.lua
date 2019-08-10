@@ -2,6 +2,7 @@ local field = require "field"
 local rules = require "rules"
 local football = require "football"
 local movement = require "movement"
+local nui = require "nui"
 
 local abilities = {}
 
@@ -29,56 +30,26 @@ abilities.draw_item = function(player, team, resolve)
   end
 end
 
-abilities.draw_hud = function(id, player, action)
-  local w, h = love.graphics.getDimensions()
-  local x1, y1 = abilities.button_pos(1)
+abilities.update_hud = function(id, player, action, dt)
   if action == "position" then
-    art.ability_icon("position", 1, x1, y1)
-  elseif action == "move" then
-    art.ability_icon("move", 1, x1, y1)
-  elseif abilities.button_hover(1) then
-    art.ability_icon("move", 2, x1, y1)
+    nui.edit.element("", "move", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon.position})
   else
-    art.ability_icon("move", 3, x1, y1)
+    nui.edit.element("", "move", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon.move})
   end
-  local type = abilities.type(id, player)
-  if type == "item" then
-    if player.team == rules.get_offense() then
-      type = "shield"
-    else
-      type = "sword"
-    end
-  end
-  local x2, y2 = abilities.button_pos(2)
-  if action == "ability" then
-    art.ability_icon(type, 1, x2, y2)
-  elseif abilities.button_hover(2) and action ~= "position" then
-    art.ability_icon(type, 2, x2, y2)
+  if abilities.type(id, player) == "throw" then
+    nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon.throw})
+  elseif player.team == rules.get_offense() then
+    nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon.shield})
   else
-    art.ability_icon(type, 3, x2, y2)
+    nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon.sword})
   end
-end
-
-abilities.button_hover = function(num)
-  local x, y, w, h = abilities.button_pos(num)
-  local mx, my = love.mouse.getPosition()
-  return (mx >= x and mx <= x+w and my >= y and my <= y+h)
-end
-
-abilities.button_pos = function(num)
-  local w, h = love.graphics.getDimensions()
-  return w/2-44 + (num-1) * 44, h-44, 44, 44
-end
-
-abilities.mousepressed = function(x, y, button)
-  local x1, y1, w1, h1 = abilities.button_pos(1)
-  local x2, y2, w2, h2 = abilities.button_pos(2)
-  if x >= x1 and x <= x1+w1 and y >= y1 and y <= y1+h1 then
-    return "1"
-  elseif x >= x2 and x <= x2+w2 and y >= y2 and y <= y2+h2 then
-    return "2"
+  if action == "position" then
+    nui.edit.element("", "move", "type", 1)
+    nui.edit.element("", "ability", "type", 2)
+  elseif action == "ability" then
+    nui.edit.element("", "ability", "type", 1)
   else
-    return false
+    nui.edit.element("", "move", "type", 1)
   end
 end
 

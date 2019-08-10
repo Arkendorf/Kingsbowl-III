@@ -1,12 +1,15 @@
 local nui = require "nui"
 local game = require "game"
 local field = require "field"
+local turn = require "turn"
 
 local menu = {}
 
 local client_list = {}
 local client_info = {}
 local team_info = {}
+local settings = {turn_time = 3, max_turns = 200}
+local time_suffix = {"s", "m", "h"}
 
 menu.load = function(leave_func)
   menu.reset_info()
@@ -29,6 +32,14 @@ menu.load = function(leave_func)
         nui.add.button("settings", tostring(i).."_"..tostring(team), 48+x*22, 70+y*22+y_offset, 8, 8, {color = i, func = menu.team_color, args = {team = team, color = i}})
       end
     end
+    nui.add.text("settings", "game", 0, 214, {text= "Game Settings:", w = 192, align = "center"})
+    nui.add.text("settings", "turn_time_label", 20, 230, {text= "Turn Time:"})
+    nui.add.text("settings", "turn_time_num", 20, 230, {table = settings, index = "turn_time", w = 152, align = "right", suffix = "s"})
+    nui.add.slider("settings", "turn_time_slider", 20, 248, "hori", 152, 8, settings, "turn_time", 1, 60)
+    nui.add.text("settings", "max_turns_label", 20, 262, {text= "Total Turns:"})
+    nui.add.text("settings", "max_turns_num", 20, 262, {table = settings, index = "max_turns", w = 152, align = "right"})
+    nui.add.slider("settings", "max_turns_slider", 20, 280, "hori", 152, 8, settings, "max_turns", 0, 1000)
+    nui.add.text("settings", "est_time", 0, 296, {text= "Game Time: 0s", w = 192, align = "center"})
     nui.hide_menu("settings")
   elseif network_state == "client" then
     nui.add.button("", "leave", w/2-32, h/2+148, 64, 16, {content = "Leave", func = leave_func})
@@ -49,8 +60,9 @@ menu.load = function(leave_func)
     client:on("team_color", function(data)
       menu.team_color(data)
     end)
-    client:on("start_game", function()
-      game.load(client_list, client_info, team_info)
+    client:setSchema("start_game", {"turn_time", "max_turns"})
+    client:on("start_game", function(data)
+      game.load(client_list, client_info, team_info, data)
     end)
   end
 
@@ -67,6 +79,24 @@ menu.update = function(dt)
     if menu.title ~= team_info[team].name then
       nui.edit.menu(team, "title", team_info[team].name)
       network.server_send("team_name", {team, team_info[team].name})
+    end
+  end
+  nui.edit.element("settings", "est_time", "text", "Game Time: "..menu.game_time())
+end
+
+menu.game_time = function()
+  local num = (settings.turn_time+turn.get_resolve_time())*settings.max_turns
+  local type = 1
+  while true do
+    if num > 60 then
+      num = num / 60
+      type = type + 1
+    else
+      if type == 3 then
+        return tostring(math.floor(num*10)/10)..time_suffix[type]
+      else
+        return tostring(math.floor(num))..time_suffix[type]
+      end
     end
   end
 end
@@ -170,9 +200,9 @@ menu.char_gui = function()
     local team = client_info[v].team
     nui.add.text(team, "name"..tostring(v), 4, 22+team_order[team]*32, {table = client_info[v], index = "username"})
     if network_state == "server" then
-      nui.add.button(team, "swap"..tostring(v), 126, 20+team_order[team]*32, 16, 16, {content = "S", func = menu.swap_team, args = {id = v}})
+      nui.add.button(team, "swap"..tostring(v), 126, 20+team_order[team]*32, 16, 16, {content = {img = art.img.char_icon, quad = art.quad.char_icon[1]}, func = menu.swap_team, args = {id = v}})
       if v ~= 0 then
-        nui.add.button(team, "kick"..tostring(v), 158, 20+team_order[team]*32, 16, 16, {content = "K", func = menu.kick, args = {id = v}})
+        nui.add.button(team, "kick"..tostring(v), 158, 20+team_order[team]*32, 16, 16, {content = {img = art.img.char_icon, quad = art.quad.char_icon[2]}, func = menu.kick, args = {id = v}})
       end
     end
     team_order[team] = team_order[team] + 1
@@ -196,8 +226,8 @@ end
 
 menu.start_game = function()
   -- if team_info[1].size > 0 and team_info[2].size > 0 then
-    game.load(client_list, client_info, team_info)
-    server:sendToAll("start_game")
+    game.load(client_list, client_info, team_info, settings)
+    server:sendToAll("start_game", {settings.turn_time, settings.max_turns})
   -- end
 end
 
