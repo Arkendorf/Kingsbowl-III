@@ -1,3 +1,5 @@
+local nui = require "nui"
+
 local gui = {}
 
 local buttons = {}

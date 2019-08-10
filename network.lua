@@ -1,6 +1,7 @@
 local server_func = require "server"
 local client_func = require "client"
 local gui = require "gui"
+local nui = require "nui"
 local menu = require "menu"
 
 local network = {}
@@ -11,9 +12,10 @@ default_port = 25565
 network_state = ""
 
 network.load = function()
-  gui.remove_all()
-  gui.new_button("host", 0, 0, 128, 32, "Host", network.start_server)
-  gui.new_button("join", 128, 0, 128, 32, "Join", network.start_client)
+  nui.remove.all()
+  local w, h = love.graphics.getDimensions()
+  nui.add.button("", "host", w/2+16, h/2-16, 96, 32, {content = "Host", func = network.start_server})
+  nui.add.button("", "join", w/2-112, h/2-16, 96, 32, {content = "Join", func = network.start_client})
 end
 
 network.update = function(dt)
@@ -30,6 +32,9 @@ network.draw = function()
   elseif network_state == "client" then
     client_func.draw()
   end
+  local w, h = love.graphics.getDimensions()
+  love.graphics.draw(art.img.logo, (w-art.img.logo:getWidth())/2, h*.1)
+  love.graphics.draw(art.img.splash, (w-art.img.splash:getWidth())/2, h-art.img.splash:getHeight()-h*.1)
 end
 
 network.quit = function()
@@ -41,13 +46,13 @@ network.quit = function()
 end
 
 network.start_server = function()
-  gui.remove_all()
+  nui.remove.all()
   network_state = "server"
   server_func.load()
 end
 
 network.start_client = function()
-  gui.remove_all()
+  nui.remove.all()
   network_state = "client"
   client_func.load()
 end

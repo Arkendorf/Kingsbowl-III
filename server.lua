@@ -1,4 +1,4 @@
-local gui = require "gui"
+local nui = require "nui"
 local menu = require "menu"
 
 local server_func = {}
@@ -10,13 +10,15 @@ local default_desc = "Server"
 local team_info = {}
 
 server_func.load = function()
-  ip_port = ""
-  gui.remove_all()
-  gui.new_textbox("username", 0, 0, 192, 16, "Username", textboxes, "username")
-  gui.new_button("host", 192, 0, 64, 16, "Host", server_func.start_server)
-  gui.new_textbox("desc", 0, 16, 256, 16, "Server Description", textboxes, "desc")
+  nui.remove.all()
+  local w, h = love.graphics.getDimensions()
+  nui.add.menu("host", "Host Server", 2, w/2-96, h/2-128, 192, 256, false)
+  nui.add.textbox("host", "username", 48, 28, 96, textboxes, "username", "Username")
+  nui.add.textbox("host", "desc", 20, 66, 152, textboxes, "desc", "Server Description")
+  nui.add.button("host", "show", 48, 110, 96, 16, {content = "Advanced", func = server_func.show_advanced, toggle = true, func2 = server_func.hide_advanced})
+  nui.add.button("host", "start", 20, 222, 64, 16, {content = "Start", func = server_func.start_server})
+  nui.add.button("host", "leave", 108, 222, 64, 16, {content = "Leave", func = server_func.main_menu})
   server_func.hide_advanced()
-  gui.new_button("main_menu", 64, 48, 128, 16, "Main Menu", server_func.main_menu)
 end
 
 server_func.update = function(dt)
@@ -38,13 +40,13 @@ server_func.quit = function()
 end
 
 server_func.main_menu = function()
-  gui.remove_all()
+  nui.remove.all()
   network_state = ""
   network.load()
 end
 
 server_func.leave_server = function()
-  gui.remove_all()
+  nui.remove.all()
   server_func.quit()
   server_func.load()
   state = "network"
@@ -54,9 +56,6 @@ server_func.start_server = function()
   if pcall(function() server_func.create_server(network.decode_ip_port(textboxes.ip_port)) end) then -- attempt to initialize server
     state = "menu"
 
-    gui.remove_all()
-    gui.new_button("leave", 0, 0, 128, 32, "Leave", server_func.leave_server)
-
     -- make sure username and description have a value
     if textboxes.username == "" then
       textboxes.username = default_username
@@ -64,10 +63,6 @@ server_func.start_server = function()
     if textboxes.desc == "" then
       textboxes.desc = default_desc
     end
-
-    -- set up client for server
-    menu.reset_info()
-    menu.add_client(0, 0, textboxes.username, 1)
 
     -- event calls for server
     server:on("connect", function(data, client)
@@ -106,22 +101,19 @@ server_func.start_server = function()
       end
     end)
 
-    menu.load()
+    menu.load(server_func.leave_server)
+    menu.add_client(0, 0, textboxes.username, 1)
   else -- if attempt produces error
     server = nil
   end
 end
 
 server_func.show_advanced = function()
-  gui.remove_button("advanced")
-  gui.new_textbox("ip_port", 0, 32, 192, 16, "I.P.", textboxes, "ip_port")
-  gui.new_button("hide", 192, 32, 64, 16, "Hide", server_func.hide_advanced)
+  nui.add.textbox("host", "ip", 20, 154, 152, textboxes, "ip_port", "I.P.")
 end
 
 server_func.hide_advanced = function()
-  gui.remove_textbox("ip_port")
-  gui.remove_button("hide")
-  gui.new_button("advanced", 0, 32, 256, 16, "Advanced", server_func.show_advanced)
+  nui.remove.element("host", "ip")
 end
 
 server_func.create_server = function(ip, port)

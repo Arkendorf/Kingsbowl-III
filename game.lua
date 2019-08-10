@@ -1,4 +1,4 @@
-local gui = require "gui"
+local nui = require "nui"
 local char = require "char"
 local movement = require "movement"
 local field = require "field"
@@ -12,7 +12,7 @@ local game = {}
 
 game.load = function(menu_client_list, menu_client_info, menu_team_info)
   state = "game"
-  gui.remove_all()
+  nui.remove.all()
   if network_state == "server" then
     local callback = server:on("connect")
     server:removeCallback(connect)

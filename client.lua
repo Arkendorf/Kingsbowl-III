@@ -1,4 +1,4 @@
-local gui = require "gui"
+local nui = require "nui"
 local menu = require "menu"
 
 client_func = {}
@@ -12,11 +12,18 @@ local textboxes = {ip_port = "", username = ""}
 
 client_func.load = function()
   client_func.test_for_servers()
-  gui.remove_all()
-  gui.new_textbox("username", 0, 0, 256, 16, "Username", textboxes, "username")
-  gui.new_button("refresh", 192, 16, 64, 16, "Refresh", client_func.refresh_test)
-  gui.new_button("main_menu", 64, 0, 128, 16, "Main Menu", client_func.main_menu)
-  client_func.hide_advanced()
+
+  -- gui
+  nui.remove.all()
+  local w, h = love.graphics.getDimensions()
+  nui.add.menu("join", "Join Server", 2, w/2-224, h/2-128, 192, 256, false)
+  nui.add.textbox("join", "username", 48, 28, 96, textboxes, "username", "Username")
+  nui.add.textbox("join", "ip", 20, 66, 152, textboxes, "ip_port", "I.P.")
+  nui.add.button("join", "join", 20, 222, 64, 16, {content = "Join", func = client_func.direct_connect})
+  nui.add.button("join", "leave", 108, 222, 64, 16, {content = "Leave", func = client_func.main_menu})
+
+  nui.add.menu("lan", "Local Games", 2, w/2+32, h/2-128, 192, 256, true)
+  nui.add.button("lan", "refresh", 64, 26, 64, 16, {content = "Refresh", func = client_func.refresh_test})
 end
 
 client_func.update = function(dt)
@@ -29,13 +36,6 @@ client_func.update = function(dt)
 end
 
 client_func.draw = function()
-  love.graphics.print("Servers open on LAN:", 0, 16)
-  for i, v in ipairs(servers) do
-    love.graphics.printf(v.info.username, 0, 32+(i-1)*32, 256, "left")
-    love.graphics.printf("ping: "..tostring(ip_test[v.num]:getRoundTripTime()), 0, 32+(i-1)*32, 256, "right")
-    love.graphics.printf(v.info.desc, 0, 32+(i-.5)*32, 256, "left")
-    love.graphics.printf("players: "..tostring(v.info.client_num), 0, 32+(i-.5)*32, 256, "right")
-  end
 end
 
 client_func.quit = function()
@@ -48,7 +48,7 @@ client_func.quit = function()
 end
 
 client_func.main_menu = function()
-  gui.remove_all()
+  nui.remove.all()
   client_func.stop_test()
   network_state = ""
   network.load()
@@ -59,31 +59,6 @@ client_func.leave_server = function()
   client = nil
   client_func.load()
   state = "network"
-end
-
-client_func.show_advanced = function()
-  gui.remove_button("advanced")
-  gui.new_textbox("ip_port", 0, 0, 128, 16, "I.P.", textboxes, "ip_port")
-  gui.new_button("join", 128, 0, 64, 16, "Join", client_func.direct_connect)
-  gui.new_button("hide", 192, 0, 64, 16, "Hide", client_func.hide_advanced)
-  client_func.set_advanced_pos()
-end
-
-client_func.hide_advanced = function()
-  gui.remove_textbox("ip_port")
-  gui.remove_button("join")
-  gui.remove_button("hide")
-  gui.new_button("advanced", 0, 0, 256, 16, "Connect Manually", client_func.show_advanced)
-  client_func.set_advanced_pos()
-end
-
-client_func.set_advanced_pos = function()
-  local y = 32+(#servers)*32
-  gui.edit_button("advanced", "y", y)
-  gui.edit_textbox("ip_port", "y", y)
-  gui.edit_button("join", "y", y)
-  gui.edit_button("hide", "y", y)
-  gui.edit_button("main_menu", "y", y+16)
 end
 
 client_func.direct_connect = function()
@@ -101,7 +76,7 @@ client_func.join_server = function(address)
   if pcall(client_func.connect) then
     state = "menu"
 
-    gui.remove_all()
+    nui.remove.all()
     -- make sure username has a value
     if textboxes.username == "" then
       textboxes.username = default_username
@@ -114,7 +89,6 @@ client_func.join_server = function(address)
       if client then
         id = client.connectId
         client:send("client_info", {textboxes.username})
-        gui.new_button("leave", 0, 0, 128, 32, "Leave", client_func.leave_server)
       end
     end)
     client:on("kick", function()
@@ -134,7 +108,7 @@ client_func.join_server = function(address)
       menu.update_client(data.id, data.username)
     end)
 
-    menu.load()
+    menu.load(client_func.leave_server)
   else
     client = nil
   end
@@ -150,10 +124,13 @@ client_func.test_for_servers = function()
     ip_test[i]:on("server_info", function(data)
       local index = #servers+1
       servers[index] = {ip = ip, num = i, info = data}
-      gui.new_button(i, 0, 32+(index-1)*32, 256, 32, "", client_func.join_server, {ip = ip, port = default_port})
-      client_func.set_advanced_pos()
+      nui.add.button("lan", i, 20, 66+(index-1)*32, 152, 32, {content = data.username..": "..data.client_num.."p\n"..data.desc, func = client_func.join_server, args = {ip = ip, port = default_port}})
     end)
-    ip_test[i]:on("start_game", function(data)
+    ip_test[i]:on("kick", function()
+      ip_test[i]:disconnect(0)
+      client_func.refresh_test()
+    end)
+    ip_test[i]:on("start_game", function()
       ip_test[i]:disconnect(0)
       client_func.refresh_test()
     end)
@@ -166,11 +143,10 @@ client_func.stop_test = function()
     v = nil
   end
   for i, v in ipairs(servers) do -- reset gui
-    gui.remove_button(v.num)
+    nui.remove.element("lan", v.num)
   end
   servers = {}
   ip_test = {}
-  client_func.set_advanced_pos()
 end
 
 client_func.refresh_test = function()

@@ -4,6 +4,7 @@ art = require "art"
 
 local menu = require "menu"
 local gui = require "gui"
+local nui = require "nui"
 local game = require "game"
 local results = require "results"
 
@@ -13,6 +14,7 @@ reset = false
 love.load = function()
   art.load("art")
   gui.load()
+  nui.load()
 
   state = "network"
   network.load()
@@ -22,9 +24,12 @@ end
 
 love.update = function(dt)
   gui.update(dt)
+  nui.update(dt)
   network.update(dt)
   if state == "game" then
     game.update(dt)
+  elseif state == "menu" then
+    menu.update(dt)
   end
 
   if reset then
@@ -46,10 +51,12 @@ love.draw = function()
     results.draw()
   end
   gui.draw()
+  nui.draw()
 end
 
 love.mousepressed = function(x, y, button)
   gui.mousepressed(x, y, button)
+  nui.mousepressed(x, y, button)
   if state == "game" then
     game.mousepressed(x, y, button)
   end
@@ -57,6 +64,7 @@ end
 
 love.keypressed = function(key)
   gui.keypressed(key)
+  nui.keypressed(key)
   if state == "game" then
     game.keypressed(key)
   end
@@ -64,6 +72,7 @@ end
 
 love.textinput = function(text)
   gui.textinput(text)
+  nui.textinput(text)
 end
 
 love.quit = function()

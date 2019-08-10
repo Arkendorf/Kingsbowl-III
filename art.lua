@@ -6,6 +6,7 @@ local art = {}
 tile_size = 32
 
 art.load = function(dir)
+  love.graphics.setDefaultFilter("nearest", "nearest")
   love.graphics.setLineStyle("rough")
   love.graphics.setLineWidth(2)
 
@@ -87,7 +88,7 @@ art.load = function(dir)
     end
   end
 
-  font = love.graphics.newImageFont("art/font.png",
+  font = love.graphics.newImageFont("art/fontwip.png",
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
     "abcdefghijklmnopqrstuvwxyz" ..
     "0123456789!?.,:", 1)
