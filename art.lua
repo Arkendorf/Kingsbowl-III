@@ -45,11 +45,14 @@ art.load = function(dir)
     art.quad.markings[i] = love.graphics.newQuad((i-1)*tile_size, 0, tile_size, tile_size, art.img.markings:getDimensions())
   end
 
-  art.quad.scoreboard = {}
   local w = art.img.scoreboard:getWidth()
   local h = art.img.scoreboard:getHeight()
-  art.quad.scoreboard[1] = love.graphics.newQuad(0, 0, w/2, h, w, h)
-  art.quad.scoreboard[2] = love.graphics.newQuad(w/2, 0, w/2, h, w, h)
+  art.quad.scoreboard = {}
+  art.quad.scoreboard[1] = love.graphics.newQuad(0, 0, w/2, h/2, w, h)
+  art.quad.scoreboard[2] = love.graphics.newQuad(0, h/2, w/2, h/2, w, h)
+  art.quad.scoreboard_overlay = {}
+  art.quad.scoreboard_overlay[1] = love.graphics.newQuad(0, 0, w/2, h/2, w, h/2)
+  art.quad.scoreboard_overlay[2] = love.graphics.newQuad(w/2, 0, w/2, h/2, w, h/2)
 
   art.quad.ability_icon = {}
   local keys = {"move", "shield", "sword", "throw", "position"}

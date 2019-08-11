@@ -15,7 +15,7 @@ local max_step = 0
 local down_delay = false
 local max_turns = 200
 local turns_left = 0
-local hud_canvas = love.graphics.newCanvas(258, 40)
+local hud_canvas = love.graphics.newCanvas(320, 51)
 
 turn.load = function(settings)
   if network_state == "client" then
@@ -152,26 +152,20 @@ end
 turn.draw_hud = function(x, y)
   love.graphics.setCanvas(hud_canvas)
   love.graphics.clear()
-  love.graphics.draw(art.img.scoreboard)
+  love.graphics.draw(art.img.scoreboard, art.img.scoreboard[rules.get_offense()])
   art.set_effects(1, 1, 1, "scoreboard_overlay", "color", palette[rules.get_color(1)])
-  love.graphics.draw(art.img.scoreboard_overlay, art.quad.scoreboard[1])
-  if rules.get_offense() == 1 then
-    love.graphics.draw(art.img.offense_marker, 10, 22)
-  end
+  love.graphics.draw(art.img.scoreboard_overlay, art.quad.scoreboard_overlay[1])
   art.set_effects(1, 1, 1, "scoreboard_overlay", "color", palette[rules.get_color(2)])
-  love.graphics.draw(art.img.scoreboard_overlay, art.quad.scoreboard[2], 129, 0)
-  if rules.get_offense() == 2 then
-    love.graphics.draw(art.img.offense_marker, 167, 22)
-  end
+  love.graphics.draw(art.img.scoreboard_overlay, art.quad.scoreboard_overlay[2], 160, 0)
   art.clear_effects()
 
-  love.graphics.printf(rules.get_score(1), 0, 5, 22, "center")
-  love.graphics.printf(rules.get_name(1), 20, 5, 80, "center")
-  love.graphics.printf(rules.get_score(2), 237, 5, 22, "center")
-  love.graphics.printf(rules.get_name(2), 158, 5, 80, "center")
-  love.graphics.printf(turns_left, 104, 5, 30, "center")
-  love.graphics.printf(math.floor(timer*10)/10, 133, 5, 21, "center")
-  love.graphics.printf(rules.get_play_string(), 95, 27, 68, "center")
+  love.graphics.printf(rules.get_score(1), 5, 6, 18, "left")
+  love.graphics.printf(rules.get_name(1), 24, 6, 96, "right")
+  love.graphics.printf(rules.get_score(2), 297, 6, 18, "right")
+  love.graphics.printf(rules.get_name(2), 199, 6, 96, "left")
+  love.graphics.printf(turns_left, 132, 6, 34, "left")
+  love.graphics.printf(math.floor(timer)+1, 168, 6, 18, "right")
+  love.graphics.printf(rules.get_play_string(), 108, 33, 102, "center")
 
   love.graphics.setCanvas(window.canvas)
 

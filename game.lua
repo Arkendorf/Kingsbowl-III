@@ -49,9 +49,7 @@ game.draw = function()
   football.draw()
   char.draw_paths()
   love.graphics.pop()
-
   turn.draw_hud()
-  love.graphics.print(love.timer.getFPS())
 end
 
 game.keypressed = function(key)

@@ -52,6 +52,7 @@ love.draw = function()
   nui.draw()
   love.graphics.setCanvas()
   window.draw()
+  love.graphics.print(font:getWidth("59"))
 end
 
 love.mousepressed = function(x, y, button)
