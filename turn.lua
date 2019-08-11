@@ -2,6 +2,7 @@ local char = require "char"
 local football = require "football"
 local rules = require "rules"
 local results = require "results"
+local window = require "window"
 
 local turn = {}
 
@@ -172,9 +173,9 @@ turn.draw_hud = function(x, y)
   love.graphics.printf(math.floor(timer*10)/10, 133, 5, 21, "center")
   love.graphics.printf(rules.get_play_string(), 95, 27, 68, "center")
 
-  love.graphics.setCanvas()
+  love.graphics.setCanvas(window.canvas)
 
-  local w = love.graphics.getWidth()
+  local w, h = window.get_dimensions()
   love.graphics.draw(hud_canvas, w/2-art.img.scoreboard:getWidth()/2, 2)
 end
 

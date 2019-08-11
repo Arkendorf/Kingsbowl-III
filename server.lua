@@ -1,5 +1,6 @@
 local nui = require "nui"
 local menu = require "menu"
+local window = require "window"
 
 local server_func = {}
 
@@ -11,7 +12,7 @@ local team_info = {}
 
 server_func.load = function()
   nui.remove.all()
-  local w, h = love.graphics.getDimensions()
+  local w, h = window.get_dimensions()
   nui.add.menu("host", "Host Server", 2, w/2-96, h/2-128, 192, 256, false)
   nui.add.textbox("host", "username", 48, 28, 96, textboxes, "username", "Username")
   nui.add.textbox("host", "desc", 20, 66, 152, textboxes, "desc", "Server Description")

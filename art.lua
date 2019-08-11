@@ -45,10 +45,6 @@ art.load = function(dir)
     art.quad.markings[i] = love.graphics.newQuad((i-1)*tile_size, 0, tile_size, tile_size, art.img.markings:getDimensions())
   end
 
-  art.quad.field_info = {}
-  art.quad.field_info[1] = love.graphics.newQuad(0, 0, art.img.field_info:getWidth(), tile_size, art.img.field_info:getDimensions())
-  art.quad.field_info[2] = love.graphics.newQuad(0, tile_size, art.img.field_info:getWidth(), tile_size, art.img.field_info:getDimensions())
-
   art.quad.scoreboard = {}
   local w = art.img.scoreboard:getWidth()
   local h = art.img.scoreboard:getHeight()
@@ -60,15 +56,18 @@ art.load = function(dir)
   for i = 1, 5 do
     art.quad.ability_icon[keys[i]] = love.graphics.newQuad((i-1)*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
   end
-  
-  art.quad.ability_background = {}
-  for i = 1, 3 do
-    art.quad.ability_background[i] = love.graphics.newQuad((i-1)*44, 0, 44, 44, art.img.ability_background:getDimensions())
-  end
 
   art.quad.char_icon = {}
   for i = 1, 2 do
     art.quad.char_icon[i] = love.graphics.newQuad((i-1)*16, 0, 16, 16, art.img.char_icon:getDimensions())
+  end
+
+  art.quad.char = {}
+  for team = 1, 2 do
+    art.quad.char[team] = {}
+    for i = 1, 4 do
+      art.quad.char[team][i] = love.graphics.newQuad((i-1)*tile_size*1.5, (team-1)*tile_size*1.5, tile_size*1.5, tile_size*1.5, art.img.char:getDimensions())
+    end
   end
 
   colors = {}
@@ -91,7 +90,7 @@ art.load = function(dir)
     end
   end
 
-  font = love.graphics.newImageFont("art/fontwip.png",
+  font = love.graphics.newImageFont("art/font.png",
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
     "abcdefghijklmnopqrstuvwxyz" ..
     "0123456789!?.,:", 1)
@@ -169,7 +168,7 @@ art.path_icon = function(num, x, y, r, g, b)
 end
 
 art.ability_icon = function(type, back, x, y)
-  love.graphics.draw(art.img.ability_background, art.quad.ability_background[back], x, y)
+  love.graphics.draw(art.img.ability_background, art.quad.ability_background[back], math.floor(x), math.floor(y))
   love.graphics.setColor(colors.white)
   love.graphics.draw(art.img.ability_icons, art.quad.ability_icon[type], x+6, y+6)
   love.graphics.setColor(1, 1, 1)

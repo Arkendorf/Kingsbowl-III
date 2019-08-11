@@ -56,7 +56,7 @@ shader.outline = love.graphics.newShader[[
 
   shader.prepare.color = function(img, data)
     for i, v in ipairs(data) do
-      if i <= 5 then
+      if i <= 4 then
         if v[4] then
           shader.color:send("color"..tostring(i), v)
         else
@@ -72,7 +72,6 @@ shader.outline = love.graphics.newShader[[
       extern vec4 color2;
       extern vec4 color3;
       extern vec4 color4;
-      extern vec4 color5;
       vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords){
         vec4 pixel = Texel(texture, texture_coords);
         if (pixel.a == 1) {
@@ -87,9 +86,6 @@ shader.outline = love.graphics.newShader[[
           }
           if (pixel.r > .3) {
             return color4;
-          }
-          if (pixel.r > .1) {
-            return color5;
           }
         }
         return vec4(0.0, 0.0, 0.0, 0.0);

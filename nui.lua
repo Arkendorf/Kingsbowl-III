@@ -1,3 +1,5 @@
+local window = require "window"
+
 local nui = {}
 
 local menus = {}
@@ -75,7 +77,7 @@ nui.load = function()
 end
 
 nui.update = function(dt)
-  local x, y = love.mouse.getPosition()
+  local x, y = window.get_mouse()
   for k, v in pairs(elements) do
     nui.hover[v.element](x, y, v)
     if v.element == "button" then
@@ -176,7 +178,7 @@ nui.draw = function()
       for l, w in pairs(v.elements) do
         nui.draw_element[w.element](w, v)
       end
-      love.graphics.setCanvas()
+      love.graphics.setCanvas(window.canvas)
       nui.draw_element.menu(v)
     end
   end
@@ -471,11 +473,11 @@ nui.draw_mode.scaleable = function(info, art_type, x, y, w, h, content, color)
       elseif section_y > 2 then
         y_offset = h-info.side
       end
-      love.graphics.draw(art.img[info.img], section.quad, x+x_offset+section.x, y+y_offset+section.y, 0, section_w, section_h)
+      love.graphics.draw(art.img[info.img], section.quad, math.floor(x+x_offset+section.x), math.floor(y+y_offset+section.y), 0, math.floor(section_w), math.floor(section_h))
       if color then
         local overlay = info.img.."_overlay"
         art.set_effects(1, 1, 1, overlay, "color", palette[color])
-        love.graphics.draw(art.img[overlay], section.quad, x+x_offset+section.x, y+y_offset+section.y, 0, section_w, section_h)
+        love.graphics.draw(art.img[overlay], section.quad, math.floor(x+x_offset+section.x), math.floor(y+y_offset+section.y), 0, math.floor(section_w), math.floor(section_h))
         art.clear_effects()
       end
     end
@@ -487,9 +489,9 @@ nui.draw_mode.scaleable = function(info, art_type, x, y, w, h, content, color)
       love.graphics.printf(content, x+info.corner, y+info.corner+(h-font_h)/2, w, "center")
     elseif type(content) == "table" then
       local quad_x, quad_y, quad_w, quad_h = content.quad:getViewport()
-      love.graphics.draw(content.img, content.quad, x+info.corner+(w-quad_w)/2, y+info.corner+(h-quad_h)/2)
+      love.graphics.draw(content.img, content.quad, math.floor(x+info.corner+(w-quad_w)/2), math.floor(y+info.corner+(h-quad_h)/2))
     else
-      love.graphics.draw(content, x+info.corner+(w-content:getWidth())/2, y+info.corner+(h-content:getHeight())/2)
+      love.graphics.draw(content, math.floor(x+info.corner+(w-content:getWidth())/2), math.floor(y+info.corner+(h-content:getHeight())/2))
     end
   end
 end
@@ -503,11 +505,11 @@ nui.draw_mode.textable = function(info, type, x, y, w, text, color)
     elseif section_x > 2 then
       x_offset = w-info.center
     end
-    love.graphics.draw(art.img[info.img], section.quad, x+x_offset+section.x, y, 0, section_w, 1)
+    love.graphics.draw(art.img[info.img], section.quad, math.floor(x+x_offset+section.x), math.floor(y), 0, math.floor(section_w), 1)
     if color then
       local overlay = info.img.."_overlay"
       art.set_effects(1, 1, 1, overlay, "color", palette[color])
-      love.graphics.draw(art.img[overlay], section.quad, x+x_offset+section.x, y, 0, section_w, 1)
+      love.graphics.draw(art.img[overlay], section.quad, math.floor(x+x_offset+section.x), math.floor(y), 0, math.floor(section_w), 1)
       art.clear_effects()
     end
   end
@@ -518,7 +520,7 @@ nui.draw_element = {}
 
 nui.draw_element.menu = function(menu)
   nui.draw_mode.scaleable(nui.info.menu, menu.type, menu.x, menu.y, menu.w, menu.h, false, menu.color)
-  love.graphics.draw(menu.canvas, menu.x+nui.info.menu.corner, menu.y+nui.info.menu.corner)
+  love.graphics.draw(menu.canvas, math.floor(menu.x+nui.info.menu.corner), math.floor(menu.y+nui.info.menu.corner))
   local font_w = font:getWidth(menu.title)
   nui.draw_mode.textable(nui.info.title, 1, menu.x+math.floor((menu.w-font_w+nui.info.menu.corner)/2), menu.y-nui.info.title.h/2+math.floor(nui.info.menu.corner/2), font_w, menu.title, menu.color)
 end
@@ -549,9 +551,9 @@ nui.draw_element.text = function(text, menu)
     love.graphics.setColor(palette[text.color][1])
   end
   if text.w then
-    love.graphics.printf(str, text.x, text.y-nui.get_scroll(text, menu), text.w, text.align)
+    love.graphics.printf(str, math.floor(text.x), math.floor(text.y-nui.get_scroll(text, menu)), math.floor(text.w), text.align)
   else
-    love.graphics.print(str, text.x, text.y-nui.get_scroll(text, menu))
+    love.graphics.print(str, math.floor(text.x), math.floor(text.y-nui.get_scroll(text, menu)))
   end
   love.graphics.setColor(1, 1, 1)
 end
@@ -563,10 +565,10 @@ nui.draw_element.slider = function(slider, menu)
   local node_pos_scale = {0, info.node_edge, info.node_edge+slider.node_size-info.node_center}
   local node_size_scale = {0, slider.node_size-1, 0}
   for i = 1, 3 do
-    love.graphics.draw(art.img[info.img], info.sections[1][slider.dir].bar[i].quad, slider.x+bar_pos_scale[i]*slider.matrix.x+(info.node_h-info.bar_h)/2*slider.matrix.y, slider.y+bar_pos_scale[i]*slider.matrix.y+(info.node_h-info.bar_h)/2*slider.matrix.x-nui.get_scroll(slider, menu), 0, 1+bar_size_scale[i]*slider.matrix.x, 1+bar_size_scale[i]*slider.matrix.y)
+    love.graphics.draw(art.img[info.img], info.sections[1][slider.dir].bar[i].quad, math.floor(slider.x+bar_pos_scale[i]*slider.matrix.x+(info.node_h-info.bar_h)/2*slider.matrix.y), math.floor(slider.y+bar_pos_scale[i]*slider.matrix.y+(info.node_h-info.bar_h)/2*slider.matrix.x-nui.get_scroll(slider, menu)), 0, math.floor(1+bar_size_scale[i]*slider.matrix.x), math.floor(1+bar_size_scale[i]*slider.matrix.y))
   end
   for i = 1, 3 do
-    love.graphics.draw(art.img[info.img], info.sections[1][slider.dir].node[i].quad, slider.x+(slider.pos+node_pos_scale[i])*slider.matrix.x, slider.y+(slider.pos+node_pos_scale[i])*slider.matrix.y-nui.get_scroll(slider, menu), 0, 1+node_size_scale[i]*slider.matrix.x, 1+node_size_scale[i]*slider.matrix.y)
+    love.graphics.draw(art.img[info.img], info.sections[1][slider.dir].node[i].quad, math.floor(slider.x+(slider.pos+node_pos_scale[i])*slider.matrix.x), math.floor(slider.y+(slider.pos+node_pos_scale[i])*slider.matrix.y-nui.get_scroll(slider, menu)), 0, math.floor(1+node_size_scale[i]*slider.matrix.x), math.floor(1+node_size_scale[i]*slider.matrix.y))
   end
 end
 

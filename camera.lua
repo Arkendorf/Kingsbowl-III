@@ -1,5 +1,6 @@
 local field = require "field"
 local rules = require "rules"
+local window = require "window"
 
 local camera = {}
 
@@ -34,7 +35,7 @@ camera.player = function(player)
 end
 
 camera.get_offset = function()
-  local w, h = love.graphics.getDimensions()
+  local w, h = window.get_dimensions()
   local cam = camera.get()
   return math.floor(-cam.x+w/2), math.floor(-cam.y+h/2)
 end

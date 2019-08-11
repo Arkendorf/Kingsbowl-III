@@ -2,6 +2,7 @@ local nui = require "nui"
 local game = require "game"
 local field = require "field"
 local turn = require "turn"
+local window = require "window"
 
 local menu = {}
 
@@ -15,7 +16,7 @@ menu.load = function(leave_func)
   menu.reset_info()
 
   nui.remove.all()
-  local w, h = love.graphics.getDimensions()
+  local w, h = window.get_dimensions()
   if network_state == "server" then
     nui.add.button("", "leave", w/2-112, h/2+148, 64, 16, {content = "Leave", func = leave_func})
     nui.add.button("", "start", w/2-32, h/2+148, 64, 16, {content = "Start", func = menu.start_game})
@@ -103,7 +104,7 @@ end
 
 menu.draw = function()
   love.graphics.push()
-  local w, h = love.graphics.getDimensions()
+  local w, h = window.get_dimensions()
   local field_w, field_h = field.get_dimensions()
   love.graphics.translate(-(field_w*tile_size-w)/2, -(field_h*tile_size-h)/2)
   field.draw()

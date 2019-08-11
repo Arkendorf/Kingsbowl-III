@@ -1,5 +1,6 @@
 local nui = require "nui"
 local field = require "field"
+local window = require "window"
 
 local results = {}
 
@@ -22,7 +23,7 @@ results.load = function(game_players, game_team_info)
   team_info = game_team_info
 
   nui.remove.all()
-  local w, h = love.graphics.getDimensions()
+  local w, h = window.get_dimensions()
   nui.add.button("", "leave", w/2-48, h/2+148, 96, 16, {content = "Main Menu", func = results.leave})
   nui.add.menu(1, team_info[1].name, 2, w/2-224, h/2-128, 192, 256, true, team_info[1].color)
   nui.add.menu(2, team_info[2].name, 2, w/2+32, h/2-128, 192, 256, true, team_info[2].color)
@@ -37,7 +38,7 @@ end
 
 results.draw = function()
   love.graphics.push()
-  local w, h = love.graphics.getDimensions()
+  local w, h = window.get_dimensions()
   local field_w, field_h = field.get_dimensions()
   love.graphics.translate(-(field_w*tile_size-w)/2, -(field_h*tile_size-h)/2)
   field.draw()

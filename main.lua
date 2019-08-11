@@ -5,6 +5,7 @@ local menu = require "menu"
 local nui = require "nui"
 local game = require "game"
 local results = require "results"
+local window = require "window"
 
 state = "network"
 reset = false
@@ -12,6 +13,7 @@ reset = false
 love.load = function()
   art.load("art")
   nui.load()
+  window.load()
 
   state = "network"
   network.load()
@@ -36,7 +38,8 @@ love.update = function(dt)
 end
 
 love.draw = function()
-  love.graphics.print(love.timer.getFPS(), 764, 0)
+  love.graphics.setCanvas(window.canvas)
+  love.graphics.clear()
   if state == "game" then
     game.draw()
   elseif state == "menu" then
@@ -47,9 +50,12 @@ love.draw = function()
     results.draw()
   end
   nui.draw()
+  love.graphics.setCanvas()
+  window.draw()
 end
 
 love.mousepressed = function(x, y, button)
+  local x, y = window.get_mouse()
   if not nui.mousepressed(x, y, button) then
     if state == "game" then
       game.mousepressed(x, y, button)
@@ -61,6 +67,9 @@ love.keypressed = function(key)
   nui.keypressed(key)
   if state == "game" then
     game.keypressed(key)
+  end
+  if key == "escape" then
+    love.event.quit()
   end
 end
 

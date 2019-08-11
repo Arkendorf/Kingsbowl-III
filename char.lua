@@ -4,6 +4,7 @@ local abilities = require "abilities"
 local football = require "football"
 local camera = require "camera"
 local field = require "field"
+local window = require "window"
 
 local char = {}
 local players = {}
@@ -12,7 +13,7 @@ local move_dist = {
   qb = 2.5,
   carrier = 2.5,
   defense = 3,
-  offense = 3.5
+  offense = 23.5
 }
 local resolve = false
 local pos_select = false
@@ -170,7 +171,7 @@ char.draw_paths = function()
     end
   end
   if not resolve then
-    local x, y = love.mouse.getPosition()
+    local x, y = window.get_mouse()
     local offset_x, offset_y = camera.get_offset()
     local tile_x = math.floor((x-offset_x)/tile_size)
     local tile_y = math.floor((y-offset_y)/tile_size)
@@ -188,13 +189,22 @@ char.draw_paths = function()
 end
 
 char.draw_char = function(k, v)
+  local state = char.get_state(k, v)
+  local quad = 1
+  if state == "qb" then
+    quad = 2
+  elseif state == "carrier" then
+    quad = 3
+  elseif v.dead then
+    quad = 4
+  end
   if pos_select then
     if v.team == players[id].team then
-      art.draw_img("helmet", v.x, v.y, colors.white[1], colors.white[2], colors.white[3], "outline")
+      art.draw_quad("char", art.quad.char[v.team][1], v.x-8/tile_size, v.y-8/tile_size, colors.white[1], colors.white[2], colors.white[3], "outline")
     end
   else
-    art.draw_img("helmet", v.x, v.y)
-    art.draw_img("helmet_overlay", v.x, v.y, 1, 1, 1, "color", palette[rules.get_color(v.team)])
+    art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size)
+    art.draw_quad("char_overlay", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, 1, 1, 1, "color", palette[rules.get_color(v.team)])
   end
 end
 

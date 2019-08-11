@@ -1,5 +1,6 @@
 local nui = require "nui"
 local menu = require "menu"
+local window = require "window"
 
 client_func = {}
 
@@ -15,7 +16,7 @@ client_func.load = function()
 
   -- gui
   nui.remove.all()
-  local w, h = love.graphics.getDimensions()
+  local w, h = window.get_dimensions()
   nui.add.menu("join", "Join Server", 2, w/2-224, h/2-128, 192, 256, false)
   nui.add.textbox("join", "username", 48, 28, 96, textboxes, "username", "Username")
   nui.add.textbox("join", "ip", 20, 66, 152, textboxes, "ip_port", "I.P.")
