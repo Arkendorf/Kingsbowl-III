@@ -29,7 +29,7 @@ football.draw = function()
       art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y)
       visible = true
     elseif ball.primed and ball.preview then
-      art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y, colors.white[1], colors.white[2], colors.white[3], "outline")
+      art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y, colors.white[1], colors.white[2], colors.white[3], "border")
       visible = true
     end
     if visible and not resolve then
@@ -148,13 +148,13 @@ football.get_ball = function()
   return ball
 end
 
-football.catch = function(id, player, players)
+football.catch = function(knight_id, knight)
   if not ball.caught then
     ball.caught = true
-    ball.carrier = id
+    ball.carrier = knight_id
     ball.primed = false
   end
-  rules.catch(player, players)
+  return rules.catch(knight)
 end
 
 football.path_intersect = function(path)

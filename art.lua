@@ -34,6 +34,8 @@ art.load = function(dir)
 
   art.quad.stat_icon = art.set_quad("stat_icons", 3)
 
+  art.quad.cycle_icon = art.set_quad("cycle_icons", 2)
+
   art.quad.path_outline = {}
   for tile = 1, 4 do
     art.quad.path_outline[tile] = {}

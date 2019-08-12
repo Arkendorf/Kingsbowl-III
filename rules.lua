@@ -86,13 +86,14 @@ rules.get_color = function(team)
   return team_info[team].color
 end
 
-rules.catch = function(player, players)
-  if player.team ~= offense then
+rules.catch = function(knight)
+  if knight.team ~= offense then
     rules.turnover()
     intercept = true
   else
-    players[qb].stats[1] = players[qb].stats[1] + 1
+    return true
   end
+  return false
 end
 
 rules.incomplete = function()
@@ -173,16 +174,16 @@ rules.get_endzones = function()
   return math.floor(field_w/12)-1, math.floor(field_w/12*11)-1
 end
 
-rules.check_td = function(player, step)
+rules.check_td = function(knight, step)
   local min, max = rules.get_endzones()
-  local x= player.tile_x
-  if movement.can_move(player, step) then
-    x = player.path[step].x
+  local x= knight.tile_x
+  if movement.can_move(knight, step) then
+    x = knight.path[step].x
   end
-  if (player.team == 1 and x > max) or (player.team == 2 and x <= min) then
+  if (knight.team == 1 and x > max) or (knight.team == 2 and x <= min) then
     if network_state == "server" then -- server has final say on touchdowns
-      team_info[player.team].score = team_info[player.team].score + 7
-      network.server_send("score", {player.team, team_info[player.team].score})
+      team_info[knight.team].score = team_info[knight.team].score + 7
+      network.server_send("score", {knight.team, team_info[knight.team].score})
     end
     return true
   end
@@ -220,20 +221,30 @@ rules.valid_pos = function(x1, y1, x2, y2, team)
   return false
 end
 
-rules.set_position = function(id, player, tile_x, tile_y)
-  for i, v in ipairs(team_info[player.team].lineup) do
+rules.set_position = function(knight_id, knight, tile_x, tile_y)
+  for i, v in ipairs(team_info[knight.team].lineup) do
     if v.x == tile_x-scrimmage and v.y == tile_y and not v.taken then
-      rules.remove_host(id, player)
-      rules.set_tile(id, player, i, v)
+      rules.remove_host(knight_id, knight)
+      rules.set_tile(knight_id, knight, i, v)
       return true
     end
   end
   return false
 end
 
-rules.remove_host = function(id, player)
-  for i, v in ipairs(team_info[player.team].lineup) do
-    if v.host == id then
+rules.preview_position = function(knight_id, knight, tile_x, tile_y)
+  for i, v in ipairs(team_info[knight.team].lineup) do
+    if v.x == tile_x-scrimmage and v.y == tile_y and not v.taken then
+      art.path_icon(5, tile_x, tile_y, colors.green[1], colors.green[2], colors.green[3])
+      return
+    end
+  end
+  art.path_icon(4, tile_x, tile_y, colors.red[1], colors.red[2], colors.red[3])
+end
+
+rules.remove_host = function(knight_id, knight)
+  for i, v in ipairs(team_info[knight.team].lineup) do
+    if v.host == knight_id then
       v.taken = false
       v.host = false
       break
@@ -241,50 +252,50 @@ rules.remove_host = function(id, player)
   end
 end
 
-rules.set_tile = function(id, player, tile_num, tile)
+rules.set_tile = function(knight_id, knight, tile_num, tile)
   tile.taken = true
-  tile.host = id
+  tile.host = knight_id
   local tile_x = tile.x+scrimmage
   local tile_y = tile.y
   if network_state == "server" then
-    player.tile_x = tile_x
-    player.tile_y = tile_y
-    network.server_send("char_tile", {id, tile_x, tile_y})
+    knight.tile_x = tile_x
+    knight.tile_y = tile_y
+    network.server_send("knight_tile", {knight_id, tile_x, tile_y})
   end
-  player.x = tile_x
-  player.y = tile_y
-  if tile_num == 1 and player.team == offense then -- if player is standing in qb position, make them qb
-    qb = id
+  knight.x = tile_x
+  knight.y = tile_y
+  if tile_num == 1 and knight.team == offense then -- if knight is standing in qb position, make them qb
+    qb = knight_id
     network.server_send("qb", qb)
   end
 end
 
-rules.give_position = function(id, player)
-  for i, v in ipairs(team_info[player.team].lineup) do
+rules.give_position = function(knight_id, knight)
+  for i, v in ipairs(team_info[knight.team].lineup) do
     if not v.taken then
-      rules.set_tile(id, player, i, v)
+      rules.set_tile(knight_id, knight, i, v)
       break
     end
   end
 end
 
-rules.prepare_position = function(id, player)
+rules.prepare_position = function(knight_id, knight)
   tile_x = math.huge
   tile_y = math.huge
   if network_state == "server" then
-    player.tile_x = tile_x
-    player.tile_y = tile_y
-    network.server_send("char_tile", {id, tile_x, tile_y})
+    knight.tile_x = tile_x
+    knight.tile_y = tile_y
+    network.server_send("knight_tile", {knight_id, tile_x, tile_y})
   end
-  player.x = tile_x
-  player.y = tile_y
+  knight.x = tile_x
+  knight.y = tile_y
 end
 
-rules.ensure_qb = function(players)
+rules.ensure_qb = function(knights)
   if not team_info[offense].lineup[1].taken then
     for i, v in ipairs(team_info[offense].lineup) do
       if v.taken then
-        rules.set_tile(v.host, players[v.host], 1, team_info[offense].lineup[1])
+        rules.set_tile(v.host, knights[v.host], 1, team_info[offense].lineup[1])
         break
       end
     end

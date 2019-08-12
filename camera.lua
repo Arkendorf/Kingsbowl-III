@@ -29,9 +29,9 @@ camera.scrimmage = function()
   cam.new_y = (field_h/2)*tile_size
 end
 
-camera.player = function(player)
-  cam.new_x = (player.x+.5)*tile_size
-  cam.new_y = (player.y+.5)*tile_size
+camera.knight = function(knight)
+  cam.new_x = (knight.x+.5)*tile_size
+  cam.new_y = (knight.y+.5)*tile_size
 end
 
 camera.get_offset = function()

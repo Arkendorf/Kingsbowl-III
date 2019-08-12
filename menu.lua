@@ -9,7 +9,7 @@ local menu = {}
 local client_list = {}
 local client_info = {}
 local team_info = {}
-local settings = {turn_time = 3, max_turns = 200}
+local settings = {turn_time = 3, max_turns = 200, knights = 1}
 local time_suffix = {"s", "m", "h"}
 
 menu.load = function(leave_func)
@@ -34,13 +34,21 @@ menu.load = function(leave_func)
       end
     end
     nui.add.text("settings", "game", 0, 214, {text= "Game Settings:", w = 192, align = "center"})
+
     nui.add.text("settings", "turn_time_label", 20, 230, {text= "Turn Time:"})
     nui.add.text("settings", "turn_time_num", 20, 230, {table = settings, index = "turn_time", w = 152, align = "right", suffix = "s"})
     nui.add.slider("settings", "turn_time_slider", 20, 248, "hori", 152, 8, settings, "turn_time", 1, 60)
+
     nui.add.text("settings", "max_turns_label", 20, 262, {text= "Total Turns:"})
     nui.add.text("settings", "max_turns_num", 20, 262, {table = settings, index = "max_turns", w = 152, align = "right"})
     nui.add.slider("settings", "max_turns_slider", 20, 280, "hori", 152, 8, settings, "max_turns", 0, 1000)
-    nui.add.text("settings", "est_time", 0, 296, {text= "Game Time: 0s", w = 192, align = "center"})
+
+    nui.add.text("settings", "est_time", 0, 292, {text= "Game Time: 0s", w = 192, align = "center"})
+
+    nui.add.text("settings", "knights_label", 20, 320, {text= "Knights Per Player:"})
+    nui.add.text("settings", "knights_num", 20, 320, {table = settings, index = "knights", w = 152, align = "right"})
+    nui.add.slider("settings", "knights_slider", 20, 338, "hori", 152, 12, settings, "knights", 1, 12)
+
     nui.hide_menu("settings")
   elseif network_state == "client" then
     nui.add.button("", "leave", w/2-32, h/2+148, 64, 16, {content = "Leave", func = leave_func})
@@ -226,10 +234,10 @@ menu.open_settings = function()
 end
 
 menu.start_game = function()
-  if team_info[1].size > 0 and team_info[2].size > 0 then
+  -- if team_info[1].size > 0 and team_info[2].size > 0 then
     game.load(client_list, client_info, team_info, settings)
     server:sendToAll("start_game", {settings.turn_time, settings.max_turns})
-  end
+  -- end
 end
 
 return menu
