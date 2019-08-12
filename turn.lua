@@ -121,7 +121,7 @@ turn.increment = function()
 end
 
 turn.check_end = function()
-  if turns_left <= 0  then -- and rules.get_score(1) ~= rules.get_score(2)
+  if turns_left <= 0 and rules.get_score(1) ~= rules.get_score(2) then
     network.server_send("results")
     server:update()
     state = "results"
@@ -153,7 +153,7 @@ end
 turn.draw_hud = function(x, y)
   love.graphics.setCanvas(hud_canvas)
   love.graphics.clear()
-  love.graphics.draw(art.img.scoreboard, art.img.scoreboard[rules.get_offense()])
+  love.graphics.draw(art.img.scoreboard, art.quad.scoreboard[rules.get_offense()])
   art.set_effects(1, 1, 1, "scoreboard_overlay", "color", palette[rules.get_color(1)])
   love.graphics.draw(art.img.scoreboard_overlay, art.quad.scoreboard_overlay[1])
   art.set_effects(1, 1, 1, "scoreboard_overlay", "color", palette[rules.get_color(2)])
@@ -164,7 +164,11 @@ turn.draw_hud = function(x, y)
   love.graphics.printf(rules.get_name(1), 24, 6, 96, "right")
   love.graphics.printf(rules.get_score(2), 297, 6, 18, "right")
   love.graphics.printf(rules.get_name(2), 199, 6, 96, "left")
-  love.graphics.printf(turns_left, 132, 6, 34, "left")
+  if turns_left > 0 then
+    love.graphics.printf(turns_left, 132, 6, 34, "left")
+  else
+    love.graphics.printf("O.T.", 132, 6, 34, "left")
+  end
   if resolve then
     love.graphics.printf("0", 168, 6, 18, "right")
   else

@@ -226,10 +226,10 @@ menu.open_settings = function()
 end
 
 menu.start_game = function()
-  -- if team_info[1].size > 0 and team_info[2].size > 0 then
+  if team_info[1].size > 0 and team_info[2].size > 0 then
     game.load(client_list, client_info, team_info, settings)
     server:sendToAll("start_game", {settings.turn_time, settings.max_turns})
-  -- end
+  end
 end
 
 return menu

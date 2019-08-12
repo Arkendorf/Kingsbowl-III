@@ -47,9 +47,9 @@ game.draw = function()
   rules.draw()
   char.draw()
   football.draw()
-  char.draw_paths()
   love.graphics.pop()
   turn.draw_hud()
+  love.graphics.print(rules.get_offense())
 end
 
 game.keypressed = function(key)

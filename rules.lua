@@ -52,9 +52,13 @@ rules.draw = function()
   end
   if pos_select then
     local x = team_info[char_team].lineup[1].x+scrimmage
-    local y= team_info[char_team].lineup[1].y
-    art.path_border(x, y, lineup_h/2, rules.valid_pos, char_team)
-    art.path_icon(6, x, y, colors.green[1], colors.green[2], colors.green[3])
+    local y = team_info[char_team].lineup[1].y
+    if char_team == offense then
+      art.path_border(x, y, lineup_h/2, rules.valid_pos, char_team)
+      art.path_icon(6, x, y, colors.green[1], colors.green[2], colors.green[3])
+    else
+      art.path_border(x, y, lineup_h/2, rules.valid_pos, char_team)
+    end
   end
 end
 
@@ -119,10 +123,8 @@ end
 rules.set_goal = function()
   if offense == 1 and goal < scrimmage then
     goal = scrimmage + math.floor(field.get_dimensions()/12)
-    down = 0
   elseif offense == 2 and goal > scrimmage then
     goal = scrimmage - math.floor(field.get_dimensions()/12)
-    down = 0
   end
   local scrim_min, scrim_max = rules.get_endzones()
   if goal > scrim_max or scrimmage < scrim_min then
@@ -134,11 +136,13 @@ rules.end_down = function()
   if intercept then -- if ball was just intercepted, set down to 1
     down = 1
     intercept = false
+    rules.set_goal()
   else
     down = down + 1
     if down > 4 then
       rules.turnover()
       down = 1
+      rules.set_goal()
     end
   end
   qb = 0
@@ -153,6 +157,7 @@ rules.reset = function()
   rules.turnover()
   local field_w = field.get_dimensions()
   rules.set_scrimmage(math.floor(field_w/12*6)-1)
+  rules.set_goal()
 end
 
 rules.turnover = function()
@@ -206,7 +211,7 @@ end
 
 rules.valid_pos = function(x1, y1, x2, y2, team)
   for i, v in ipairs(team_info[team].lineup) do
-    if i > 1 then
+    if team ~= offense or i > 1 then
       if v.x == x2-scrimmage and v.y == y2 then
         return true
       end

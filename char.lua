@@ -10,7 +10,7 @@ local char = {}
 local players = {}
 local action = "move"
 local move_dist = {
-  qb = 2.5,
+  qb = 22.5,
   carrier = 2.5,
   defense = 3,
   offense = 23.5
@@ -149,6 +149,7 @@ char.update_hud = function(dt)
 end
 
 char.draw = function()
+  char.draw_paths()
   for k, v in pairs(players) do -- draw stationary players first
     if #v.path <= 0 then
       char.draw_char(k, v)
@@ -165,11 +166,15 @@ char.draw = function()
 end
 
 char.draw_paths = function()
+  char.preview()
   for k, v in pairs(players) do -- draw paths
     if not resolve and players[id].team == v.team then -- if on the same team, draw path
       movement.draw_path(v.tile_x, v.tile_y, v.path, colors.white[1], colors.white[2], colors.white[3])
     end
   end
+end
+
+char.preview = function()
   if not resolve then
     local x, y = window.get_mouse()
     local offset_x, offset_y = camera.get_offset()
