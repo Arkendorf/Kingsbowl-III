@@ -5,7 +5,7 @@ local field_h = 27
 local canvas = false
 local interval = math.floor(field_w/12)
 local yard_mark_y = {1, field_h, math.ceil(field_h/2-interval), math.ceil(field_h/2+interval)}
-local number_y = {interval, field_h-interval+1}
+local number_y = {interval, math.ceil(field_h/2), field_h-interval+1}
 local end_zone_color = {1, 2}
 
 field.load = function()

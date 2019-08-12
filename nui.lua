@@ -69,6 +69,10 @@ nui.info.slider = {
   sections = {}
 }
 
+nui.info.image = {
+  mode = "image"
+}
+
 nui.load = function()
   love.keyboard.setKeyRepeat(true)
   for k, v in pairs(nui.info) do
@@ -140,6 +144,9 @@ nui.hover.text = function()
 end
 
 nui.hover.slider = function()
+end
+
+nui.hover.image = function()
 end
 
 nui.hitbox = function(element, menu)
@@ -273,6 +280,9 @@ nui.pressed.slider = function(x, y, id, slider, menu_id, menu)
   return false
 end
 
+nui.pressed.image = function()
+end
+
 nui.keypressed = function(key)
   if typing.id and key == "backspace" then
     local textbox = nui.get.element(typing.menu, typing.id)
@@ -356,6 +366,10 @@ nui.add.element = function(menu_id, id, element, info)
     elements[id] = element
     nui.add_info(elements[id], info)
   end
+end
+
+nui.add.image = function(menu_id, id, x, y, img, quad)
+  nui.add.element(menu_id, id, {element = "image", img = img, quad = quad, x = x, y = y, w = 0, h = 0})
 end
 
 nui.add_info = function(element, info)
@@ -448,6 +462,9 @@ nui.quad.slider = function(info)
       info.sections[type].vert.node[x] = nui.create_section(vert_node_x, node_pos_scale[x], info.node_h, node_size_scale[x], info.img, type, info.w)
     end
   end
+end
+
+nui.quad.image = function()
 end
 
 nui.create_section = function(x, y, w, h, img, type, type_w)
@@ -569,6 +586,14 @@ nui.draw_element.slider = function(slider, menu)
   end
   for i = 1, 3 do
     love.graphics.draw(art.img[info.img], info.sections[1][slider.dir].node[i].quad, math.floor(slider.x+(slider.pos+node_pos_scale[i])*slider.matrix.x), math.floor(slider.y+(slider.pos+node_pos_scale[i])*slider.matrix.y-nui.get_scroll(slider, menu)), 0, math.floor(1+node_size_scale[i]*slider.matrix.x), math.floor(1+node_size_scale[i]*slider.matrix.y))
+  end
+end
+
+nui.draw_element.image = function(image, menu)
+  if image.quad then
+    love.graphics.draw(art.img[image.img], image.quad, image.x, image.y)
+  else
+    love.graphics.draw(art.img[image.img], image.x, image.y)
   end
 end
 

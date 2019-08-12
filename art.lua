@@ -14,15 +14,25 @@ art.load = function(dir)
 
   art.quad = {}
 
-  art.quad.item = {}
-  for i = 1, 8 do
-    art.quad.item[i] = love.graphics.newQuad((i-1)*tile_size, 0, tile_size, tile_size, art.img.sword:getDimensions())
-  end
+  art.quad.item = art.set_quad("sword", 8)
 
-  art.quad.path_icon = {}
-  for i = 1, 6 do
-    art.quad.path_icon[i] = love.graphics.newQuad((i-1)*tile_size/2, 0, tile_size/2, tile_size/2, art.img.path_icons:getDimensions())
-  end
+  art.quad.path_icon = art.set_quad("path_icons", 6)
+
+  art.quad.tiles = art.set_quad("tiles", 4)
+
+  art.quad.markings = art.set_quad("markings", 20)
+
+  art.quad.scoreboard = art.set_quad("scoreboard", 2)
+
+  art.quad.scoreboard_overlay = art.set_quad("scoreboard_overlay", 2)
+
+  art.quad.ability_icon = art.set_quad("ability_icons", 5)
+
+  art.quad.char_icon = art.set_quad("char_icon", 2)
+
+  art.quad.char = art.set_quad("char", 4, 2)
+
+  art.quad.stat_icon = art.set_quad("stat_icons", 3)
 
   art.quad.path_outline = {}
   for tile = 1, 4 do
@@ -35,47 +45,9 @@ art.load = function(dir)
     end
   end
 
-  art.quad.tiles = {}
-  for i = 1, 4 do
-    art.quad.tiles[i] = love.graphics.newQuad((i-1)*tile_size, 0, tile_size, tile_size, art.img.tiles:getDimensions())
-  end
-
-  art.quad.markings = {}
-  for i = 1, 20 do
-    art.quad.markings[i] = love.graphics.newQuad((i-1)*tile_size, 0, tile_size, tile_size, art.img.markings:getDimensions())
-  end
-
-  local w = art.img.scoreboard:getWidth()
-  local h = art.img.scoreboard:getHeight()
-  art.quad.scoreboard = {}
-  art.quad.scoreboard[1] = love.graphics.newQuad(0, 0, w/2, h/2, w, h)
-  art.quad.scoreboard[2] = love.graphics.newQuad(0, h/2, w/2, h/2, w, h)
-  art.quad.scoreboard_overlay = {}
-  art.quad.scoreboard_overlay[1] = love.graphics.newQuad(0, 0, w/2, h/2, w, h/2)
-  art.quad.scoreboard_overlay[2] = love.graphics.newQuad(w/2, 0, w/2, h/2, w, h/2)
-
-  art.quad.ability_icon = {}
-  local keys = {"move", "shield", "sword", "throw", "position"}
-  for i = 1, 5 do
-    art.quad.ability_icon[keys[i]] = love.graphics.newQuad((i-1)*tile_size, 0, tile_size, tile_size, art.img.ability_icons:getDimensions())
-  end
-
-  art.quad.char_icon = {}
-  for i = 1, 2 do
-    art.quad.char_icon[i] = love.graphics.newQuad((i-1)*16, 0, 16, 16, art.img.char_icon:getDimensions())
-  end
-
-  art.quad.char = {}
-  for team = 1, 2 do
-    art.quad.char[team] = {}
-    for i = 1, 4 do
-      art.quad.char[team][i] = love.graphics.newQuad((i-1)*tile_size*1.5, (team-1)*tile_size*1.5, tile_size*1.5, tile_size*1.5, art.img.char:getDimensions())
-    end
-  end
-
   colors = {}
   colors.green = {65/255, 255/255, 110/255}
-  colors.red = {237/255, 76/255, 64/255}
+  colors.red = {229/255, 34/255, 66/255}
   colors.yellow = {255/255, 245/255, 64/255}
   colors.white = {250/255, 255/255, 255/255}
 
@@ -100,6 +72,27 @@ art.load = function(dir)
   love.graphics.setFont(font)
 
   shader.load()
+end
+
+art.set_quad = function(img, x_num, y_num)
+  local w = art.img[img]:getWidth()
+  local h = art.img[img]:getHeight()
+  local quad_w = math.ceil(w/x_num)
+  local quads = {}
+  if y_num and y_num > 1 then
+    local quad_h = math.ceil(h/y_num)
+    for quad_y = 1, y_num do
+      quads[quad_y] = {}
+      for quad_x = 1, x_num do
+        quads[quad_y][quad_x] = love.graphics.newQuad((quad_x-1)*quad_w, (quad_y-1)*quad_h, quad_w, quad_h, w, h)
+      end
+    end
+  else
+    for quad_x = 1, x_num do
+      quads[quad_x] = love.graphics.newQuad((quad_x-1)*quad_w, 0, quad_w, h, w, h)
+    end
+  end
+  return quads
 end
 
 art.load_folder = function(dir)

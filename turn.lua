@@ -121,8 +121,9 @@ turn.increment = function()
 end
 
 turn.check_end = function()
-  if turns_left <= 0 and rules.get_score(1) ~= rules.get_score(2) then
+  if turns_left <= 0  then -- and rules.get_score(1) ~= rules.get_score(2)
     network.server_send("results")
+    server:update()
     state = "results"
     results.load(char.get_players(), rules.get_info())
   end
@@ -164,13 +165,17 @@ turn.draw_hud = function(x, y)
   love.graphics.printf(rules.get_score(2), 297, 6, 18, "right")
   love.graphics.printf(rules.get_name(2), 199, 6, 96, "left")
   love.graphics.printf(turns_left, 132, 6, 34, "left")
-  love.graphics.printf(math.floor(timer)+1, 168, 6, 18, "right")
+  if resolve then
+    love.graphics.printf("0", 168, 6, 18, "right")
+  else
+    love.graphics.printf(math.floor(timer)+1, 168, 6, 18, "right")
+  end
   love.graphics.printf(rules.get_play_string(), 108, 33, 102, "center")
 
   love.graphics.setCanvas(window.canvas)
 
   local w, h = window.get_dimensions()
-  love.graphics.draw(hud_canvas, w/2-art.img.scoreboard:getWidth()/2, 2)
+  love.graphics.draw(hud_canvas, w/2-art.img.scoreboard:getWidth()/4, 8)
 end
 
 turn.get_resolve_time = function()

@@ -99,7 +99,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
       char.end_down(data.step_time)
     end)
     client:on("catch", function(data)
-      football.catch(data, players[data])
+      football.catch(data, players[data], players)
       players[data].carrier = true
     end)
     client:on("touchdown", function(data)
@@ -121,7 +121,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info)
 
   players = {}
   for i, v in ipairs(menu_client_list) do
-    players[v] = {username = menu_client_info[v].username, team = menu_client_info[v].team, tile_x = 3+i, tile_y = 3+i, path = {}, x = 3+i, y = 3+i, xv = 0, yv = 0, item = {active = false}}
+    players[v] = {username = menu_client_info[v].username, team = menu_client_info[v].team, tile_x = 3+i, tile_y = 3+i, path = {}, x = 3+i, y = 3+i, xv = 0, yv = 0, item = {active = false}, stats = {0, 0, 0}}
   end
 
   char.pos_prepare()
@@ -341,9 +341,9 @@ char.prepare = function(step, step_time, max_step)
           if v.team ~= w.team and not w.dead then -- players can only collide with non-dead members of the opposite team
             if v.team ~= rules.get_offense() or not movement.can_move(w, step) then -- only defense can be bounced, unless offense is colliding with stationary player
               if movement.collision(v, w, step) then
-                if char.tackleable(k, v, step) and not char.shielded(k, v, step, step_time, max_step) then
+                if char.tackleable(k, v) and not char.shielded(k, v, step, step_time, max_step) then
                   char.tackle(v, w, step_time)
-                elseif char.tackleable(l, w, step) and not char.shielded(l, w, step, step_time, max_step) then
+                elseif char.tackleable(l, w) and not char.shielded(l, w, step, step_time, max_step) then
                   char.tackle(w, v, step_time)
                 else
                   movement.bounce(v, v.tile_x, v.tile_y, v.path[step].x, v.path[step].y, step_time, .5)
@@ -380,12 +380,12 @@ char.finish = function(step, step_time, max_step)
       end
       -- ball catching
       if football.ball_active() and movement.collision(ball, v, step) then -- ball and player are colliding
-        football.catch(k, v)
+        football.catch(k, v, players)
         v.carrier = true
         network.server_send("catch", k)
       end
       -- check for td
-      if char.tackleable(k, v, step) then
+      if char.tackleable(k, v) then
         if rules.check_td(v, step) then
           end_info.type = "touchdown"
           end_down = true
@@ -424,10 +424,11 @@ char.tackle = function(player, tackler, step_time)
   if not tackler.item.active then
     abilities.stab(player, tackler, step_time)
   end
+  tackler.stats[2] = tackler.stats[2] + 1
 end
 
 char.check_tackle = function(id, player, step)
-  if char.tackleable(id, player, step) then
+  if char.tackleable(id, player) then
     for l, w in pairs(players) do
       if player.team ~= w.team then
         if w.item.active and movement.collision(w.item, player, step) then
@@ -440,7 +441,7 @@ char.check_tackle = function(id, player, step)
   return false
 end
 
-char.tackleable = function(id, player, step)
+char.tackleable = function(id, player)
   return (not player.dead and (player.carrier or (not football.get_ball().thrown and id == rules.get_qb())))
 end
 
@@ -451,6 +452,7 @@ char.shielded = function(id, player, step, step_time, max_step)
         if step > 1 then
           abilities.flourish(v, step_time, step >= max_step)
         end
+        v.stats[3] = v.stats[3] + 1
         return true
       end
     end
@@ -468,9 +470,24 @@ char.start_resolve = function(step_time)
     end
     rules.ensure_qb(players) -- make sure each team has a qb
   end
-  abilities.collide(players, step_time)
+  char.item_collide(step_time)
   for k, v in pairs(players) do --check for initial item tackle
     char.check_tackle(k, v, 0)
+  end
+end
+
+char.item_collide = function(step_time)
+  for k, v in pairs(players) do
+    abilities.set(v, step_time)
+  end
+  for k, v in pairs(players) do
+    if abilities.collide(k, v, players, step_time) then
+      for l, w in pairs(players) do
+        if char.tackleable(l, w) and w.tile_x == v.item.new_x and w.tile_y == v.item.new_y then
+          v.stats[3] = v.stats[3] + 1
+        end
+      end
+    end
   end
 end
 

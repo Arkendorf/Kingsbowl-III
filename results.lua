@@ -25,8 +25,13 @@ results.load = function(game_players, game_team_info)
   nui.remove.all()
   local w, h = window.get_dimensions()
   nui.add.button("", "leave", w/2-48, h/2+148, 96, 16, {content = "Main Menu", func = results.leave})
-  nui.add.menu(1, team_info[1].name, 2, w/2-224, h/2-128, 192, 256, true, team_info[1].color)
-  nui.add.menu(2, team_info[2].name, 2, w/2+32, h/2-128, 192, 256, true, team_info[2].color)
+  for team = 1, 2 do
+    nui.add.menu(team, team_info[team].name, 2, w/2-224+(team-1)*256, h/2-128, 192, 256, true, team_info[team].color)
+    nui.add.text(team, "label", 4, 22, {text = "Stats:"})
+    for i = 1, 3 do
+      nui.add.image(team, "stat"..tostring(i), 116+(i-1)*24, 22, "stat_icons", art.quad.stat_icon[i])
+    end
+  end
   results.char_gui()
 
   if team_info[1].score > team_info[2].score then
@@ -46,11 +51,12 @@ results.draw = function()
 end
 
 results.char_gui = function()
-  nui.remove.menu_elements(1)
-  nui.remove.menu_elements(2)
   local team_order = {0, 0}
   for k, v in pairs(players) do
-    nui.add.text(v.team, "name"..tostring(k), 4, 22+team_order[v.team]*32, {table = v, index = "username"})
+    nui.add.text(v.team, "name"..tostring(k), 4, 54+team_order[v.team]*32, {table = v, index = "username"})
+    for i = 1, 3 do
+      nui.add.text(v.team, "stat"..tostring(i)..tostring(k), 116+(i-1)*24, 54+team_order[v.team]*32, {text = v.stats[i], w = 16, align = "center"})
+    end
     team_order[v.team] = team_order[v.team] + 1
   end
 end

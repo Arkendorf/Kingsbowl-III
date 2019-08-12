@@ -82,10 +82,12 @@ rules.get_color = function(team)
   return team_info[team].color
 end
 
-rules.catch = function(player)
+rules.catch = function(player, players)
   if player.team ~= offense then
     rules.turnover()
     intercept = true
+  else
+    players[qb].stats[1] = players[qb].stats[1] + 1
   end
 end
 

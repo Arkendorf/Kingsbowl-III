@@ -32,16 +32,16 @@ end
 
 abilities.update_hud = function(id, player, action, dt)
   if action == "position" then
-    nui.edit.element("", "move", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon.position})
+    nui.edit.element("", "move", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon[5]})
   else
-    nui.edit.element("", "move", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon.move})
+    nui.edit.element("", "move", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon[1]})
   end
   if abilities.type(id, player) == "throw" then
-    nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon.throw})
+    nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon[4]})
   elseif player.team == rules.get_offense() then
-    nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon.shield})
+    nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon[2]})
   else
-    nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon.sword})
+    nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon[3]})
   end
   if action == "position" then
     nui.edit.element("", "move", "type", 1)
@@ -70,7 +70,7 @@ end
 abilities.cancel = function(id, player)
   local type = abilities.type(id, player)
   if type then
-    abilities.reset[type](player)
+    abilities.reset[type](player, 0)
   end
 end
 
@@ -190,24 +190,21 @@ abilities.adjacent = function(x1, y1, x2, y2)
   return (x_dif >= -1 and x_dif <= 1 and y_dif >= -1 and y_dif <= 1 and not (x1 == x2 and y1 == y2))
 end
 
-abilities.collide = function(players, step_time)
-  for k, v in pairs(players) do
-    abilities.set(v, step_time)
-  end
-  for k, v in pairs(players) do -- resolve items
-    if v.item.active then
-      for l, w in pairs(players) do
-        if w.item.active and v.team ~= w.team then -- items can collide
-          if v.item.new_x == w.item.new_x and v.item.new_y == w.item.new_y then -- items occupy same tile, cancel out
-            abilities.reset.item(v, step_time, false)
-            abilities.reset.item(w, step_time, false)
-            movement.bounce(v.item, v.tile_x, v.tile_y, v.item.new_x, v.item.new_y, step_time, .75)
-            movement.bounce(w.item, w.tile_x, w.tile_y, w.item.new_x, w.item.new_y, step_time, .75)
-          end
+abilities.collide = function(k, v, players, step_time)
+  if v.team == rules.get_offense() and v.item.active then
+    for l, w in pairs(players) do
+      if w.item.active and v.team ~= w.team then -- items can collide
+        if v.item.new_x == w.item.new_x and v.item.new_y == w.item.new_y then -- items occupy same tile, cancel out
+          abilities.reset.item(v, step_time)
+          abilities.reset.item(w, step_time)
+          movement.bounce(v.item, v.tile_x, v.tile_y, v.item.new_x, v.item.new_y, step_time, .75)
+          movement.bounce(w.item, w.tile_x, w.tile_y, w.item.new_x, w.item.new_y, step_time, .75)
+          return true
         end
       end
     end
   end
+  return false
 end
 
 abilities.stab = function(player, tackler, step_time)

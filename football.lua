@@ -148,13 +148,13 @@ football.get_ball = function()
   return ball
 end
 
-football.catch = function(id, player)
+football.catch = function(id, player, players)
   if not ball.caught then
     ball.caught = true
     ball.carrier = id
     ball.primed = false
   end
-  rules.catch(player)
+  rules.catch(player, players)
 end
 
 football.path_intersect = function(path)
