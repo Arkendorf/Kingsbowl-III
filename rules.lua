@@ -17,7 +17,7 @@ local char_team = 1
 local down_suffix = {"st", "nd", "rd", "th"}
 local yard_scale = 2
 
-rules.load = function(menu_client_list, menu_client_info, menu_team_info)
+rules.load = function(menu_client_list, menu_client_info, menu_team_info, menu_settings)
   if network_state == "client" then
     client:setSchema("score", {"team", "score"})
     client:on("score", function(data)
@@ -27,11 +27,21 @@ rules.load = function(menu_client_list, menu_client_info, menu_team_info)
       qb = data
     end)
   end
+
+  local field_w, field_h = field.get_dimensions()
+
+  lineup_h = math.ceil((menu_settings.knights*#menu_client_list+4)/2)
+  if lineup_h < 3 then
+    lineup_h = 3
+  elseif lineup_h > field_h then
+    lineup_h = field_h
+  end
+
   pos_select = true
   offense = 1
   rules.set_scrimmage(math.floor(field.get_dimensions()/2)-1)
   rules.set_goal()
-  yard_scale = 120/field.get_dimensions()
+  yard_scale = 120/field_w
   down = 1
   team_info = menu_team_info
   team_info[1].score = 0
@@ -305,27 +315,31 @@ end
 rules.set_lineup = function(team)
   local lineup = {}
 
-  local center_y = math.ceil(lineup_h/2)
   local sign = (team-1.5)*2
 
   local field_w, field_h = field.get_dimensions()
-  local y = math.floor((field_h-lineup_h)/2)-1
+  local y = math.floor(field_h/2)
   local x = lineup_buffer+team-1 -- team 2 has an extra offset of one to account for the scrimmage marker being inbetween tiles but saved as one
 
-  lineup[1] = {x = (x+1)*sign, y = y+center_y}
-  lineup[2] = {x = x*sign, y = y+center_y}
+  lineup[1] = {x = (x+1)*sign, y = y}
+  lineup[2] = {x = x*sign, y = y}
 
   for i = 1, math.floor(lineup_h/2) do
-    lineup[#lineup+1] = {x = (x+1)*sign, y = y+center_y+i}
-    lineup[#lineup+1] = {x = (x+1)*sign, y = y+center_y-i}
-    lineup[#lineup+1] = {x = x*sign, y = y+center_y+i}
-    lineup[#lineup+1] = {x = x*sign, y = y+center_y-i}
+    lineup[#lineup+1] = {x = (x+1)*sign, y = y+i}
+    lineup[#lineup+1] = {x = (x+1)*sign, y = y-i}
+    lineup[#lineup+1] = {x = x*sign, y = y+i}
+    lineup[#lineup+1] = {x = x*sign, y = y-i}
   end
   team_info[team].lineup = lineup
 end
 
 rules.get_scrimmage = function()
   return scrimmage
+end
+
+rules.max_players = function()
+  local field_w, field_h = field.get_dimensions()
+  return 2*field_h
 end
 
 return rules

@@ -3,6 +3,7 @@ local game = require "game"
 local field = require "field"
 local turn = require "turn"
 local window = require "window"
+local rules = require "rules"
 
 local menu = {}
 
@@ -234,10 +235,12 @@ menu.open_settings = function()
 end
 
 menu.start_game = function()
-  -- if team_info[1].size > 0 and team_info[2].size > 0 then
+  if #client_list*settings.knights > rules.max_players() then
+  elseif team_info[1].size <= 0 or team_info[2].size <= 0 then
+  else
     game.load(client_list, client_info, team_info, settings)
     server:sendToAll("start_game", {settings.turn_time, settings.max_turns})
-  -- end
+  end
 end
 
 return menu

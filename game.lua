@@ -19,7 +19,7 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
     server:removeCallback(connect)
   end
 
-  rules.load(menu_client_list, menu_client_info, menu_team_info)
+  rules.load(menu_client_list, menu_client_info, menu_team_info, menu_settings)
   football.load()
   char.load(menu_client_list, menu_client_info, menu_team_info, menu_settings)
   turn.load(menu_settings)
