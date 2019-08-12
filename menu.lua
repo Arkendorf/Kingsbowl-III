@@ -70,7 +70,7 @@ menu.load = function(leave_func)
     client:on("team_color", function(data)
       menu.team_color(data)
     end)
-    client:setSchema("start_game", {"turn_time", "max_turns"})
+    client:setSchema("start_game", {"turn_time", "max_turns", "knights"})
     client:on("start_game", function(data)
       game.load(client_list, client_info, team_info, data)
     end)
@@ -239,7 +239,7 @@ menu.start_game = function()
   elseif team_info[1].size <= 0 or team_info[2].size <= 0 then
   else
     game.load(client_list, client_info, team_info, settings)
-    server:sendToAll("start_game", {settings.turn_time, settings.max_turns})
+    server:sendToAll("start_game", {settings.turn_time, settings.max_turns, settings.knights})
   end
 end
 
