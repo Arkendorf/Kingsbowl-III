@@ -29,7 +29,7 @@ results.load = function(game_players, game_team_info, replay_active, replay_info
     if not love.filesystem.getInfo("replays") then
       love.filesystem.createDirectory("replays")
     end
-    local title = tostring(team_info[1].name).. " vs. "..tostring(team_info[2].name)..", "..os.date("%m.%d.%y, %I.%M.%S")
+    local title = os.date("Date %m-%d-%y Time %I.%M.%S")
     local file_name = "replays/"..title..".txt"
     local data = bitser.dumps(replay_info)
     love.filesystem.write(file_name, data)

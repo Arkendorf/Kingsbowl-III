@@ -33,7 +33,7 @@ football.draw = function()
       art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y)
       visible = true
     elseif ball.primed and ball.preview then
-      art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y, colors.white[1], colors.white[2], colors.white[3], "border")
+      art.draw_quad("arrow", art.quad.item[ball.dir], ball.tile_x, ball.tile_y, colors.white[1], colors.white[2], colors.white[3], "border")
       visible = true
     end
     if not replay_active and visible and not resolve then

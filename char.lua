@@ -5,6 +5,7 @@ local football = require "football"
 local camera = require "camera"
 local field = require "field"
 local window = require "window"
+local broadcast = require "broadcast"
 
 local char = {}
 
@@ -91,20 +92,24 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
       pos_select = data
     end)
     network.client_callback("tackle", function(data)
-      char.tackle(knights[data.knight_id], knights[data.tackle_id], data.step_time)
+      char.tackle_broadcast(data.knight_id, knights[data.knight_id], knights[data.tackle_id])
+      char.tackle(data.knight_id, knights[data.knight_id], knights[data.tackle_id], data.step_time)
       abilities.flourish(knights[data.tackle_id], data.step_time, data.sheath)
       char.end_down(data.step_time)
     end, {"knight_id", "tackle_id", "step_time", "sheath"})
     network.client_callback("catch", function(data)
+      char.catch_broadcast(knights[data])
       char.catch(data, knights[data])
       knights[data].carrier = true
     end)
     network.client_callback("touchdown", function(data)
+      char.touchdown_broadcast(knights[data.knight_id])
       end_info.type = "touchdown"
       end_down = true
-      char.end_down(data)
-    end)
+      char.end_down(data.step_time)
+    end, {"knight_id", "step_time"})
     network.client_callback("incomplete", function(data)
+      char.incomplete_broadcast()
       char.incomplete()
       char.end_down(data)
     end)
@@ -163,11 +168,10 @@ char.update = function(dt)
   else
     camera.object(object)
   end
-end
 
-char.update_hud = function(dt)
   abilities.update_hud(knight_id, knights[knight_id], action, dt)
 end
+
 
 char.draw = function()
   if not replay_active then
@@ -393,9 +397,9 @@ char.prepare = function(step, step_time, max_step)
             if v.team ~= rules.get_offense() or not movement.can_move(w, step) then -- only defense can be bounced, unless offense is colliding with stationary knight
               if movement.collision(v, w, step) then
                 if char.tackleable(i, v) and not char.shielded(i, v, step, step_time, max_step) then
-                  char.tackle(v, w, step_time)
+                  char.tackle(i, v, w, step_time)
                 elseif char.tackleable(j, w) and not char.shielded(j, w, step, step_time, max_step) then
-                  char.tackle(w, v, step_time)
+                  char.tackle(j, w, v, step_time)
                 else
                   movement.bounce(v, v.tile_x, v.tile_y, v.path[step].x, v.path[step].y, step_time, .5)
                 end
@@ -431,6 +435,7 @@ char.finish = function(step, step_time, max_step)
       end
       -- ball catching
       if football.ball_active() and movement.collision(ball, v, step) then -- ball and knight are colliding
+        char.catch_broadcast(v)
         char.catch(i, v)
         v.carrier = true
         network.server_send("catch", i)
@@ -438,9 +443,10 @@ char.finish = function(step, step_time, max_step)
       -- check for td
       if char.tackleable(i, v) then
         if rules.check_td(v, step) then
+          char.touchdown_broadcast(v)
           end_info.type = "touchdown"
           end_down = true
-          network.server_send("touchdown", step_time)
+          network.server_send("touchdown", {i, step_time})
         end
       end
     end
@@ -448,6 +454,7 @@ char.finish = function(step, step_time, max_step)
   -- ball incomplete
   if network_state == "server" then
     if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
+      char.incomplete_broadcast()
       char.incomplete()
       network.server_send("incomplete", step_time)
     end
@@ -473,7 +480,8 @@ char.incomplete = function()
   ball.caught = true
 end
 
-char.tackle = function(knight, tackler, step_time)
+char.tackle = function(knight_id, knight, tackler, step_time)
+  char.tackle_broadcast(knight_id, knight, tackler)
   movement.cancel(knight)
   knight.dead = true
   end_info.type = "tackle"
@@ -490,7 +498,7 @@ char.check_tackle = function(knight_id, knight, step)
     for i, v in ipairs(knights) do
       if knight.team ~= v.team then
         if v.item.active and movement.collision(v.item, knight, step) then
-          char.tackle(knight, v)
+          char.tackle(knight_id, knight, v)
           return i, v
         end
       end
@@ -660,6 +668,42 @@ char.load_turn = function(turns, current)
         rules.set_position(i, knights[i], v.click_x, v.click_y)
       end
     end
+  end
+end
+
+char.touchdown_broadcast = function(knight)
+  char.broadcast(tostring(players[knight.player].username).." has scored a touchdown for "..rules.get_name(knight.team).."!", knight.team)
+end
+
+char.catch_broadcast = function(knight)
+  if knight.team == rules.get_offense() then
+    char.broadcast(tostring(players[knight.player].username).." has caught the ball", knight.team)
+  else
+    char.broadcast(tostring(players[knight.player].username).." has intercepted the ball!", knight.team)
+  end
+end
+
+char.tackle_broadcast = function(knight_id, knight, tackler)
+  if knight_id == rules.get_qb() then
+    char.broadcast(tostring(players[knight.player].username).." has been sacked by "..tostring(players[tackler.player].username), tackler.team)
+  else
+    char.broadcast(tostring(players[knight.player].username).." has been tackled by "..tostring(players[tackler.player].username), tackler.team)
+  end
+end
+
+char.incomplete_broadcast = function()
+  if rules.get_offense() == 1 then
+    char.broadcast("Incomplete", 2)
+  else
+    char.broadcast("Incomplete", 1)
+  end
+end
+
+char.broadcast = function(txt, team)
+  if team == players[id].team then
+    broadcast.new(txt, "green")
+  else
+    broadcast.new(txt, "red")
   end
 end
 

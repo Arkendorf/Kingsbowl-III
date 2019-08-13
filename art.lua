@@ -22,9 +22,9 @@ art.load = function(dir)
 
   art.quad.markings = art.set_quad("markings", 20)
 
-  art.quad.scoreboard = art.set_quad("scoreboard", 2)
-
   art.quad.scoreboard_overlay = art.set_quad("scoreboard_overlay", 2)
+
+  art.quad.possession = art.set_quad("possession", 2)
 
   art.quad.ability_icon = art.set_quad("ability_icons", 5)
 
@@ -70,7 +70,7 @@ art.load = function(dir)
   font = love.graphics.newImageFont("art/font.png",
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
     "abcdefghijklmnopqrstuvwxyz" ..
-    "0123456789!?.,:", 1)
+    "0123456789!?.,:-*()", 1)
   love.graphics.setFont(font)
 
   shader.load()

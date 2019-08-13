@@ -4,6 +4,7 @@ local field = require "field"
 local turn = require "turn"
 local window = require "window"
 local rules = require "rules"
+local broadcast = require "broadcast"
 
 local menu = {}
 
@@ -81,6 +82,7 @@ menu.load = function(leave_func)
   menu.char_gui()
 
   field.load()
+  broadcast.load()
 end
 
 menu.update = function(dt)
@@ -92,6 +94,7 @@ menu.update = function(dt)
     end
   end
   nui.edit.element("settings", "est_time", "text", "Game Time: "..menu.game_time())
+  broadcast.update(dt)
 end
 
 menu.game_time = function()
@@ -118,9 +121,13 @@ menu.draw = function()
   love.graphics.translate(-(field_w*tile_size-w)/2, -(field_h*tile_size-h)/2)
   field.draw()
   love.graphics.pop()
+  broadcast.draw()
 end
 
 menu.add_client = function(id, index, username, team)
+  if username ~= "" then
+    broadcast.new(username.." has joined!", "green")
+  end
   menu.increase_team_size(team)
   client_list[#client_list+1] = id
   client_info[id] = {index = index, username = username, team = team}
@@ -128,6 +135,7 @@ menu.add_client = function(id, index, username, team)
 end
 
 menu.remove_client = function(id)
+  broadcast.new(client_info[id].username.." has left", "yellow")
   menu.decrease_team_size(client_info[id].team)
   -- remove client from client list
   for i, v in ipairs(client_list) do
@@ -142,6 +150,7 @@ menu.remove_client = function(id)
 end
 
 menu.update_client = function(id, username)
+  broadcast.new(username.." has joined!", "green")
   client_info[id].username = username
   menu.char_gui()
 end
@@ -236,7 +245,9 @@ end
 
 menu.start_game = function()
   if #client_list*settings.knights > rules.max_players() then
-  -- elseif team_info[1].size <= 0 or team_info[2].size <= 0 then
+    broadcast.new("Number of players * knights per player must be below "..tostring(rules.max_players()).."! (currently "..tostring(#client_list*settings.knights)..")", "red")
+  elseif team_info[1].size <= 0 or team_info[2].size <= 0 then
+    broadcast.new("Both teams must have at least one player!", "red")
   else
     game.load(client_list, client_info, team_info, settings)
     server:sendToAll("start_game", {settings.turn_time, settings.max_turns, settings.knights})

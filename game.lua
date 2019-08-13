@@ -8,6 +8,7 @@ local abilities = require "abilities"
 local football = require "football"
 local camera = require "camera"
 local window = require "window"
+local broadcast = require "broadcast"
 
 local game = {}
 
@@ -40,6 +41,8 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
 
   nui.add.button("", "cycle_left", w/2-104, h-56, 32, 32, {func = char.cycle_knight, args = -1, content = {img = art.img.cycle_icons, quad = art.quad.cycle_icon[1]}})
   nui.add.button("", "cycle_right", w/2+88, h-56, 32, 32, {func = char.cycle_knight, args = -1, content = {img = art.img.cycle_icons, quad = art.quad.cycle_icon[2]}})
+
+  broadcast.load()
 end
 
 game.update = function(dt)
@@ -47,7 +50,7 @@ game.update = function(dt)
   turn.update(dt)
   football.update(dt)
   camera.update(dt)
-  char.update_hud(dt)
+  broadcast.update(dt)
 end
 
 game.draw = function()
@@ -59,6 +62,7 @@ game.draw = function()
   football.draw()
   love.graphics.pop()
   turn.draw_hud()
+  broadcast.draw()
 end
 
 game.keypressed = function(key)
