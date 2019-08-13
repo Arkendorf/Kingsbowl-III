@@ -35,8 +35,7 @@ turn.load = function(settings, game_replay_active, game_replay_info)
       turn.complete(data)
     end)
     network.client_callback("results", function()
-      state = "results"
-      results.load(char.get_players(), rules.get_info(), replay_active, replay_info)
+      turn.start_results()
     end)
     network.client_callback('timer', function(data)
       timer = data
@@ -138,13 +137,17 @@ end
 
 turn.check_end = function()
   if turns_left <= 0  then -- and rules.get_score(1) ~= rules.get_score(2)
-    network.server_send("results")
-    if server then
-      server:update()
-    end
-    state = "results"
-    results.load(char.get_players(), rules.get_info(), replay_active, replay_info)
+    turn.start_results()
   end
+end
+
+turn.start_results = function()
+  state = "results"
+  if server then
+    network.server_send("results")
+    server:update()
+  end
+  results.load(char.get_players(), rules.get_info(), replay_active, replay_info)
 end
 
 turn.delay_down = function()

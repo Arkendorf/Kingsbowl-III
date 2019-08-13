@@ -1,6 +1,7 @@
 local nui = require "nui"
 local menu = require "menu"
 local window = require "window"
+local game = require "game"
 
 local server_func = {}
 
@@ -86,11 +87,12 @@ server_func.start_server = function()
       end
     end)
     server:on("disconnect", function(data, client)
-      if state == "menu" then
-        if data == 1 then -- make sure it's a genuine player who left
+      if data == 1 then -- make sure it's a genuine player who left
+        server:sendToAll("client_quit", client.connectId)
+        if state == "menu" then
           menu.remove_client(client.connectId)
-          -- inform other clients of departure
-          server:sendToAll("client_quit", client.connectId)
+        elseif state == "game" then
+          game.remove_client(client.connectId)
         end
       end
     end)

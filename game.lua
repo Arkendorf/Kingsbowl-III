@@ -15,6 +15,8 @@ local game = {}
 local replay_active = false
 local replay_info = false
 
+local stop = false
+
 game.load = function(menu_client_list, menu_client_info, menu_team_info, menu_settings, menu_replay_turns)
   state = "game"
   nui.remove.all()
@@ -51,6 +53,10 @@ game.update = function(dt)
   football.update(dt)
   camera.update(dt)
   broadcast.update(dt)
+
+  if stop then
+    turn.start_results()
+  end
 end
 
 game.draw = function()
@@ -74,6 +80,12 @@ end
 game.mousepressed = function(x, y, button)
   if not replay_active then
     char.mousepressed(x, y, button)
+  end
+end
+
+game.remove_client = function(id)
+  if char.remove_player(id) then -- returns true of client's team has no other players
+    stop = true
   end
 end
 

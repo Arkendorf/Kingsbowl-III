@@ -671,6 +671,21 @@ char.load_turn = function(turns, current)
   end
 end
 
+char.remove_player = function(id)
+  broadcast.new(tostring(players[id].username).. " has left", "yellow")
+  for i, v in ipairs(players[id].knights) do
+    knights[v] = nil
+  end
+  local team = players[id].team
+  players[id] = nil
+  for k, v in pairs(players) do
+    if v.team == team then
+      return false
+    end
+  end
+  return true
+end
+
 char.touchdown_broadcast = function(knight)
   char.broadcast(tostring(players[knight.player].username).." has scored a touchdown for "..rules.get_name(knight.team).."!", knight.team)
 end

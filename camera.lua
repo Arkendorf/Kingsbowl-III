@@ -7,6 +7,8 @@ local camera = {}
 
 local cam = {}
 
+local shake = {t = 100, mag = 0}
+
 camera.load = function()
   cam = {x = 0, y = 0, new_x = 0, new_y = 0}
   camera.scrimmage()
@@ -17,6 +19,11 @@ end
 camera.update = function(dt)
   cam.x = cam.x + (cam.new_x - cam.x)*4*dt
   cam.y = cam.y + (cam.new_y - cam.y)*4*dt
+  if shake.t > 0 then
+    shake.t = shake.t - dt
+    cam.x = cam.x + math.random(-shake.mag, shake.mag)
+    cam.y = cam.y + math.random(-shake.mag, shake.mag)
+  end
 end
 
 camera.get = function()
@@ -45,6 +52,11 @@ camera.get_offset = function()
   local w, h = window.get_dimensions()
   local cam = camera.get()
   return math.floor(-cam.x+w/2), math.floor(-cam.y+h/2)
+end
+
+camera.shake = function(mag, t)
+  shake.mag = mag
+  shake.t = t
 end
 
 return camera
