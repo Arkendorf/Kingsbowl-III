@@ -1,26 +1,39 @@
 local nui = require "nui"
 local field = require "field"
 local window = require "window"
+local bitser = require "bitser"
 
 local results = {}
 
 local players = {}
 local team_info = {}
 
-results.load = function(game_players, game_team_info)
+results.load = function(game_players, game_team_info, replay_active, replay_info)
   state = "results"
 
-  if network_state == "server" then -- disconnect all networking, no longer necessary
-    server:destroy()
-    server = nil
-  elseif network_state == "client" then
-    client:disconnectNow(1)
-    client = nil
+  if not replay_active then
+    if network_state == "server" then -- disconnect all networking, no longer necessary
+      server:destroy()
+      server = nil
+    elseif network_state == "client" then
+      client:disconnectNow(1)
+      client = nil
+    end
   end
   network_state = ""
 
   players = game_players
   team_info = game_team_info
+
+  if not replay_active then
+    if not love.filesystem.getInfo("replays") then
+      love.filesystem.createDirectory("replays")
+    end
+    local title = tostring(team_info[1].name).. " vs. "..tostring(team_info[2].name)..", "..os.date("%m.%d.%y, %I.%M.%S")
+    local file_name = "replays/"..title..".txt"
+    local data = bitser.dumps(replay_info)
+    love.filesystem.write(file_name, data)
+  end
 
   nui.remove.all()
   local w, h = window.get_dimensions()

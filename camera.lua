@@ -1,6 +1,7 @@
 local field = require "field"
 local rules = require "rules"
 local window = require "window"
+local football = require "football"
 
 local camera = {}
 
@@ -29,9 +30,15 @@ camera.scrimmage = function()
   cam.new_y = (field_h/2)*tile_size
 end
 
-camera.knight = function(knight)
-  cam.new_x = (knight.x+.5)*tile_size
-  cam.new_y = (knight.y+.5)*tile_size
+camera.object = function(object)
+  local x = object.x
+  local y = object.y
+  if object.item and object.item.x and object.item.y then
+    x = object.item.x
+    y = object.item.y
+  end
+  cam.new_x = (x+.5)*tile_size
+  cam.new_y = (y+.5)*tile_size
 end
 
 camera.get_offset = function()

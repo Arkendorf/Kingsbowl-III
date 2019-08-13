@@ -17,16 +17,22 @@ local char_team = 1
 local down_suffix = {"st", "nd", "rd", "th"}
 local yard_scale = 2
 
-rules.load = function(menu_client_list, menu_client_info, menu_team_info, menu_settings)
+local replay_active = false
+
+rules.load = function(menu_client_list, menu_client_info, menu_team_info, menu_settings, game_replay_active)
   if network_state == "client" then
-    client:setSchema("score", {"team", "score"})
-    client:on("score", function(data)
+    network.client_callback("score", function(data)
       team_info[data.team].score = data.score
-    end)
-    client:on("qb", function(data)
+    end, {"team", "score"})
+    network.client_callback("qb", function(data)
       qb = data
     end)
+    network.client_callback("scrimmage", function(data)
+      scrimmage = data
+    end)
   end
+
+  replay_active = game_replay_active
 
   local field_w, field_h = field.get_dimensions()
 
@@ -46,6 +52,7 @@ rules.load = function(menu_client_list, menu_client_info, menu_team_info, menu_s
   team_info = menu_team_info
   team_info[1].score = 0
   team_info[2].score = 0
+  qb = 0
 
   rules.set_lineup(1)
   rules.set_lineup(2)
@@ -60,7 +67,7 @@ rules.draw = function()
   if goal then
     art.rectangle(goal+1-3/tile_size, 0, 6/tile_size, field_h, colors.green[1], colors.green[2], colors.green[3])
   end
-  if pos_select then
+  if not replay_active and pos_select then
     local x = team_info[char_team].lineup[1].x+scrimmage
     local y = team_info[char_team].lineup[1].y
     if char_team == offense then
@@ -129,6 +136,7 @@ rules.set_scrimmage = function(x)
   elseif scrimmage < scrim_min then
     scrimmage = scrim_min
   end
+  network.server_send("scrimmage", scrimmage)
 end
 
 rules.set_goal = function()

@@ -6,6 +6,9 @@ local window = require "window"
 
 local turn = {}
 
+local replay_active = false
+local replay_info = {}
+
 local turn_time = 3
 local step_time = .5
 local timer = turn_time
@@ -17,28 +20,39 @@ local max_turns = 200
 local turns_left = 0
 local hud_canvas = love.graphics.newCanvas(320, 51)
 
-turn.load = function(settings)
+turn.load = function(settings, game_replay_active, game_replay_info)
   if network_state == "client" then
-    client:on("resolve", function(data)
+    network.client_callback("load_or_save", function()
+      turn.load_or_save()
+    end)
+    network.client_callback("resolve", function(data)
       turn.resolve(data)
     end)
-    client:on("new_step", function(data)
+    network.client_callback("new_step", function(data)
       turn.new_step(data)
     end)
-    client:on("complete", function(data)
+    network.client_callback("complete", function(data)
       turn.complete(data)
     end)
-    client:on("results", function()
+    network.client_callback("results", function()
       state = "results"
-      results.load(char.get_players(), rules.get_info())
+      results.load(char.get_players(), rules.get_info(), replay_active, replay_info)
     end)
-    client:on('timer', function(data)
+    network.client_callback('timer', function(data)
       timer = data
     end)
   end
 
   turn_time = settings.turn_time
   max_turns = settings.max_turns
+
+  replay_info = game_replay_info
+  if game_replay_active then
+    replay_active = true
+    turn_time = 0
+  else
+    replay_active = false
+  end
 
   timer = turn_time
   resolve = false
@@ -60,6 +74,8 @@ turn.update = function(dt)
           network.server_send("new_step", new_step)
         end
       else
+        turn.load_or_save()
+        network.server_send("load_or_save")
         local step_num = math.max(char.step_num(), football.step_num())
         turn.resolve(step_num)
         network.server_send("resolve", step_num)
@@ -121,17 +137,28 @@ turn.increment = function()
 end
 
 turn.check_end = function()
-  if turns_left <= 0 and rules.get_score(1) ~= rules.get_score(2) then
+  if turns_left <= 0  then -- and rules.get_score(1) ~= rules.get_score(2)
     network.server_send("results")
-    server:update()
+    if server then
+      server:update()
+    end
     state = "results"
-    results.load(char.get_players(), rules.get_info())
+    results.load(char.get_players(), rules.get_info(), replay_active, replay_info)
   end
 end
 
 turn.delay_down = function()
   down_delay = true
   timer = step_time * 3
+end
+
+turn.load_or_save = function()
+  local current = max_turns-turns_left+1
+  if replay_active then
+    char.load_turn(replay_info.turns, current)
+  else
+    replay_info.turns[current] = char.save_turn()
+  end
 end
 
 turn.resolve = function(step_num)

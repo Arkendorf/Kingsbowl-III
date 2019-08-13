@@ -236,7 +236,7 @@ end
 
 menu.start_game = function()
   if #client_list*settings.knights > rules.max_players() then
-  elseif team_info[1].size <= 0 or team_info[2].size <= 0 then
+  -- elseif team_info[1].size <= 0 or team_info[2].size <= 0 then
   else
     game.load(client_list, client_info, team_info, settings)
     server:sendToAll("start_game", {settings.turn_time, settings.max_turns, settings.knights})

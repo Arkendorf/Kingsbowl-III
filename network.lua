@@ -3,6 +3,7 @@ local client_func = require "client"
 local nui = require "nui"
 local menu = require "menu"
 local window = require "window"
+local replays = require "replays"
 
 local network = {}
 
@@ -14,8 +15,9 @@ network_state = ""
 network.load = function()
   nui.remove.all()
   local w, h = window.get_dimensions()
-  nui.add.button("", "host", w/2+16, h*.8, 96, 32, {content = "Host", func = network.start_server})
-  nui.add.button("", "join", w/2-112, h*.8, 96, 32, {content = "Join", func = network.start_client})
+  nui.add.button("", "host", w/2-116, h*.8, 64, 32, {content = "Host", func = network.start_server})
+  nui.add.button("", "join", w/2-32, h*.8, 64, 32, {content = "Join", func = network.start_client})
+  nui.add.button("", "replay", w/2+52, h*.8, 64, 32, {content = "Replays", func = network.start_replays})
 end
 
 network.update = function(dt)
@@ -77,6 +79,29 @@ network.decode_ip_port = function(ip_port, default_ip)
     ip = new_ip
   end
   return ip, port
+end
+
+network.start_replays = function()
+  state = "replays"
+  replays.load()
+end
+
+network.server_callback = function(name, func, schema)
+  if server then
+    if schema then
+      server:setSchema(name, schema)
+    end
+    server:on(name, func)
+  end
+end
+
+network.client_callback = function(name, func, schema)
+  if client then
+    if schema then
+      client:setSchema(name, schema)
+    end
+    client:on(name, func)
+  end
 end
 
 network.server_send = function(event, data)

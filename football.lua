@@ -7,14 +7,18 @@ local resolve = false
 local move_dist = 4
 local ball = {}
 
-football.load = function()
+local replay_active = false
+
+football.load = function(game_replay_active)
   if network_state == "client" then
-    client:setSchema("ball_tile", {"x", "y"})
-    client:on("ball_tile", function(data)
+    network.client_callback("ball_tile", function(data)
       ball.tile_x = data.x
       ball.tile_y = data.y
-    end)
+    end, {"x", "y"})
   end
+
+  replay_active = game_replay_active
+
   ball = {tile_x = 0, tile_y = 0, x = 0, y = 0, thrown = false, caught = false, full_path = {}, path = {}, range = 0, xv = 0, yv = 0, tile = 0, primed = false, preview = false}
 end
 
@@ -32,7 +36,7 @@ football.draw = function()
       art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y, colors.white[1], colors.white[2], colors.white[3], "border")
       visible = true
     end
-    if visible and not resolve then
+    if not replay_active and visible and not resolve then
       movement.draw_path(ball.tile_x, ball.tile_y, ball.path, colors.white[1], colors.white[2], colors.white[3])
       if ball.tile+ball.range >= #ball.full_path then -- if final tile of full path will be reached this turn, add icon to path
         ball.path[#ball.path].icon = 1

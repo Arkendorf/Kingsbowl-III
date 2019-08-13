@@ -11,18 +11,25 @@ local window = require "window"
 
 local game = {}
 
-game.load = function(menu_client_list, menu_client_info, menu_team_info, menu_settings)
+local replay_active = false
+local replay_info = false
+
+game.load = function(menu_client_list, menu_client_info, menu_team_info, menu_settings, menu_replay_turns)
   state = "game"
   nui.remove.all()
-  if network_state == "server" then
-    local callback = server:on("connect")
-    server:removeCallback(connect)
+
+  replay_info = {client_list = menu_client_list, client_info = menu_client_info, team_info = menu_team_info, settings = menu_settings, turns = {}}
+  if menu_replay_turns then
+    replay_info.turns = menu_replay_turns
+    replay_active = true
+  else
+    replay_active = false
   end
 
-  rules.load(menu_client_list, menu_client_info, menu_team_info, menu_settings)
-  football.load()
-  char.load(menu_client_list, menu_client_info, menu_team_info, menu_settings)
-  turn.load(menu_settings)
+  rules.load(menu_client_list, menu_client_info, menu_team_info, menu_settings, replay_active)
+  football.load(replay_active)
+  char.load(menu_client_list, menu_client_info, menu_team_info, menu_settings, replay_active)
+  turn.load(menu_settings, replay_active, replay_info)
   abilities.load()
   camera.load()
   field.load()
@@ -52,15 +59,18 @@ game.draw = function()
   football.draw()
   love.graphics.pop()
   turn.draw_hud()
-  love.graphics.print(rules.get_offense())
 end
 
 game.keypressed = function(key)
-  char.keypressed(key)
+  if not replay_active then
+    char.keypressed(key)
+  end
 end
 
 game.mousepressed = function(x, y, button)
-  char.mousepressed(x, y, button)
+  if not replay_active then
+    char.mousepressed(x, y, button)
+  end
 end
 
 return game
