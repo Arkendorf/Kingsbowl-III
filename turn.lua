@@ -53,6 +53,9 @@ turn.load = function(settings, game_replay_active, game_replay_info)
     replay_active = false
   end
 
+  step = 0
+  max_step = 0
+  down_delay = false
   timer = turn_time
   resolve = false
   turns_left = max_turns
@@ -197,6 +200,7 @@ turn.draw_hud = function(x, y)
   love.graphics.draw(art.img.possession_overlay, art.quad.possession[rules.get_offense()], 92, 27)
   art.clear_effects()
 
+  love.graphics.setColor(colors.white)
   love.graphics.printf(rules.get_score(1), 5, 6, 18, "left")
   love.graphics.printf(rules.get_name(1), 24, 6, 96, "right")
   love.graphics.printf(rules.get_score(2), 297, 6, 18, "right")
@@ -214,6 +218,7 @@ turn.draw_hud = function(x, y)
     end
   end
   love.graphics.printf(rules.get_play_string(), 108, 33, 102, "center")
+  love.graphics.setColor(1, 1, 1)
 
   love.graphics.setCanvas(window.canvas)
 

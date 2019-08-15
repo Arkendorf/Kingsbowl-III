@@ -9,7 +9,7 @@ local qb = 0
 local down = 1
 local scrimmage = 0
 local goal = 0
-local lineup_h = 7
+local lineup_h = {0, 0}
 local lineup_buffer = 1
 local intercept = false
 local pos_select = true
@@ -36,11 +36,13 @@ rules.load = function(menu_client_list, menu_client_info, menu_team_info, menu_s
 
   local field_w, field_h = field.get_dimensions()
 
-  lineup_h = math.ceil((menu_settings.knights*#menu_client_list+4)/2)
-  if lineup_h < 3 then
-    lineup_h = 3
-  elseif lineup_h > field_h then
-    lineup_h = field_h
+  for team = 1, 2 do
+    lineup_h[team] = math.ceil((menu_settings.knights*menu_team_info[team].size+4)/2)
+    if lineup_h[team] < 3 then
+      lineup_h[team] = 3
+    elseif lineup_h[team] > field_h then
+      lineup_h[team] = field_h
+    end
   end
 
   pos_select = true
@@ -61,7 +63,6 @@ rules.load = function(menu_client_list, menu_client_info, menu_team_info, menu_s
 end
 
 rules.draw = function()
-  love.graphics.print(down, 0, 24)
   local field_w, field_h = field.get_dimensions()
   art.rectangle(scrimmage+1-3/tile_size, 0, 6/tile_size, field_h, colors.yellow[1], colors.yellow[2], colors.yellow[3])
   if goal then
@@ -71,10 +72,10 @@ rules.draw = function()
     local x = team_info[char_team].lineup[1].x+scrimmage
     local y = team_info[char_team].lineup[1].y
     if char_team == offense then
-      art.path_border(x, y, lineup_h/2, rules.valid_pos, char_team)
+      art.path_border(x, y, lineup_h[char_team]/2, rules.valid_pos, char_team)
       art.path_icon(6, x, y, colors.green[1], colors.green[2], colors.green[3])
     else
-      art.path_border(x, y, lineup_h/2, rules.valid_pos, char_team)
+      art.path_border(x, y, lineup_h[char_team]/2, rules.valid_pos, char_team)
     end
   end
 end
@@ -332,7 +333,7 @@ rules.set_lineup = function(team)
   lineup[1] = {x = (x+1)*sign, y = y}
   lineup[2] = {x = x*sign, y = y}
 
-  for i = 1, math.floor(lineup_h/2) do
+  for i = 1, math.floor(lineup_h[team]/2) do
     lineup[#lineup+1] = {x = (x+1)*sign, y = y+i}
     lineup[#lineup+1] = {x = (x+1)*sign, y = y-i}
     lineup[#lineup+1] = {x = x*sign, y = y+i}

@@ -36,7 +36,9 @@ abilities.update_hud = function(knight_id, knight, action, dt)
   else
     nui.edit.element("", "move", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon[1]})
   end
-  if abilities.type(knight_id, knight) == "throw" then
+  if knight.carrier then
+    nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon[6]})
+  elseif abilities.type(knight_id, knight) == "throw" then
     nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon[4]})
   elseif knight.team == rules.get_offense() then
     nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon[2]})

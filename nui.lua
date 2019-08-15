@@ -503,7 +503,9 @@ nui.draw_mode.scaleable = function(info, art_type, x, y, w, h, content, color)
     if type(content) == "string" then
       local width, wrap = font:getWrap(content, w)
       local font_h = #wrap * font:getHeight()
+      love.graphics.setColor(colors.white)
       love.graphics.printf(content, x+info.corner, y+info.corner+(h-font_h)/2, w, "center")
+      love.graphics.setColor(255, 255, 255)
     elseif type(content) == "table" then
       local quad_x, quad_y, quad_w, quad_h = content.quad:getViewport()
       love.graphics.draw(content.img, content.quad, math.floor(x+info.corner+(w-quad_w)/2), math.floor(y+info.corner+(h-quad_h)/2))
@@ -530,7 +532,9 @@ nui.draw_mode.textable = function(info, type, x, y, w, text, color)
       art.clear_effects()
     end
   end
+  love.graphics.setColor(colors.white)
   love.graphics.printf(text, x+info.edge, y+6, w, "center")
+  love.graphics.setColor(1, 1, 1)
 end
 
 nui.draw_element = {}
@@ -566,6 +570,8 @@ nui.draw_element.text = function(text, menu)
   end
   if text.color then
     love.graphics.setColor(palette[text.color][1])
+  else
+    love.graphics.setColor(colors.white)
   end
   if text.w then
     love.graphics.printf(str, math.floor(text.x), math.floor(text.y-nui.get_scroll(text, menu)), math.floor(text.w), text.align)

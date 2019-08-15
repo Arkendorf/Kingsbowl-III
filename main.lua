@@ -52,7 +52,6 @@ love.draw = function()
   nui.draw()
   love.graphics.setCanvas()
   window.draw()
-  love.graphics.print(love.timer.getFPS(), 8, 0)
 end
 
 love.mousepressed = function(x, y, button)

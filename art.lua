@@ -5,6 +5,7 @@ local art = {}
 tile_size = 32
 
 art.load = function(dir)
+  love.graphics.setBackgroundColor(29/255, 32/255, 63/255)
   love.graphics.setDefaultFilter("nearest", "nearest")
   love.graphics.setLineStyle("rough")
   love.graphics.setLineWidth(2)
@@ -26,7 +27,7 @@ art.load = function(dir)
 
   art.quad.possession = art.set_quad("possession", 2)
 
-  art.quad.ability_icon = art.set_quad("ability_icons", 5)
+  art.quad.ability_icon = art.set_quad("ability_icons", 6)
 
   art.quad.char_icon = art.set_quad("char_icon", 2)
 
@@ -52,8 +53,8 @@ art.load = function(dir)
   end
 
   colors = {}
-  colors.green = {144/255, 204/255, 71/255}
-  colors.red = {229/255, 34/255, 66/255}
+  colors.green = {121/255, 255/255, 109/255}
+  colors.red = {255/255, 94/255, 82/255}
   colors.yellow = {255/255, 195255, 91/255}
   colors.white = {250/255, 255/255, 255/255}
 

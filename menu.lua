@@ -163,6 +163,10 @@ menu.get_client_list = function()
   return client_list
 end
 
+menu.get_team_info = function(team)
+  return team_info[team]
+end
+
 menu.reset_info = function()
   client_list = {}
   team_info = {{size = 0, color = 1, name = "Team 1"}, {size = 0, color = 2, name = "Team 2"}}
@@ -244,14 +248,17 @@ menu.open_settings = function()
 end
 
 menu.start_game = function()
-  if #client_list*settings.knights > rules.max_players() then
-    broadcast.new("Number of players * knights per player must be below "..tostring(rules.max_players()).."! (currently "..tostring(#client_list*settings.knights)..")", "red")
-  elseif team_info[1].size <= 0 or team_info[2].size <= 0 then
-    broadcast.new("Both teams must have at least one player!", "red")
-  else
-    game.load(client_list, client_info, team_info, settings)
-    server:sendToAll("start_game", {settings.turn_time, settings.max_turns, settings.knights})
+  for team = 1, 2 do
+    if team_info[team].size <= 0 then
+      broadcast.new(team_info[team].name.." must have at least one player!", "red")
+      return
+    elseif team_info[team].size*settings.knights > rules.max_players() then
+      broadcast.new("Number of players on "..team_info[team].name.." * knights per player must be below "..tostring(rules.max_players()).."! (currently "..tostring(team_info[team].size*settings.knights)..")", "red")
+      return
+    end
   end
+  game.load(client_list, client_info, team_info, settings)
+  server:sendToAll("start_game", {settings.turn_time, settings.max_turns, settings.knights})
 end
 
 return menu

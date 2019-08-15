@@ -37,12 +37,14 @@ football.draw = function()
       visible = true
     end
     if not replay_active and visible and not resolve then
-      movement.draw_path(ball.tile_x, ball.tile_y, ball.path, colors.white[1], colors.white[2], colors.white[3])
       if ball.tile+ball.range >= #ball.full_path then -- if final tile of full path will be reached this turn, add icon to path
         ball.path[#ball.path].icon = 1
       else -- otherwise, draw the icon seperately
         local tile = ball.full_path[#ball.full_path]
         art.path_icon(1, tile.x, tile.y)
+      end
+      if ball.tile_x == ball.x and ball.tile_y == ball.y then -- very hackty solution to path spazzing, probably a result of client not getting tile info in time (but normal x and y are also funky for some reason)
+        movement.draw_path(ball.tile_x, ball.tile_y, ball.path, colors.white[1], colors.white[2], colors.white[3])
       end
     end
   end

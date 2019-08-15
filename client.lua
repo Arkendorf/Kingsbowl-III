@@ -76,48 +76,55 @@ client_func.join_server = function(address)
   client_func.stop_test()
   client = sock.newClient(address.ip, address.port)
   if pcall(client_func.connect) then
-    state = "menu"
 
-    nui.remove.all()
-    -- make sure username has a value
-    if textboxes.username == "" then
-      textboxes.username = default_username
-    end
-
-    menu.reset_info()
 
     -- event calls once connected to a server
     client:on("connect", function()
       if client then
+        client_func.start_menu()
         id = client.connectId
         client:send("client_info", {textboxes.username})
       end
     end)
-    client:on("kick", function()
-      if client then
-        client_func.leave_server()
-      end
-    end)
-    client:setSchema("new_client", {"id", "index", "username", "team"})
-    client:on("new_client", function(data)
-      menu.add_client(data.id, data.index, data.username, data.team)
-    end)
-    client:on("client_quit", function(data)
-      if state == "menu" then
-        menu.remove_client(data)
-      elseif state == "game" then
-        game.remove_client(data)
-      end
-    end)
-    client:setSchema("client_info", {"id", "username"})
-    client:on("client_info", function(data)
-      menu.update_client(data.id, data.username)
-    end)
 
-    menu.load(client_func.leave_server)
   else
     client = nil
   end
+end
+
+client_func.start_menu = function()
+  state = "menu"
+
+  nui.remove.all()
+  -- make sure username has a value
+  if textboxes.username == "" then
+    textboxes.username = default_username
+  end
+
+  menu.reset_info()
+
+  client:on("kick", function()
+    if client then
+      client_func.leave_server()
+    end
+  end)
+  client:setSchema("new_client", {"id", "index", "username", "team"})
+  client:on("new_client", function(data)
+    menu.add_client(data.id, data.index, data.username, data.team)
+  end)
+  client:on("client_quit", function(data)
+    if state == "menu" then
+      menu.remove_client(data)
+    elseif state == "game" then
+      game.remove_client(data)
+    end
+  end)
+  client:setSchema("client_info", {"id", "username"})
+  client:on("client_info", function(data)
+    menu.update_client(data.id, data.username)
+  end)
+
+  menu.load(client_func.leave_server)
 end
 
 client_func.test_for_servers = function()

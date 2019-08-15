@@ -83,7 +83,7 @@ particle.draw_particle = function(v, info)
   else
     art.set_effects(1, 1, 1, info.img, v.shader, v.shader_info)
   end
-  art.draw_quad(info.img, art.quad[info.quad][math.floor(v.frame)], v.x, v.y)
+  art.draw_quad(info.img, art.quad[info.quad][math.min(math.floor(v.frame), info.frames)], v.x, v.y)
   art.clear_effects()
 end
 

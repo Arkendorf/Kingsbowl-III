@@ -42,14 +42,14 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
   particle.load()
 
   -- hud
+  local w, h = window.get_dimensions()
   if not replay_active then
-    local w, h = window.get_dimensions()
     nui.add.button("", "move", w/2-52, h-64, 48, 48, {func = char.keypressed, args = "1"})
     nui.add.button("", "ability", w/2+20, h-64, 48, 48, {func = char.keypressed, args = "2"})
     nui.add.button("", "cycle_left", w/2-104, h-56, 32, 32, {func = char.cycle_knight, args = -1, content = {img = art.img.cycle_icons, quad = art.quad.cycle_icon[1]}})
     nui.add.button("", "cycle_right", w/2+88, h-56, 32, 32, {func = char.cycle_knight, args = -1, content = {img = art.img.cycle_icons, quad = art.quad.cycle_icon[2]}})
-    nui.add.button("", "username", w-56, h-56, 32, 32, {toggle = true, func = char.toggle_usernames, func2 = char.toggle_usernames, content = art.img.username_icon})
   end
+  nui.add.button("", "username", w-56, h-56, 32, 32, {toggle = true, func = char.toggle_usernames, func2 = char.toggle_usernames, content = art.img.username_icon})
 end
 
 game.update = function(dt)

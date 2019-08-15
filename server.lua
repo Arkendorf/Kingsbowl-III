@@ -81,6 +81,11 @@ server_func.start_server = function()
             local info = menu.get_client_info(v)
             server:sendToPeer(peer, "new_client", {v, info.index, info.username, info.team})
           end
+          for team  = 1, 2 do -- send team information
+            local info = menu.get_team_info(team)
+            server:sendToPeer(peer, "team_color", {team, info.color})
+            server:sendToPeer(peer, "team_name", {team, info.name})
+          end
         end
       else
         server:sendToPeer(server:getPeerByIndex(client:getIndex()), "kick")
