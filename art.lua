@@ -36,6 +36,10 @@ art.load = function(dir)
 
   art.quad.cycle_icon = art.set_quad("cycle_icons", 2)
 
+  art.quad.particle = art.set_quad("blood", 8)
+
+  art.quad.confetti = art.set_quad("confetti", 18)
+
   art.quad.path_outline = {}
   for tile = 1, 4 do
     art.quad.path_outline[tile] = {}
@@ -48,9 +52,9 @@ art.load = function(dir)
   end
 
   colors = {}
-  colors.green = {65/255, 255/255, 110/255}
+  colors.green = {144/255, 204/255, 71/255}
   colors.red = {229/255, 34/255, 66/255}
-  colors.yellow = {255/255, 245/255, 64/255}
+  colors.yellow = {255/255, 195255, 91/255}
   colors.white = {250/255, 255/255, 255/255}
 
   local w, h = art.img.palettes:getDimensions()
@@ -71,6 +75,14 @@ art.load = function(dir)
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
     "abcdefghijklmnopqrstuvwxyz" ..
     "0123456789!?.,:-*()", 1)
+  smallfont = love.graphics.newImageFont("art/smallfont.png",
+    " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
+    "abcdefghijklmnopqrstuvwxyz" ..
+    "0123456789!?.,:-*()")
+  smallfont_overlay = love.graphics.newImageFont("art/smallfont_overlay.png",
+    " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
+    "abcdefghijklmnopqrstuvwxyz" ..
+    "0123456789!?.,:-*()")
   love.graphics.setFont(font)
 
   shader.load()

@@ -19,7 +19,7 @@ end
 broadcast.update = function(dt)
   for i, v in ipairs(list) do
     v.t = v.t + dt
-    v.y = v.y + (i*font:getHeight()-v.y) * dt * 4
+    v.y = v.y + (i*smallfont:getHeight()-v.y) * dt * 4
     if i > max or v.t > leave_t then
       v.x = v.x - (v.w+buffer+1-v.x) * dt * 4
       if (v.x+v.w+buffer) <= 0.1 or v.t > garbage_t then
@@ -36,16 +36,20 @@ broadcast.draw = function()
   love.graphics.clear()
   local w, h = window.get_dimensions()
   for i, v in ipairs(list) do
+    love.graphics.setFont(smallfont)
+    love.graphics.print(v.txt, buffer+v.x, h-math.floor(v.y)-buffer)
+    love.graphics.setFont(smallfont_overlay)
     love.graphics.setColor(colors[v.color])
     love.graphics.print(v.txt, buffer+v.x, h-math.floor(v.y)-buffer)
   end
+  love.graphics.setFont(font)
   love.graphics.setColor(1, 1, 1)
   love.graphics.setCanvas(window.canvas)
   love.graphics.draw(canvas, 0, 0)
 end
 
 broadcast.new = function(txt, color)
-  local w = font:getWidth(txt)
+  local w = smallfont:getWidth(txt)
   table.insert(list, 1, {txt = txt, color = color, x = -w-buffer, y = 0, w = w, t = 0})
 end
 

@@ -6,6 +6,8 @@ local camera = require "camera"
 local field = require "field"
 local window = require "window"
 local broadcast = require "broadcast"
+local particle = require "particle"
+local show_usernames = false
 
 local char = {}
 
@@ -15,10 +17,10 @@ local knight_cycle = 1
 local knight_id = 1
 local action = "move"
 local move_dist = {
-  qb = 2.5,
+  qb = 22.5,
   carrier = 2.5,
   defense = 3,
-  offense = 23.5
+  offense = 3.5
 }
 local resolve = false
 local pos_select = false
@@ -92,7 +94,6 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
       pos_select = data
     end)
     network.client_callback("tackle", function(data)
-      char.tackle_broadcast(data.knight_id, knights[data.knight_id], knights[data.tackle_id])
       char.tackle(data.knight_id, knights[data.knight_id], knights[data.tackle_id], data.step_time)
       abilities.flourish(knights[data.tackle_id], data.step_time, data.sheath)
       char.end_down(data.step_time)
@@ -103,13 +104,10 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
       knights[data].carrier = true
     end)
     network.client_callback("touchdown", function(data)
-      char.touchdown_broadcast(knights[data.knight_id])
-      end_info.type = "touchdown"
-      end_down = true
+      char.touchdown(knights[data.knight_id])
       char.end_down(data.step_time)
     end, {"knight_id", "step_time"})
     network.client_callback("incomplete", function(data)
-      char.incomplete_broadcast()
       char.incomplete()
       char.end_down(data)
     end)
@@ -135,6 +133,8 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
   char.cycle_knight(0)
 
   replay_active = game_replay_active
+
+  show_usernames = false
 
   char.pos_prepare()
   football.visible(players[id].team)
@@ -235,12 +235,23 @@ char.draw_char = function(i, v)
       quad = 4
     end
   end
-  if not replay_active and i == knight_id then
-    art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, colors.white[1], colors.white[2], colors.white[3], "outline")
-  end
-  if not pos_select or v.team == players[id].team then
-    art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size)
-    art.draw_quad("char_overlay", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, 1, 1, 1, "color", palette[rules.get_color(v.team)])
+  if v.tile_x ~= math.huge and v.tile_y ~= math.huge then
+    if not replay_active and i == knight_id then
+      art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, colors.white[1], colors.white[2], colors.white[3], "outline")
+    end
+    if not pos_select or v.team == players[id].team then
+      art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size)
+      art.draw_quad("char_overlay", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, 1, 1, 1, "color", palette[rules.get_color(v.team)])
+    end
+    if show_usernames then
+      love.graphics.setFont(smallfont)
+      love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
+      love.graphics.setColor(palette[rules.get_color(v.team)][2])
+      love.graphics.setFont(smallfont_overlay)
+      love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
+      love.graphics.setColor(1, 1, 1)
+      love.graphics.setFont(font)
+    end
   end
 end
 
@@ -277,23 +288,32 @@ char.mousepressed = function(x, y, button)
     local tile_x = math.floor(x/tile_size)
     local tile_y = math.floor(y/tile_size)
     tile_x, tile_y = field.cap_tile(tile_x, tile_y)
+    local valid = false
     if action == "move" then
       if char.set_path(knight_id, tile_x, tile_y) then
         abilities.cancel(knight_id, knights[knight_id])
         network.server_send("path", {knight_id, tile_x, tile_y})
         network.client_send("path", {knight_id, tile_x, tile_y})
+        valid = true
       end
     elseif action == "ability" then
       if char.use_ability(knight_id, tile_x, tile_y) then
         movement.cancel(knights[knight_id])
         network.server_send("ability", {knight_id, tile_x, tile_y})
         network.client_send("ability", {knight_id, tile_x, tile_y})
+        valid = true
       end
     elseif action == "position" then -- choose position to start next down
       if rules.set_position(knight_id, knights[knight_id], tile_x, tile_y) then
         network.server_send("position", {knight_id, tile_x, tile_y})
         network.client_send("position", {knight_id, tile_x, tile_y})
+        valid = true
       end
+    end
+    if valid then
+      particle.add("click", tile_x, tile_y, "green")
+    else
+      particle.add("click", tile_x, tile_y, "red")
     end
   end
 end
@@ -443,9 +463,7 @@ char.finish = function(step, step_time, max_step)
       -- check for td
       if char.tackleable(i, v) then
         if rules.check_td(v, step) then
-          char.touchdown_broadcast(v)
-          end_info.type = "touchdown"
-          end_down = true
+          char.touchdown(v)
           network.server_send("touchdown", {i, step_time})
         end
       end
@@ -454,7 +472,6 @@ char.finish = function(step, step_time, max_step)
   -- ball incomplete
   if network_state == "server" then
     if football.ball_active() and ball.tile >= #ball.full_path then -- incomplete
-      char.incomplete_broadcast()
       char.incomplete()
       network.server_send("incomplete", step_time)
     end
@@ -471,16 +488,27 @@ char.catch = function(knight_id, knight)
     local qb = rules.get_qb()
     players[knights[qb].player].stats[1] = players[knights[qb].player].stats[1] + 1
   end
+  particle.add("catch", knight.tile_x, knight.tile_y)
 end
 
 char.incomplete = function()
+  char.incomplete_broadcast()
   end_info.type = "incomplete"
   end_down = true
   local ball = football.get_ball()
   ball.caught = true
+  particle.add("stuck", ball.tile_x, ball.tile_y)
+end
+
+char.touchdown = function(knight)
+  char.touchdown_broadcast(knight)
+  end_info.type = "touchdown"
+  end_down = true
+  particle.add("confetti", knight.tile_x, knight.tile_y, false, "color", palette[rules.get_color(knight.team)])
 end
 
 char.tackle = function(knight_id, knight, tackler, step_time)
+  particle.add("blood", knight.tile_x, knight.tile_y)
   char.tackle_broadcast(knight_id, knight, tackler)
   movement.cancel(knight)
   knight.dead = true
@@ -491,6 +519,7 @@ char.tackle = function(knight_id, knight, tackler, step_time)
     abilities.stab(knight, tackler, step_time)
   end
   players[tackler.player].stats[2] = players[tackler.player].stats[2] + 1
+  particle.add("stab", knight.tile_x, knight.tile_y)
 end
 
 char.check_tackle = function(knight_id, knight, step)
@@ -518,12 +547,17 @@ char.shielded = function(knight_id, knight, step, step_time, max_step)
         if step > 1 then
           abilities.flourish(v, step_time, step >= max_step)
         end
-        players[v.player].stats[3] = players[v.player].stats[3] + 1
+        char.shield(players[v.player], knight.tile_x, knight.tile_y)
         return true
       end
     end
   end
   return false
+end
+
+char.shield = function(player, x, y)
+  player.stats[3] = player.stats[3] + 1
+  particle.add("shield", x, y)
 end
 
 char.start_resolve = function(step_time)
@@ -550,7 +584,7 @@ char.item_collide = function(step_time)
     if abilities.collide(i, v, knights, step_time) then
       for j, w in ipairs(knights) do
         if char.tackleable(j, w) and w.tile_x == v.item.new_x and w.tile_y == v.item.new_y then
-          players[v.player].stats[3] = players[v.player].stats[3] + 1
+          char.shield(players[v.player], w.tile_x, w.tile_y)
         end
       end
     end
@@ -622,6 +656,10 @@ char.get_move_dist = function()
   return move_dist
 end
 
+char.toggle_usernames = function()
+  show_usernames = not show_usernames
+end
+
 char.save_turn = function()
   local turn_info = {}
   for i, v in ipairs(knights) do
@@ -652,8 +690,12 @@ char.save_turn = function()
   return turn_info
 end
 
-char.load_turn = function(turns, current)
-  local turn_info = turns[current]
+char.load_turn = function(turn_info)
+  for i, v in ipairs(knights) do
+    if not turn_info[i] then -- player must have left if no data is saved for them
+      char.remove_player(v.player)
+    end
+  end
   for i, v in ipairs(turn_info) do
     knights[i].tile_x = v.tile_x
     knights[i].tile_y = v.tile_y
@@ -674,6 +716,11 @@ end
 char.remove_player = function(id)
   broadcast.new(tostring(players[id].username).. " has left", "yellow")
   for i, v in ipairs(players[id].knights) do
+    if char.tackleable(v, knights[v]) then -- if player with ball leaves, reset down
+      end_info.type = "tackle"
+      end_info.x = knights[v].tile_x
+      end_down = true
+    end
     knights[v] = nil
   end
   local team = players[id].team

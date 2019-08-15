@@ -1,6 +1,7 @@
 local nui = require "nui"
 local menu = require "menu"
 local window = require "window"
+local game = require "game"
 
 client_func = {}
 
@@ -102,7 +103,11 @@ client_func.join_server = function(address)
       menu.add_client(data.id, data.index, data.username, data.team)
     end)
     client:on("client_quit", function(data)
-      menu.remove_client(data)
+      if state == "menu" then
+        menu.remove_client(data)
+      elseif state == "game" then
+        game.remove_client(data)
+      end
     end)
     client:setSchema("client_info", {"id", "username"})
     client:on("client_info", function(data)

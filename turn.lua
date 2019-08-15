@@ -10,7 +10,7 @@ local replay_active = false
 local replay_info = {}
 
 local turn_time = 3
-local step_time = .5
+local step_time = .4
 local timer = turn_time
 local resolve = false
 local step = 0
@@ -136,7 +136,7 @@ turn.increment = function()
 end
 
 turn.check_end = function()
-  if turns_left <= 0  then -- and rules.get_score(1) ~= rules.get_score(2)
+  if turns_left <= 0 and rules.get_score(1) ~= rules.get_score(2) then
     turn.start_results()
   end
 end
@@ -158,7 +158,11 @@ end
 turn.load_or_save = function()
   local current = max_turns-turns_left+1
   if replay_active then
-    char.load_turn(replay_info.turns, current)
+    if replay_info.turns[current] then
+      char.load_turn(replay_info.turns[current])
+    else
+      turn.start_results()
+    end
   else
     replay_info.turns[current] = char.save_turn()
   end
@@ -202,17 +206,19 @@ turn.draw_hud = function(x, y)
   else
     love.graphics.printf("O.T.", 132, 6, 34, "left")
   end
-  if resolve then
-    love.graphics.printf("0", 168, 6, 18, "right")
-  else
-    love.graphics.printf(math.floor(timer)+1, 168, 6, 18, "right")
+  if not replay_active then
+    if resolve then
+      love.graphics.printf("0", 168, 6, 18, "right")
+    else
+      love.graphics.printf(math.floor(timer)+1, 168, 6, 18, "right")
+    end
   end
   love.graphics.printf(rules.get_play_string(), 108, 33, 102, "center")
 
   love.graphics.setCanvas(window.canvas)
 
   local w, h = window.get_dimensions()
-  love.graphics.draw(hud_canvas, w/2-art.img.scoreboard:getWidth()/4, 8)
+  love.graphics.draw(hud_canvas, w/2-art.img.scoreboard:getWidth()/2, 8)
 end
 
 turn.get_resolve_time = function()

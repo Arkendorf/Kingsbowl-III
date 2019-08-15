@@ -49,8 +49,10 @@ results.load = function(game_players, game_team_info, replay_active, replay_info
 
   if team_info[1].score > team_info[2].score then
     nui.add.menu("header", team_info[1].name.." Wins! "..tostring(team_info[1].score).." to "..tostring(team_info[2].score), 1, w/2, h/2-160, 1, 1, false, team_info[1].color)
-  else
+  elseif team_info[2].score > team_info[1].score then
     nui.add.menu("header", team_info[2].name.." Wins! "..tostring(team_info[2].score).." to "..tostring(team_info[1].score), 1, w/2, h/2-160, 1, 1, false, team_info[2].color)
+  else
+    nui.add.menu("header", "Draw: "..tostring(team_info[1].score).." to "..tostring(team_info[2].score), 1, w/2, h/2-160, 1, 1, false)
   end
 end
 
