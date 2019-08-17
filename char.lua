@@ -140,6 +140,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
   football.visible(players[id].team)
   rules.set_team(players[id].team)
   resolve = false
+  end_down = false
 end
 
 char.update = function(dt)
@@ -218,6 +219,8 @@ char.preview = function()
         abilities.preview_throw(knights[knight_id], tile_x, tile_y)
       elseif type == "item" then
         abilities.preview_item(knight_id, knights[knight_id], knights, tile_x, tile_y)
+      else
+        art.path_icon(4, tile_x, tile_y, colors.red[1], colors.red[2], colors.red[3])
       end
     end
   end

@@ -15,7 +15,7 @@ local intercept = false
 local pos_select = true
 local char_team = 1
 local down_suffix = {"st", "nd", "rd", "th"}
-local yard_scale = 2
+local yard_scale = 0
 
 local replay_active = false
 
@@ -55,6 +55,7 @@ rules.load = function(menu_client_list, menu_client_info, menu_team_info, menu_s
   team_info[1].score = 0
   team_info[2].score = 0
   qb = 0
+  intercept = false
 
   rules.set_lineup(1)
   rules.set_lineup(2)

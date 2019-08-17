@@ -25,6 +25,7 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
 
   replay_info = {client_list = menu_client_list, client_info = menu_client_info, team_info = menu_team_info, settings = menu_settings, turns = {}}
   if menu_replay_turns then
+    id = 0
     replay_info.turns = menu_replay_turns
     replay_active = true
   else

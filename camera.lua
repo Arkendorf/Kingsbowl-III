@@ -7,7 +7,7 @@ local camera = {}
 
 local cam = {}
 
-local shake = {t = 100, mag = 0}
+local shake = {t = 0, mag = 0}
 
 camera.load = function()
   cam = {x = 0, y = 0, new_x = 0, new_y = 0, x_offset = 0, y_offset = 0}
@@ -40,7 +40,7 @@ end
 camera.object = function(object)
   local x = object.x
   local y = object.y
-  if object.item and object.item.x and object.item.y then
+  if object.item and object.item.visible and object.item.x and object.item.y then
     x = object.item.x
     y = object.item.y
   end

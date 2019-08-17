@@ -9,14 +9,14 @@ local turn = {}
 local replay_active = false
 local replay_info = {}
 
-local turn_time = 3
+local turn_time = 0
 local step_time = .4
 local timer = turn_time
 local resolve = false
 local step = 0
 local max_step = 0
 local down_delay = false
-local max_turns = 200
+local max_turns = 0
 local turns_left = 0
 local hud_canvas = love.graphics.newCanvas(320, 51)
 

@@ -1,11 +1,10 @@
 local window = {w = 400, h = 300, scale = 2}
 
 window.load = function()
-  love.window.setFullscreen(true)
+  -- love.window.setFullscreen(true)
   window.w = math.floor(love.graphics.getWidth()/window.scale)
   window.h = math.floor(love.graphics.getHeight()/window.scale)
   window.canvas = love.graphics.newCanvas(window.w, window.h)
-
 end
 
 window.get_dimensions = function()

@@ -20,6 +20,7 @@ football.load = function(game_replay_active)
   replay_active = game_replay_active
 
   ball = {tile_x = 0, tile_y = 0, x = 0, y = 0, thrown = false, caught = false, full_path = {}, path = {}, range = 0, xv = 0, yv = 0, tile = 0, primed = false, preview = false}
+  resolve = false
 end
 
 football.update = function(dt)
