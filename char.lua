@@ -98,7 +98,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
       char.tackle(data.knight_id, knights[data.knight_id], knights[data.tackle_id], data.step, data.step_time)
       abilities.flourish(knights[data.tackle_id], data.step_time, data.sheath)
       char.end_down(data.step_time)
-    end, {"knight_id", "tackle_id", "step_time", "sheath"})
+    end, {"knight_id", "tackle_id", "step", "step_time", "sheath"})
     network.client_callback("catch", function(data)
       char.catch_broadcast(knights[data])
       char.catch(data, knights[data])
@@ -536,6 +536,7 @@ char.check_tackle = function(knight_id, knight, step)
       if knight.team ~= v.team then
         if v.item.active and movement.collision(v.item, knight, step) then
           char.tackle(knight_id, knight, v)
+          movement.cancel(knight)
           return i, v
         end
       end
