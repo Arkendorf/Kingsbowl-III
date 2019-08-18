@@ -1,0 +1,1 @@
+Clicking the “Refresh” button will refresh the list of available local games.

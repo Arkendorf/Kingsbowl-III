@@ -84,6 +84,9 @@ game.keypressed = function(key)
   if not replay_active then
     char.keypressed(key)
   end
+  if key == "escape" then
+    love.event.quit()
+  end
 end
 
 game.mousepressed = function(x, y, button)

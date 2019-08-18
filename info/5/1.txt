@@ -1,0 +1,1 @@
+The primary action a player can take during their turn is to move one or more of their knights. However, a knight can only move to a tile within its range. If a tile is valid, when mousing over a tile, a green path will appear between the knight and the tile. However, if the tile is not valid, a red “X” will appear, and all valid tiles will be outlined in yellow.

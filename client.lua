@@ -40,6 +40,12 @@ end
 client_func.draw = function()
 end
 
+client_func.keypressed = function(key)
+  if key == "escape" then
+    client_func.main_menu()
+  end
+end
+
 client_func.quit = function()
   if client then
     client:disconnectNow(1)

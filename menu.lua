@@ -13,10 +13,12 @@ local client_info = {}
 local team_info = {}
 local settings = {turn_time = 3, max_turns = 200, knights = 1}
 local time_suffix = {"s", "m", "h"}
+local leave_func = false
 
-menu.load = function(leave_func)
+menu.load = function(menu_leave_func)
   menu.reset_info()
 
+  leave_func = menu_leave_func
   nui.remove.all()
   local w, h = window.get_dimensions()
   if network_state == "server" then
@@ -51,7 +53,7 @@ menu.load = function(leave_func)
     nui.add.text("settings", "knights_num", 20, 320, {table = settings, index = "knights", w = 152, align = "right"})
     nui.add.slider("settings", "knights_slider", 20, 338, "hori", 152, 12, settings, "knights", 1, 12)
 
-    nui.hide_menu("settings")
+    nui.hide.menu("settings")
   elseif network_state == "client" then
     nui.add.button("", "leave", w/2-32, h/2+148, 64, 16, {content = "Leave", func = leave_func})
 
@@ -122,6 +124,12 @@ menu.draw = function()
   field.draw()
   love.graphics.pop()
   broadcast.draw()
+end
+
+menu.keypressed = function(key)
+  if key == "escape" then
+    leave_func()
+  end
 end
 
 menu.add_client = function(id, index, username, team)
@@ -233,18 +241,18 @@ menu.char_gui = function()
 end
 
 menu.close_settings = function()
-  nui.hide_menu("settings")
+  nui.hide.menu("settings")
 
-  nui.show_menu(1)
-  nui.show_menu(2)
+  nui.show.menu(1)
+  nui.show.menu(2)
   menu.char_gui()
 end
 
 menu.open_settings = function()
-  nui.hide_menu(1)
-  nui.hide_menu(2)
+  nui.hide.menu(1)
+  nui.hide.menu(2)
 
-  nui.show_menu("settings")
+  nui.show.menu("settings")
 end
 
 menu.start_game = function()

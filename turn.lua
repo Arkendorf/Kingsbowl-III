@@ -18,7 +18,7 @@ local max_step = 0
 local down_delay = false
 local max_turns = 0
 local turns_left = 0
-local hud_canvas = love.graphics.newCanvas(320, 51)
+local hud_canvas = love.graphics.newCanvas(318, 51)
 
 turn.load = function(settings, game_replay_active, game_replay_info)
   if network_state == "client" then
@@ -195,7 +195,7 @@ turn.draw_hud = function(x, y)
   art.set_effects(1, 1, 1, "scoreboard_overlay", "color", palette[rules.get_color(1)])
   love.graphics.draw(art.img.scoreboard_overlay, art.quad.scoreboard_overlay[1])
   art.set_effects(1, 1, 1, "scoreboard_overlay", "color", palette[rules.get_color(2)])
-  love.graphics.draw(art.img.scoreboard_overlay, art.quad.scoreboard_overlay[2], 160, 0)
+  love.graphics.draw(art.img.scoreboard_overlay, art.quad.scoreboard_overlay[2], 159, 0)
   art.set_effects(1, 1, 1, "possession_overlay", "color", palette[rules.get_color(rules.get_offense())])
   love.graphics.draw(art.img.possession_overlay, art.quad.possession[rules.get_offense()], 92, 27)
   art.clear_effects()
@@ -203,7 +203,7 @@ turn.draw_hud = function(x, y)
   love.graphics.setColor(colors.white)
   love.graphics.printf(rules.get_score(1), 5, 6, 18, "left")
   love.graphics.printf(rules.get_name(1), 24, 6, 96, "right")
-  love.graphics.printf(rules.get_score(2), 297, 6, 18, "right")
+  love.graphics.printf(rules.get_score(2), 295, 6, 18, "right")
   love.graphics.printf(rules.get_name(2), 199, 6, 96, "left")
   if turns_left > 0 then
     love.graphics.printf(turns_left, 132, 6, 34, "left")

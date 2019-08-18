@@ -1,0 +1,1 @@
+The game ends once the number of remaining turns reaches zero. However, if neither team is in the lead when this happens, the game enters overtime. Overtime ends once a team scores.

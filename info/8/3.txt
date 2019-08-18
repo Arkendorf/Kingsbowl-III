@@ -1,0 +1,1 @@
+If a knight collides with ball anywhere along their paths, that knight has “caught” the ball. From this point on until the end of the down, that knight is the “ball carrier”. An interception occurs If the ball carrier is not on the same team as the quarterback. (See the “Rules” tab for more information)

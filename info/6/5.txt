@@ -1,0 +1,1 @@
+To attack, click on any adjacent tile. Your knight’s sword will enter that tile. If the sword collides with the ball carrier, they will be tackled. (See the “Rules” tab for more information)

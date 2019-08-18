@@ -5,7 +5,9 @@ local menu = require "menu"
 local nui = require "nui"
 local game = require "game"
 local results = require "results"
+local info = require "info"
 local window = require "window"
+local replays = require "replays"
 
 state = "network"
 reset = false
@@ -17,8 +19,6 @@ love.load = function()
 
   state = "network"
   network.load()
-
-  love.window.setTitle("Kingsbowl 3")
 end
 
 love.update = function(dt)
@@ -48,6 +48,8 @@ love.draw = function()
     network.draw()
   elseif state == "results" then
     results.draw()
+  elseif state == "replays" then
+    replays.draw()
   end
   nui.draw()
   love.graphics.setCanvas()
@@ -67,9 +69,19 @@ love.keypressed = function(key)
   nui.keypressed(key)
   if state == "game" then
     game.keypressed(key)
+  elseif state == "menu" then
+    menu.keypressed(key)
+  elseif state == "network" then
+    network.keypressed(key)
+  elseif state == "replays" then
+    replays.keypressed(key)
   end
-  if key == "escape" then
-    love.event.quit()
+  info.keypressed(key)
+  if key == "t" then
+    if not love.filesystem.getInfo("screenshots") then
+      love.filesystem.createDirectory("screenshots")
+    end
+    love.graphics.captureScreenshot("screenshots/"..os.time()..".png")
   end
 end
 

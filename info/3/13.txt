@@ -1,0 +1,1 @@
+Finally, the host can adjust the number of knights controlled by each player, using the “Knights Per Player” slider.

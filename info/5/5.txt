@@ -1,0 +1,1 @@
+When resolving collision between two knights on opposing teams, the knight on offense gets priority, unless they are carrying the ball. (See the “Rules” tab for more information)

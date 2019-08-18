@@ -4,6 +4,7 @@ local nui = require "nui"
 local menu = require "menu"
 local window = require "window"
 local replays = require "replays"
+local info = require "info"
 
 local network = {}
 
@@ -15,9 +16,12 @@ network_state = ""
 network.load = function()
   nui.remove.all()
   local w, h = window.get_dimensions()
-  nui.add.button("", "host", w/2-116, h*.8, 64, 32, {content = "Host", func = network.start_server})
-  nui.add.button("", "join", w/2-32, h*.8, 64, 32, {content = "Join", func = network.start_client})
-  nui.add.button("", "replay", w/2+52, h*.8, 64, 32, {content = "Replays", func = network.start_replays})
+  local button_h = math.floor((h+art.img.splash:getHeight())/2)+14
+  nui.add.button("", "host", w/2-116, button_h, 64, 32, {content = "Host", func = network.start_server})
+  nui.add.button("", "join", w/2-32, button_h, 64, 32, {content = "Join", func = network.start_client})
+  nui.add.button("", "info", w/2+52, button_h, 64, 32, {content = "How to Play", func = info.load})
+  nui.add.button("", "replay", w/2-74, button_h+52, 64, 32, {content = "Replays", func = network.start_replays})
+  nui.add.button("", "quit", w/2+10, button_h+52, 64, 32, {content = "Quit", func = love.event.quit, color = 1})
 end
 
 network.update = function(dt)
@@ -29,15 +33,23 @@ network.update = function(dt)
 end
 
 network.draw = function()
-  local w, h = window.get_dimensions()
   if network_state == "server" then
     server_func.draw()
   elseif network_state == "client" then
     client_func.draw()
   end
-  love.graphics.draw(art.img.splash, math.floor((w-art.img.splash:getWidth())/2), math.floor((h-art.img.splash:getHeight())/2))
-  love.graphics.draw(art.img.logo, math.floor((w-art.img.logo:getWidth())/2), math.floor(h*.1))
+  local w, h = window.get_dimensions()
+  local splash_h = math.floor((h-art.img.splash:getHeight())/2)
+  love.graphics.draw(art.img.splash, math.floor((w-art.img.splash:getWidth())/2), splash_h)
+  love.graphics.draw(art.img.logo, math.floor((w-art.img.logo:getWidth())/2), splash_h-art.img.logo:getHeight()-4)
+end
 
+network.keypressed = function(key)
+  if network_state == "server" then
+    server_func.keypressed(key)
+  elseif network_state == "client" then
+    client_func.keypressed(key)
+  end
 end
 
 network.quit = function()

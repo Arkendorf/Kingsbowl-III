@@ -1,0 +1,1 @@
+If the ball reaches its final destination without colliding with a knight an incompletion occurs, and the ball becomes inactive. (See the “Rules” tab for more information)

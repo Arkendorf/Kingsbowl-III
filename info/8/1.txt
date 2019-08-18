@@ -1,0 +1,1 @@
+The ball appears on the field once it is thrown by the quarterback, taking the appearance of an arrow. The ball follows a path the same way knights do.

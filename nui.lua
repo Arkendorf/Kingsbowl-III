@@ -190,7 +190,9 @@ nui.draw = function()
     end
   end
   for k, v in pairs(elements) do
-    nui.draw_element[v.element](v)
+    if not v.hide then
+      nui.draw_element[v.element](v)
+    end
   end
 end
 
@@ -202,9 +204,11 @@ nui.mousepressed = function(x, y, button)
   local click = false
   if button == 1 then
     for k, v in pairs(elements) do
-      if nui.pressed[v.element](x, y, k, v, "") then
-        click = true
-        break
+      if not v.hide then
+        if nui.pressed[v.element](x, y, k, v, "") then
+          click = true
+          break
+        end
       end
     end
     if not click then
@@ -247,6 +251,16 @@ nui.pressed.button = function(x, y, id, button, menu_id, menu)
     return true
   end
   return false
+end
+
+nui.active = function(menu_id, id, active)
+  local element = nui.get.element(menu_id, id)
+  element.active = active
+  if active then
+    element.type = 1
+  else
+    element.type = 2
+  end
 end
 
 nui.pressed.textbox = function(x, y, id, textbox, menu_id, menu)
@@ -369,7 +383,8 @@ nui.add.element = function(menu_id, id, element, info)
 end
 
 nui.add.image = function(menu_id, id, x, y, img, quad)
-  nui.add.element(menu_id, id, {element = "image", img = img, quad = quad, x = x, y = y, w = 0, h = 0})
+  local img2, quad2, w, h = nui.image_info(img, quad)
+  nui.add.element(menu_id, id, {element = "image", img = img2, quad = quad2, x = x, y = y, w = w, h = h})
 end
 
 nui.add_info = function(element, info)
@@ -597,10 +612,26 @@ end
 
 nui.draw_element.image = function(image, menu)
   if image.quad then
-    love.graphics.draw(art.img[image.img], image.quad, image.x, image.y)
+    love.graphics.draw(image.img, image.quad, math.floor(image.x), math.floor(image.y-nui.get_scroll(image, menu)))
   else
-    love.graphics.draw(art.img[image.img], image.x, image.y)
+    love.graphics.draw(image.img, math.floor(image.x), math.floor(image.y-nui.get_scroll(image, menu)))
   end
+end
+
+nui.image_info = function(img, quad)
+  local w, h = 0, 0
+  if type(img) == "string" then
+    img = art.img[img]
+  end
+  if quad then
+    local quad_x, quad_y, quad_w, quad_h = quad:getViewport()
+    w = quad_w
+    h = quad_h
+  else
+    w = img:getWidth()
+    h = img:getHeight()
+  end
+  return img, quad, w, h
 end
 
 nui.get_scroll = function(element, menu)
@@ -639,12 +670,44 @@ nui.remove.menu_elements = function(menu_id)
   end
 end
 
-nui.hide_menu = function(id)
+nui.hide = {}
+
+nui.hide.menu = function(id)
   menus[id].hide = true
 end
 
-nui.show_menu = function(id)
+nui.hide.element = function(menu_id, id)
+  local element = nui.get.element(menu_id, id)
+  element.hide = true
+end
+
+nui.hide.all = function()
+  for k, v in pairs(menus) do
+    nui.hide.menu(k)
+  end
+  for k, v in pairs(elements) do
+    nui.hide.element("", k)
+  end
+end
+
+nui.show = {}
+
+nui.show.menu = function(id)
   menus[id].hide = false
+end
+
+nui.show.element = function(menu_id, id)
+  local element = nui.get.element(menu_id, id)
+  element.hide = false
+end
+
+nui.show.all = function()
+  for k, v in pairs(menus) do
+    nui.show.menu(k)
+  end
+  for k, v in pairs(elements) do
+    nui.show.element("", k)
+  end
 end
 
 return nui

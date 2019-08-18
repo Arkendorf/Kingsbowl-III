@@ -6,12 +6,31 @@ local game = require "game"
 local replays = {}
 
 replays.load = function()
+  state = "replays"
   nui.remove.all()
   local w, h = window.get_dimensions()
   nui.add.menu("list", "Replay List", 2, w/2-96, h/2-128, 192, 256, true)
   nui.add.button("", "leave", w/2-32, h/2+148, 64, 16, {content = "Leave", func = replays.leave})
 
   replays.file_buttons()
+end
+
+replays.draw = function()
+  if network_state == "server" then
+    server_func.draw()
+  elseif network_state == "client" then
+    client_func.draw()
+  end
+  local w, h = window.get_dimensions()
+  local splash_h = math.floor((h-art.img.splash:getHeight())/2)
+  love.graphics.draw(art.img.splash, math.floor((w-art.img.splash:getWidth())/2), splash_h)
+  love.graphics.draw(art.img.logo, math.floor((w-art.img.logo:getWidth())/2), splash_h-art.img.logo:getHeight()-4)
+end
+
+replays.keypressed = function(key)
+  if key == "escape" then
+    replays.leave()
+  end
 end
 
 replays.file_buttons = function()

@@ -1,0 +1,1 @@
+From the settings menu, the host can adjust team settings. To change a team’s name edit its respective textbox, and to change a team’s color click on one of its color buttons. Teams cannot have the same color.

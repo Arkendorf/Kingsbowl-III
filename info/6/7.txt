@@ -1,0 +1,1 @@
+To defend, click on any adjacent tile. Your knight’s shield will enter that tile. If the shield collides with an opponent’s sword, both the sword and shield will be reset. If the shield overlaps the ball carrier, they become invulnerable to tackles.

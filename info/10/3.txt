@@ -1,0 +1,1 @@
+The top-left of the scoreboard features Team 1’s score, name, and color. The opposite side of the scoreboard features Team 2’s name, score, and color.

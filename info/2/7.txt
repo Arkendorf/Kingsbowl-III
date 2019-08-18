@@ -1,0 +1,1 @@
+Clicking the “Join” button will attempt to join a game running on the specified I.P. Clicking “Leave” will return you to the main menu.

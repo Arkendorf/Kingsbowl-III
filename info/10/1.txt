@@ -1,0 +1,1 @@
+The scoreboard display is located at the top of the screen during gameplay.

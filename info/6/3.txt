@@ -1,0 +1,1 @@
+To throw the ball, click on any tile on the field. The ball will then path from your knight to that tile.(See the “Ball/Arrow” tab for more information)

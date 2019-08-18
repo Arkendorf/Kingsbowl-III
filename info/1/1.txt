@@ -1,0 +1,1 @@
+To host a game, click the “Host” button on the main menu.

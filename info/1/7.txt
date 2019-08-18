@@ -1,0 +1,1 @@
+Clicking the “Advanced” button will reveal the “I.P.” textbox. If an I.P. is entered, the game will attempt to open the server using that I.P.

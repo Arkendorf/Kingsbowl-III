@@ -7,10 +7,11 @@ local field = require "field"
 local window = require "window"
 local broadcast = require "broadcast"
 local particle = require "particle"
-local show_usernames = false
+local nui = require "nui"
 
 local char = {}
 
+local show_usernames = false
 local players = {}
 local knights = {}
 local knight_cycle = 1
@@ -18,7 +19,7 @@ local knight_id = 1
 local action = "move"
 local move_dist = {
   qb = 2.5,
-  carrier = 2.5,
+  carrier = 22.5,
   defense = 3,
   offense = 3.5
 }
@@ -94,7 +95,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
       pos_select = data
     end)
     network.client_callback("tackle", function(data)
-      char.tackle(data.knight_id, knights[data.knight_id], knights[data.tackle_id], data.step_time)
+      char.tackle(data.knight_id, knights[data.knight_id], knights[data.tackle_id], data.step, data.step_time)
       abilities.flourish(knights[data.tackle_id], data.step_time, data.sheath)
       char.end_down(data.step_time)
     end, {"knight_id", "tackle_id", "step_time", "sheath"})
@@ -175,9 +176,6 @@ end
 
 
 char.draw = function()
-  if not replay_active then
-    char.draw_paths()
-  end
   for i, v in ipairs(knights) do -- draw stationary knights first
     if #v.path <= 0 then
       char.draw_char(i, v)
@@ -190,6 +188,9 @@ char.draw = function()
   end
   for i, v in ipairs(knights) do -- draw items
     abilities.draw_item(v, players[id].team, resolve)
+  end
+  if not replay_active then
+    char.draw_paths()
   end
 end
 
@@ -280,6 +281,8 @@ char.keypressed = function(key)
     char.cycle_knight(1)
   elseif key == "lshift" then
     char.cycle_knight(-1)
+  elseif key == "i" then
+    char.toggle_usernames()
   end
 end
 
@@ -420,13 +423,15 @@ char.prepare = function(step, step_time, max_step)
             if v.team ~= rules.get_offense() or not movement.can_move(w, step) then -- only defense can be bounced, unless offense is colliding with stationary knight
               if movement.collision(v, w, step) then
                 if char.tackleable(i, v) and not char.shielded(i, v, step, step_time, max_step) then
-                  char.tackle(i, v, w, step_time)
+                  char.tackle(i, v, w, step, step_time)
+                  movement.cancel(w)
                 elseif char.tackleable(j, w) and not char.shielded(j, w, step, step_time, max_step) then
-                  char.tackle(j, w, v, step_time)
+                  char.tackle(j, w, v, step, step_time)
+                  movement.cancel(v)
                 else
                   movement.bounce(v, v.tile_x, v.tile_y, v.path[step].x, v.path[step].y, step_time, .5)
+                  movement.cancel(v)
                 end
-                movement.cancel(v)
                 collision = true
                 step_change = true
               end
@@ -454,7 +459,7 @@ char.finish = function(step, step_time, max_step)
       local tackle_id, tackler = char.check_tackle(i, v, step, step_time)
       if tackle_id then
         abilities.flourish(tackler, step_time, step >= max_step)
-        network.server_send("tackle", {i, tackle_id, step_time, step >= max_step})
+        network.server_send("tackle", {i, tackle_id, step, step_time, step >= max_step})
       end
       -- ball catching
       if football.ball_active() and movement.collision(ball, v, step) then -- ball and knight are colliding
@@ -510,19 +515,19 @@ char.touchdown = function(knight)
   particle.add("confetti", knight.tile_x, knight.tile_y, false, "color", palette[rules.get_color(knight.team)])
 end
 
-char.tackle = function(knight_id, knight, tackler, step_time)
-  particle.add("blood", knight.tile_x, knight.tile_y)
+char.tackle = function(knight_id, knight, tackler, step, step_time)
+  local x, y = movement.get_pos(knight, step)
+  particle.add("stab", x, y)
+  particle.add("blood", x, y)
   char.tackle_broadcast(knight_id, knight, tackler)
-  movement.cancel(knight)
   knight.dead = true
   end_info.type = "tackle"
   end_info.x = knight.tile_x
   end_down = true
   if not tackler.item.active then
-    abilities.stab(knight, tackler, step_time)
+    abilities.stab(knight, tackler, step, step_time)
   end
   players[tackler.player].stats[2] = players[tackler.player].stats[2] + 1
-  particle.add("stab", knight.tile_x, knight.tile_y)
 end
 
 char.check_tackle = function(knight_id, knight, step)
@@ -661,6 +666,8 @@ end
 
 char.toggle_usernames = function()
   show_usernames = not show_usernames
+  nui.active("", "username", show_usernames)
+  nui.edit.element("", "username", "active", show_usernames)
 end
 
 char.save_turn = function()

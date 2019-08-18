@@ -1,0 +1,1 @@
+The host can also alter turn settings for the game. Moving the “Turn Time” slider will alter how much time players have per turn, and moving the “Total Turns” slider will alter the number of turns the game lasts for. A prediction for how long the game will last for, excluding overtime, is displayed beneath these sliders. (See the “Gameplay Basics” tab for more information)

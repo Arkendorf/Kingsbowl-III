@@ -1,0 +1,1 @@
+Use the “Server Description” textbox to set a description for your game. Players joining your game from your local network will be able to read this description, along with your username.

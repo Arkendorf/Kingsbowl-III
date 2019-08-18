@@ -1,0 +1,1 @@
+On the right side of the menu is a list of currently available local games. Each game is represented by button displaying the host’s username and game description. Clicking a button will allow you to join its respective game.

@@ -1,0 +1,1 @@
+Turn information is displayed in the center of the top row, with remaining turns on the left, and the turn timer on the right.

@@ -1,0 +1,1 @@
+Clicking the “Start” button will attempt to start the game using your settings. Clicking “Leave” will return you to the main menu.

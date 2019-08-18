@@ -32,6 +32,12 @@ end
 server_func.draw = function()
 end
 
+server_func.keypressed = function(key)
+  if key == "escape" then
+    server_func.main_menu()
+  end
+end
+
 server_func.quit = function()
   if server then
     server:sendToAll("kick")

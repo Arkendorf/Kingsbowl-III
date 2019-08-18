@@ -1,0 +1,1 @@
+Knights cannot move to a tile that will be occupied by a teammate. Movement is first come first serve: the first knight to select a tile is the only one able to move there. Additionally, a knight cannot move to a tile if the path to that tile collides with a teammate’s path.

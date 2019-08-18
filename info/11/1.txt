@@ -1,0 +1,1 @@
+The results page appears when a game ends. The winning team and the final scores appear at the top of the menu.
