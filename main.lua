@@ -65,6 +65,10 @@ love.mousepressed = function(x, y, button)
   end
 end
 
+love.wheelmoved = function(x, y)
+  nui.wheelmoved(x, y)
+end
+
 love.keypressed = function(key)
   nui.keypressed(key)
   if state == "game" then
@@ -77,7 +81,7 @@ love.keypressed = function(key)
     replays.keypressed(key)
   end
   info.keypressed(key)
-  if key == "t" then
+  if key == "`" then
     if not love.filesystem.getInfo("screenshots") then
       love.filesystem.createDirectory("screenshots")
     end

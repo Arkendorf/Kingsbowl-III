@@ -75,7 +75,7 @@ art.load = function(dir)
   font = love.graphics.newImageFont("art/font.png",
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
     "abcdefghijklmnopqrstuvwxyz" ..
-    "0123456789!?.,:-*()", 1)
+    "0123456789!?.,:-*()/'‘’\"“”", 1)
   smallfont = love.graphics.newImageFont("art/smallfont.png",
     " ABCDEFGHIJKLMNOPQRSTUVWXYZ" ..
     "abcdefghijklmnopqrstuvwxyz" ..

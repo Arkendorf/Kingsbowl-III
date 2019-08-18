@@ -16,11 +16,6 @@ replays.load = function()
 end
 
 replays.draw = function()
-  if network_state == "server" then
-    server_func.draw()
-  elseif network_state == "client" then
-    client_func.draw()
-  end
   local w, h = window.get_dimensions()
   local splash_h = math.floor((h-art.img.splash:getHeight())/2)
   love.graphics.draw(art.img.splash, math.floor((w-art.img.splash:getWidth())/2), splash_h)

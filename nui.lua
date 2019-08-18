@@ -89,6 +89,11 @@ nui.update = function(dt)
     end
   end
   for k, v in pairs(menus) do
+    if v.scroll.active then
+      v.scroll.y = v.scroll.y + v.scroll.v * dt
+      v.scroll.v = v.scroll.v * .9
+      nui.update_wheel_scroll(k)
+    end
     for l, w in pairs(v.elements) do
       nui.hover[w.element](x, y, w, v)
       if w.element == "button" then
@@ -111,6 +116,25 @@ nui.update = function(dt)
     else
       sliding.id = false
     end
+  end
+end
+
+nui.update_wheel_scroll = function(menu_id)
+  local menu = menus[menu_id]
+  local slider = nui.get.element(menu_id, "scroll")
+  local bar_size = slider.size+nui.info.slider.bar_edge*2
+  local node_size = slider.node_size+nui.info.slider.node_edge*2
+  if slider.max > 0 then
+    slider.pos = (menu.scroll.y/(slider.max-slider.min))*(bar_size-node_size)
+  end
+  if menu.scroll.y < slider.min then
+    menu.scroll.y = slider.min
+    menu.scroll.v = 0
+    slider.pos = 0
+  elseif menu.scroll.y > slider.max then
+    menu.scroll.y = slider.max
+    menu.scroll.v = 0
+    slider.pos = bar_size-node_size
   end
 end
 
@@ -297,6 +321,17 @@ end
 nui.pressed.image = function()
 end
 
+nui.wheelmoved = function(x, y)
+  local mx, my = window.get_mouse()
+  for k, v in pairs(menus) do
+    if nui.element_collide(mx, my, v.x+nui.info.menu.corner, v.y+nui.info.menu.corner, v.w, v.h) then
+      if v.scroll.active then
+        v.scroll.v = v.scroll.v - y * 60
+      end
+    end
+  end
+end
+
 nui.keypressed = function(key)
   if typing.id and key == "backspace" then
     local textbox = nui.get.element(typing.menu, typing.id)
@@ -335,7 +370,7 @@ end
 nui.add = {}
 
 nui.add.menu = function(id, title, type, x, y, w, h, scroll_active, color)
-  menus[id] = {title = title, type = type, x = x-nui.info.menu.corner, y = y-nui.info.menu.corner, w = w, h = h, elements = {}, scroll = {active = scroll_active, y = 0}, color = color}
+  menus[id] = {title = title, type = type, x = x-nui.info.menu.corner, y = y-nui.info.menu.corner, w = w, h = h, elements = {}, scroll = {active = scroll_active, y = 0, v = 0}, color = color}
   local menu = menus[id]
   menu.canvas = love.graphics.newCanvas(w, h)
   if scroll_active then
@@ -413,6 +448,7 @@ nui.adjust_scroll = function(id)
       menu.scroll.y = 0
       nui.edit.element(id, "scroll", "node_size", menu.h-nui.info.slider.node_edge*2-.1)
       nui.edit.element(id, "scroll", "max", 0)
+      nui.edit.element(id, "scroll", "pos", 0)
     end
   end
 end
@@ -519,7 +555,7 @@ nui.draw_mode.scaleable = function(info, art_type, x, y, w, h, content, color)
       local width, wrap = font:getWrap(content, w)
       local font_h = #wrap * font:getHeight()
       love.graphics.setColor(colors.white)
-      love.graphics.printf(content, x+info.corner, y+info.corner+(h-font_h)/2, w, "center")
+      love.graphics.printf(content, math.floor(x+info.corner), math.floor(y+info.corner+(h-font_h)/2), w, "center")
       love.graphics.setColor(255, 255, 255)
     elseif type(content) == "table" then
       local quad_x, quad_y, quad_w, quad_h = content.quad:getViewport()
