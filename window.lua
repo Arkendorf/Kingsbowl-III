@@ -2,7 +2,7 @@ local window = {w = 0, h = 0, scale = 2}
 
 window.load = function()
   love.window.setTitle("Kingsbowl III")
-  love.window.setMode(1600, 1200, {fullscreen = false})
+  love.window.setMode(800, 600, {fullscreen = true})
   window.w = math.floor(love.graphics.getWidth()/window.scale)
   window.h = math.floor(love.graphics.getHeight()/window.scale)
   window.canvas = love.graphics.newCanvas(window.w, window.h)
