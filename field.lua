@@ -52,9 +52,13 @@ field.draw_canvas = function(canvas)
   for i = 1, 9 do -- draw yard numbers
     local x = (i + 1) * interval
     for j, y in ipairs(number_y) do
-      if i <= 5 then
+      if i < 5 then
         art.draw_quad("markings", art.quad.markings[12+i], x, y)
         art.draw_quad("markings", art.quad.markings[19], x-1, y)
+      elseif i == 5 then
+        art.draw_quad("markings", art.quad.markings[17], x, y)
+        art.draw_quad("markings", art.quad.markings[19], x-1, y)
+        art.draw_quad("markings", art.quad.markings[20], x+2, y)
       else
         art.draw_quad("markings", art.quad.markings[22-i], x, y)
         art.draw_quad("markings", art.quad.markings[20], x+2, y)
