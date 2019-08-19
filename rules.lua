@@ -6,7 +6,7 @@ local rules = {}
 local offense = 1
 local team_info = {}
 local qb = 0
-local down = 1
+local down = 0
 local scrimmage = 0
 local goal = 0
 local lineup_h = {0, 0}
@@ -121,7 +121,6 @@ end
 
 rules.tackle = function(x)
   rules.set_scrimmage(x)
-  rules.set_goal()
   rules.end_down()
 end
 
@@ -142,11 +141,7 @@ rules.set_scrimmage = function(x)
 end
 
 rules.set_goal = function()
-  if offense == 1 and goal < scrimmage then
-    goal = scrimmage + math.floor(field.get_dimensions()/12)
-  elseif offense == 2 and goal > scrimmage then
-    goal = scrimmage - math.floor(field.get_dimensions()/12)
-  end
+  goal = scrimmage + math.floor(field.get_dimensions()/12) * (offense-1.5)*-2
   local scrim_min, scrim_max = rules.get_endzones()
   if goal > scrim_max or scrimmage < scrim_min then
     goal = false
@@ -160,6 +155,10 @@ rules.end_down = function()
     rules.set_goal()
   else
     down = down + 1
+    if (offense == 1 and goal < scrimmage) or (offense == 2 and goal > scrimmage) then
+      rules.set_goal()
+      down = 1
+    end
     if down > 4 then
       rules.turnover()
       down = 1

@@ -4,7 +4,7 @@ local rules = require "rules"
 local football = {}
 
 local resolve = false
-local move_dist = 4
+local move_dist = 5
 local ball = {}
 
 local replay_active = false

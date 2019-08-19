@@ -19,7 +19,7 @@ local knight_id = 1
 local action = "move"
 local move_dist = {
   qb = 2.5,
-  carrier = 22.5,
+  carrier = 2.5,
   defense = 3,
   offense = 3.5
 }
@@ -419,16 +419,16 @@ char.prepare = function(step, step_time, max_step)
     for i, v in ipairs(knights) do
       if movement.can_move(v, step) then -- knights can only be bounced if they are moving
         for j, w in ipairs(knights) do
-          if v.team ~= w.team and not w.dead then -- knights can only collide with non-dead members of the opposite team
+          if i ~= j and not w.dead then -- knights can only collide with other non-dead knights
             if v.team ~= rules.get_offense() or not movement.can_move(w, step) then -- only defense can be bounced, unless offense is colliding with stationary knight
               if movement.collision(v, w, step) then
-                if char.tackleable(i, v) and not char.shielded(i, v, step, step_time, max_step) then
+                if v.team ~= w.team and char.tackleable(i, v) and not char.shielded(i, v, step, step_time, max_step) then
                   char.tackle(i, v, w, step, step_time)
                   movement.cancel(w)
-                elseif char.tackleable(j, w) and not char.shielded(j, w, step, step_time, max_step) then
+                elseif v.team ~= w.team and char.tackleable(j, w) and not char.shielded(j, w, step, step_time, max_step) then
                   char.tackle(j, w, v, step, step_time)
                   movement.cancel(v)
-                else
+                elseif movement.can_move(v, step) then
                   movement.bounce(v, v.tile_x, v.tile_y, v.path[step].x, v.path[step].y, step_time, .5)
                   movement.cancel(v)
                 end
@@ -633,6 +633,7 @@ char.finish_select = function()
 end
 
 char.end_down = function(step_time)
+  end_down = true
   for i, v in ipairs(knights) do
     movement.cancel(v)
     abilities.reset.item(v, step_time)

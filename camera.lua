@@ -44,14 +44,14 @@ camera.object = function(object)
     x = object.item.x
     y = object.item.y
   end
-  cam.new_x = (x+.5)*tile_size
-  cam.new_y = (y+.5)*tile_size
+  cam.new_x = math.floor((x+.5)*tile_size)
+  cam.new_y = math.floor((y+.5)*tile_size)
 end
 
 camera.get_offset = function()
   local w, h = window.get_dimensions()
   local cam = camera.get()
-  return math.floor(-cam.x-cam.x_offset+w/2), math.floor(-cam.y-cam.y_offset+h/2)
+  return math.ceil(-cam.x-cam.x_offset+w/2), math.ceil(-cam.y-cam.y_offset+h/2)
 end
 
 camera.shake = function(mag, t)

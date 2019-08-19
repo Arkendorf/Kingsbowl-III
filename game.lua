@@ -16,6 +16,7 @@ local game = {}
 local replay_active = false
 local replay_info = false
 
+local quit_t = 0
 local stop = false
 
 game.load = function(menu_client_list, menu_client_info, menu_team_info, menu_settings, menu_replay_turns)
@@ -61,6 +62,14 @@ game.update = function(dt)
   broadcast.update(dt)
   particle.update(dt)
 
+  if love.keyboard.isDown("escape") then
+    quit_t = quit_t + dt
+    if quit_t > 1 then
+      love.event.quit()
+    end
+  else
+    quit_t = 0
+  end
   if stop then
     turn.start_results()
   end
@@ -70,8 +79,8 @@ game.draw = function()
   love.graphics.push()
   love.graphics.translate(camera.get_offset())
   field.draw()
-  rules.draw()
   particle.draw_bottom()
+  rules.draw()
   char.draw()
   football.draw()
   particle.draw_top()
@@ -84,8 +93,8 @@ game.keypressed = function(key)
   if not replay_active then
     char.keypressed(key)
   end
-  if key == "escape" then
-    love.event.quit()
+  if network_state == "server" and key == "backspace" then
+    stop = true
   end
 end
 

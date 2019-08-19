@@ -122,6 +122,7 @@ turn.complete = function(step)
   football.finish(step)
   if not down_delay and char.finish(step, step_time, max_step) then
     turn.delay_down()
+    network.server_send("timer", timer)
   else
     down_delay = false
     resolve = false
