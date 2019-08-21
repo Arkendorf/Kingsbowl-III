@@ -5,55 +5,6 @@ end
 
 shader.prepare = {}
 
-shader.prepare.border = function(img)
-  shader.border:send("w", img:getWidth())
-  shader.border:send("h", img:getHeight())
-end
-shader.border = love.graphics.newShader[[
-    extern number w;
-    extern number h;
-    vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords){
-      vec4 pixel = Texel(texture, texture_coords);
-      if (pixel.a == 1.0) {
-        vec4 test = Texel(texture, vec2(texture_coords.x+1.0/w, texture_coords.y));
-        if (test.a < 1.0) {
-          return color;
-        }
-        test = Texel(texture, vec2(texture_coords.x, texture_coords.y+1.0/h));
-        if (test.a < 1.0) {
-          return color;
-        }
-        test = Texel(texture, vec2(texture_coords.x-1.0/w, texture_coords.y));
-        if (test.a < 1.0) {
-          return color;
-        }
-        test = Texel(texture, vec2(texture_coords.x, texture_coords.y-1.0/h));
-        if (test.a < 1.0) {
-          return color;
-        }
-      }
-      else {
-        vec4 test = Texel(texture, vec2(texture_coords.x+1.0/w, texture_coords.y));
-        if (test.a > 0.0) {
-          return color;
-        }
-        test = Texel(texture, vec2(texture_coords.x, texture_coords.y+1.0/h));
-        if (test.a > 0.0) {
-          return color;
-        }
-        test = Texel(texture, vec2(texture_coords.x-1.0/w, texture_coords.y));
-        if (test.a > 0.0) {
-          return color;
-        }
-        test = Texel(texture, vec2(texture_coords.x, texture_coords.y-1.0/h));
-        if (test.a > 0.0) {
-          return color;
-        }
-      }
-      return vec4(0.0, 0.0, 0.0, 0.0);
-    }
-  ]]
-
 shader.prepare.color = function(img, data)
   for i, v in ipairs(data) do
     if i <= 4 then

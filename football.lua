@@ -38,7 +38,7 @@ football.set_preview = function()
   preview.remove_path("ball")
   if not replay_active and not resolve and not ball.caught and (ball.thrown or (ball.primed and ball.preview)) then
     preview.add_icon("ball", 6, ball.full_path[#ball.full_path].x, ball.full_path[#ball.full_path].y)
-    preview.add_path("ball", ball.path, ball.tile_x, ball.tile_y)
+    preview.add_path("ball", ball.path, ball.x, ball.y)
     preview.add_icon("ball", 5, ball.path[#ball.path].x, ball.path[#ball.path].y) -- add marker at end of path
   end
 end
