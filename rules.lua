@@ -186,6 +186,7 @@ rules.turnover = function()
   else
     offense = 1
   end
+  qb = 0
 end
 
 rules.get_endzones = function()
@@ -218,8 +219,11 @@ rules.finish_select = function()
 end
 
 rules.get_play_string = function()
-  if goal then
-    return tostring(down)..down_suffix[down].." and "..tostring(math.abs(goal-scrimmage)*yard_scale)
+  local yards = math.ceil(math.abs(goal-scrimmage)*yard_scale)
+  if yards > 0 then
+    return tostring(down)..down_suffix[down].." and "..tostring(yards)
+  elseif goal then
+    return tostring(down)..down_suffix[down].." and Inches"
   else
     return tostring(down)..down_suffix[down].." and Goal"
   end

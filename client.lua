@@ -162,7 +162,7 @@ client_func.stop_test = function()
     v = nil
   end
   for i, v in ipairs(servers) do -- reset gui
-    nui.remove.element("lan", v.num)
+    pcall(function() nui.remove.element("lan", v.num) end)
   end
   servers = {}
   ip_test = {}

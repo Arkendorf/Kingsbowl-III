@@ -220,6 +220,8 @@ end
 menu.kick = function(data)
   if data.id ~= 0 then
     server:sendToPeer(server:getPeerByIndex(client_info[data.id].index), "kick")
+    server:sendToAll("client_quit", data.id)
+    menu.remove_client(data.id)
   end
 end
 

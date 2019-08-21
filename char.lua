@@ -246,15 +246,15 @@ char.draw_char = function(i, v)
     if not pos_select or v.team == players[id].team then
       art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size)
       art.draw_quad("char_overlay", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, 1, 1, 1, "color", palette[rules.get_color(v.team)])
-    end
-    if show_usernames then
-      love.graphics.setFont(smallfont)
-      love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
-      love.graphics.setColor(palette[rules.get_color(v.team)][2])
-      love.graphics.setFont(smallfont_overlay)
-      love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
-      love.graphics.setColor(1, 1, 1)
-      love.graphics.setFont(font)
+      if show_usernames then
+        love.graphics.setFont(smallfont)
+        love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
+        love.graphics.setColor(palette[rules.get_color(v.team)][2])
+        love.graphics.setFont(smallfont_overlay)
+        love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(font)
+      end
     end
   end
 end
@@ -382,20 +382,20 @@ end
 
 char.path_collision = function(knight_id, path, team)
   local step_num = char.step_num()
+  if #path > step_num then
+    step_num = #path
+  end
   for i, v in ipairs(knights) do
     if knight_id ~= i and v.team == team then
-      if #v.path > 0 then
-        for j = 1, step_num do
-          if v.path[j] and path[j] then
-            if v.path[j].x == path[j].x and v.path[j].y == path[j].y then -- check for overlapping intermediate steps in path
-              return j
-            end
+      for j = 1, step_num do
+        if path[j] then
+          local x, y = movement.get_pos(v, j)
+          if x == path[j].x and y == path[j].y then -- check for overlapping intermediate steps in path
+            return j
           end
         end
-        if v.path[#v.path].x == path[#path].x and v.path[#v.path].y == path[#path].y then -- check for overlapping final destinations
-          return #path
-        end
-      elseif v.tile_x == path[#path].x and v.tile_y == path[#path].y then -- if teammate is stationary and wont move, make sure path doesn't end up on that tile
+      end
+      if #v.path > 0 and v.path[#v.path].x == path[#path].x and v.path[#v.path].y == path[#path].y then -- check for overlapping final destinations
         return #path
       end
     end

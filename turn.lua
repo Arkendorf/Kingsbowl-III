@@ -69,7 +69,6 @@ turn.update = function(dt)
         if step >= max_step then
           turn.complete(max_step)
           network.server_send("complete", max_step)
-          turn.check_end()
         else
           local new_step = step+1
           turn.new_step(new_step)
@@ -81,9 +80,6 @@ turn.update = function(dt)
         local step_num = math.max(char.step_num(), football.step_num())
         turn.resolve(step_num)
         network.server_send("resolve", step_num)
-        if step_num <= 0 then
-          turn.check_end()
-        end
       end
     else
       timer = 0
@@ -140,7 +136,7 @@ turn.increment = function()
 end
 
 turn.check_end = function()
-  if turns_left <= 0 and rules.get_score(1) ~= rules.get_score(2) then
+  if turns_left <= 0 then
     turn.start_results()
   end
 end
@@ -157,6 +153,7 @@ end
 turn.delay_down = function()
   down_delay = true
   timer = step_time * 3
+  turn.check_end()
 end
 
 turn.load_or_save = function()
@@ -218,13 +215,13 @@ turn.draw_hud = function(x, y)
       love.graphics.printf(math.floor(timer)+1, 168, 6, 18, "right")
     end
   end
-  love.graphics.printf(rules.get_play_string(), 108, 33, 102, "center")
+  love.graphics.printf(rules.get_play_string(), 102, 33, 118, "center")
   love.graphics.setColor(1, 1, 1)
 
   love.graphics.setCanvas(window.canvas)
 
   local w, h = window.get_dimensions()
-  love.graphics.draw(hud_canvas, w/2-art.img.scoreboard:getWidth()/2, 8)
+  love.graphics.draw(hud_canvas, math.floor(w/2-art.img.scoreboard:getWidth()/2), 8)
 end
 
 turn.get_resolve_time = function()

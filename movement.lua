@@ -131,9 +131,7 @@ end
 
 movement.can_move = function(object, step)
   if object.path and object.path[step] then
-    if step > 0 then
-      return #object.path >= step
-    end
+    return true
   end
   return false
 end

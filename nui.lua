@@ -326,7 +326,7 @@ nui.wheelmoved = function(x, y)
   for k, v in pairs(menus) do
     if nui.element_collide(mx, my, v.x+nui.info.menu.corner, v.y+nui.info.menu.corner, v.w, v.h) then
       if v.scroll.active then
-        v.scroll.v = v.scroll.v - y * 60
+        v.scroll.v = v.scroll.v - y * 80
       end
     end
   end
