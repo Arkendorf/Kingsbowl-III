@@ -1,5 +1,6 @@
 local field = require "field"
 local movement = require "movement"
+local preview = require "preview"
 
 local rules = {}
 
@@ -63,21 +64,22 @@ rules.load = function(menu_client_list, menu_client_info, menu_team_info, menu_s
   field.set_color(team_info[1].color, team_info[2].color)
 end
 
+rules.update = function(dt)
+  if not replay_active and pos_select then
+    local x = team_info[char_team].lineup[1].x+scrimmage
+    local y = team_info[char_team].lineup[1].y
+    preview.set_border(x, y, lineup_h[char_team]/2, rules.valid_pos, char_team)
+    if char_team == offense then
+      preview.add_icon("preview", 1, x, y, "green")
+    end
+  end
+end
+
 rules.draw = function()
   local field_w, field_h = field.get_dimensions()
   art.rectangle(scrimmage+1-3/tile_size, 0, 6/tile_size, field_h, colors.yellow[1], colors.yellow[2], colors.yellow[3])
   if goal then
     art.rectangle(goal+1-3/tile_size, 0, 6/tile_size, field_h, colors.green[1], colors.green[2], colors.green[3])
-  end
-  if not replay_active and pos_select then
-    local x = team_info[char_team].lineup[1].x+scrimmage
-    local y = team_info[char_team].lineup[1].y
-    if char_team == offense then
-      art.path_border(x, y, lineup_h[char_team]/2, rules.valid_pos, char_team)
-      art.path_icon(6, x, y, colors.green[1], colors.green[2], colors.green[3])
-    else
-      art.path_border(x, y, lineup_h[char_team]/2, rules.valid_pos, char_team)
-    end
   end
 end
 
@@ -258,11 +260,11 @@ end
 rules.preview_position = function(knight_id, knight, tile_x, tile_y)
   for i, v in ipairs(team_info[knight.team].lineup) do
     if v.x == tile_x-scrimmage and v.y == tile_y and not v.taken then
-      art.path_icon(5, tile_x, tile_y, colors.green[1], colors.green[2], colors.green[3])
+      preview.add_icon("preview", 2, tile_x, tile_y, "green")
       return
     end
   end
-  art.path_icon(4, tile_x, tile_y, colors.red[1], colors.red[2], colors.red[3])
+  preview.add_icon("preview", 2, tile_x, tile_y, "red")
 end
 
 rules.remove_host = function(knight_id, knight)

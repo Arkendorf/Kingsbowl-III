@@ -150,42 +150,4 @@ movement.get_pos = function(object, step)
   end
 end
 
-movement.draw_path = function(x, y, path, r, g, b)
-  if #path > 0 then
-    local x_dif = path[1].x - x
-    local y_dif = path[1].y - y
-    if path[1].icon or #path == 1 then
-      art.line(x+.5+x_dif*.5, y+.5+y_dif*.5, path[1].x+.5-x_dif*.3, path[1].y+.5-y_dif*.3, r, g, b)
-    else
-      art.line(x+.5+x_dif*.5, y+.5+y_dif*.5, path[1].x+.5, path[1].y+.5, r, g, b)
-    end
-    for i, v in ipairs(path) do
-      if i < #path then
-        local x1 = v.x+.5
-        local y1 = v.y+.5
-        local x2 = path[i+1].x+.5
-        local y2 = path[i+1].y+.5
-        local x_dif = x2 - x1
-        local y_dif = y2 - y1
-        if v.icon then
-          x1 = x1 + x_dif*.3
-          y1 = y1 + y_dif*.3
-          art.path_icon(v.icon, v.x, v.y, r, g, b)
-        else
-          art.draw_img("path_node", v.x, v.y, r, g, b)
-        end
-        if path[i+1].icon or i+1 >= #path then
-          x2 = x2 - x_dif*.3
-          y2 = y2 - y_dif*.3
-        end
-        art.line(x1, y1, x2, y2, r, g, b)
-      elseif v.icon then
-        art.path_icon(v.icon, v.x, v.y, r, g, b)
-      else
-        art.path_icon(5, v.x, v.y, r, g, b)
-      end
-    end
-  end
-end
-
 return movement

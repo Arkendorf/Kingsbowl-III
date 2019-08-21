@@ -17,7 +17,7 @@ art.load = function(dir)
 
   art.quad.item = art.set_quad("sword", 8)
 
-  art.quad.path_icon = art.set_quad("path_icons", 6)
+  art.quad.path_icon = art.set_quad("path_icons", 9)
 
   art.quad.tiles = art.set_quad("tiles", 4)
 
@@ -173,44 +173,11 @@ art.rectangle = function(x, y, w, h, r, g, b)
   art.clear_effects()
 end
 
-art.path_icon = function(num, x, y, r, g, b)
-  art.draw_img("path_icon_border", x, y, r, g, b)
-  art.draw_quad("path_icons", art.quad.path_icon[num], x+8/tile_size, y+8/tile_size, r, g, b)
-end
-
 art.ability_icon = function(type, back, x, y)
   love.graphics.draw(art.img.ability_background, art.quad.ability_background[back], math.floor(x), math.floor(y))
   love.graphics.setColor(colors.white)
   love.graphics.draw(art.img.ability_icons, art.quad.ability_icon[type], x+6, y+6)
   love.graphics.setColor(1, 1, 1)
-end
-
-art.path_border = function(x1, y1, radius, func, info)
-  for y2 = y1-math.ceil(radius), y1+math.ceil(radius) do
-    for x2 = x1-math.ceil(radius), x1+math.ceil(radius) do
-      if func(x1, y1, x2, y2, info) then
-        art.draw_quad("path_icons", art.quad.path_icon[5], x2+8/tile_size, y2+8/tile_size, colors.yellow[1], colors.yellow[2], colors.yellow[3])
-        for y = 1, 2 do
-          for x = 1, 2 do
-            local x_dir = (x-1.5)*2
-            local y_dir = (y-1.5)*2
-            local hori = func(x1, y1, x2+x_dir, y2, info)
-            local vert = func(x1, y1, x2, y2+y_dir, info)
-            local diag = func(x1, y1, x2+x_dir, y2+y_dir, info)
-            if hori and vert and not diag then
-              art.draw_quad("path_outline", art.quad.path_outline[2][y][x], x2+(x-1)*.5, y2+(y-1)*.5, colors.yellow[1], colors.yellow[2], colors.yellow[3])
-            elseif hori and not vert then
-              art.draw_quad("path_outline", art.quad.path_outline[3][y][x], x2+(x-1)*.5, y2+(y-1)*.5, colors.yellow[1], colors.yellow[2], colors.yellow[3])
-            elseif vert and not hori then
-              art.draw_quad("path_outline", art.quad.path_outline[4][y][x], x2+(x-1)*.5, y2+(y-1)*.5, colors.yellow[1], colors.yellow[2], colors.yellow[3])
-            elseif not diag and not hori and not vert then
-              art.draw_quad("path_outline", art.quad.path_outline[1][y][x], x2+(x-1)*.5, y2+(y-1)*.5, colors.yellow[1], colors.yellow[2], colors.yellow[3])
-            end
-          end
-        end
-      end
-    end
-  end
 end
 
 return art

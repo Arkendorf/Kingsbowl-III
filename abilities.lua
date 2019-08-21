@@ -3,6 +3,7 @@ local rules = require "rules"
 local football = require "football"
 local movement = require "movement"
 local nui = require "nui"
+local preview = require "preview"
 
 local abilities = {}
 
@@ -18,15 +19,11 @@ abilities.update_item = function(knight, dt)
   end
 end
 
-abilities.draw_item = function(knight, team, resolve)
+abilities.draw_item = function(knight)
   if knight.item.visible and abilities.adjacent(knight.tile_x, knight.tile_y, knight.item.tile_x, knight.item.tile_y) then
     local quad = art.direction(knight.tile_x, knight.tile_y, knight.item.tile_x, knight.item.tile_y)
     art.draw_quad(knight.item.type, art.quad.item[quad], knight.item.x, knight.item.y)
     art.draw_quad(knight.item.type.."_overlay", art.quad.item[quad], knight.item.x, knight.item.y, 1, 1, 1, "color", palette[rules.get_color(knight.team)])
-  end
-  if knight.item.active and team == knight.team and not resolve then
-    local quad = art.direction(knight.tile_x, knight.tile_y, knight.item.new_x, knight.item.new_y)
-    art.draw_quad(knight.item.type, art.quad.item[quad], knight.item.new_x, knight.item.new_y, colors.white[1], colors.white[2], colors.white[3], "border")
   end
 end
 
@@ -79,8 +76,7 @@ end
 abilities.type = function(knight_id, knight)
   local qb = rules.get_qb()
   local offense = rules.get_offense()
-  local ball = football.get_ball()
-  if qb == knight_id and not ball.thrown then
+  if qb == knight_id and not football.thrown() then
     return "throw"
   elseif not knight.carrier then
     return "item"
@@ -100,29 +96,23 @@ end
 abilities.preview_throw = function(knight, x, y)
   if abilities.valid(knight.tile_x, knight.tile_y, x, y) then
     local path = movement.get_path(knight.tile_x, knight.tile_y, x, y)
-    movement.draw_path(knight.tile_x, knight.tile_y, path, colors.green[1], colors.green[2], colors.green[3])
-    local quad = art.direction(knight.tile_x, knight.tile_y, path[1].x, path[1].y)
-    art.draw_quad("arrow", art.quad.item[quad], knight.tile_x, knight.tile_y, colors.green[1], colors.green[2], colors.green[3], "border")
+    preview.add_path("preview", path, knight.tile_x, knight.tile_y, "green")
+    preview.add_icon("preview", 5, path[#path].x, path[#path].y, "green")
   else
-    art.path_icon(4, x, y, colors.red[1], colors.red[2], colors.red[3])
+    preview.add_icon("preview", 5, x, y, "red")
   end
 end
 
 abilities.preview_item = function(knight_id, knight, knights, x, y)
-  if abilities.valid(knight.tile_x, knight.tile_y, x, y) and abilities.adjacent(knight.tile_x, knight.tile_y, x, y) then
-    if not abilities.overlap(knight_id, knight, knights, x, y) then
-      local quad = art.direction(knight.tile_x, knight.tile_y, x, y)
-      if knight.team == rules.get_offense() then
-        art.draw_quad("shield", art.quad.item[quad], x, y, colors.green[1], colors.green[2], colors.green[3], "border")
-      else
-        art.draw_quad("sword", art.quad.item[quad], x, y, colors.green[1], colors.green[2], colors.green[3], "border")
-      end
-    else
-      art.path_icon(3, x, y, colors.red[1], colors.red[2], colors.red[3])
-    end
+  local icon = 3
+  if knight.team == rules.get_offense() then
+    icon = 4
+  end
+  if abilities.valid(knight.tile_x, knight.tile_y, x, y) and abilities.adjacent(knight.tile_x, knight.tile_y, x, y) and not abilities.overlap(knight_id, knight, knights, x, y) then
+    preview.add_icon("preview", icon, x, y, "green")
   else
-    art.path_icon(4, x, y, colors.red[1], colors.red[2], colors.red[3])
-    art.path_border(knight.tile_x, knight.tile_y, 1.5, abilities.adjacent)
+    preview.add_icon("preview", icon, x, y, "red")
+    preview.set_border(knight.tile_x, knight.tile_y, 1.5, abilities.adjacent)
   end
 end
 
@@ -151,6 +141,18 @@ abilities.start.item = function(knight, x, y)
     return true
   else
     return false
+  end
+end
+
+abilities.set_preview = function(knight_id, knight, team, resolve)
+  if knight.item.active and team == knight.team and not resolve then
+    preview.remove_path("preview") -- remove precedence
+    preview.remove_path(knight_id)
+    if knight.team == rules.get_offense() then
+      preview.add_icon(knight_id, 4, knight.item.new_x, knight.item.new_y)
+    else
+      preview.add_icon(knight_id, 3, knight.item.new_x, knight.item.new_y)
+    end
   end
 end
 

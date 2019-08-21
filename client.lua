@@ -136,22 +136,24 @@ end
 client_func.test_for_servers = function()
   ip_test = {}
   for i = 1, 255 do
-    local ip = default_ip_prefix..tostring(i)
-    ip_test[i] = sock.newClient(ip, default_port)
-    ip_test[i]:connect(0)
-    ip_test[i]:setSchema("server_info", {"username", "desc", "client_num"})
-    ip_test[i]:on("server_info", function(data)
-      local index = #servers+1
-      servers[index] = {ip = ip, num = i, info = data}
-      nui.add.button("lan", i, 20, 66+(index-1)*56, 152, 32, {content = data.username.."\n"..data.desc, func = client_func.join_server, args = {ip = ip, port = default_port}})
-    end)
-    ip_test[i]:on("kick", function()
-      ip_test[i]:disconnect(0)
-      client_func.refresh_test()
-    end)
-    ip_test[i]:on("start_game", function()
-      ip_test[i]:disconnect(0)
-      client_func.refresh_test()
+    pcall(function()
+      local ip = default_ip_prefix..tostring(i)
+      ip_test[i] = sock.newClient(ip, default_port)
+      ip_test[i]:connect(0)
+      ip_test[i]:setSchema("server_info", {"username", "desc", "client_num"})
+      ip_test[i]:on("server_info", function(data)
+        local index = #servers+1
+        servers[index] = {ip = ip, num = i, info = data}
+        nui.add.button("lan", i, 20, 66+(index-1)*56, 152, 32, {content = data.username.."\n"..data.desc, func = client_func.join_server, args = {ip = ip, port = default_port}})
+      end)
+      ip_test[i]:on("kick", function()
+        ip_test[i]:disconnect(0)
+        client_func.refresh_test()
+      end)
+      ip_test[i]:on("start_game", function()
+        ip_test[i]:disconnect(0)
+        client_func.refresh_test()
+      end)
     end)
   end
 end

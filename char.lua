@@ -8,6 +8,7 @@ local window = require "window"
 local broadcast = require "broadcast"
 local particle = require "particle"
 local nui = require "nui"
+local preview = require "preview"
 
 local char = {}
 
@@ -151,6 +152,10 @@ char.update = function(dt)
       abilities.update_item(v, dt)
     end
   end
+  -- preview
+  if not replay_active then
+    char.preview()
+  end
   -- camera
   local object = knights[knight_id]
   if replay_active then
@@ -187,23 +192,13 @@ char.draw = function()
     end
   end
   for i, v in ipairs(knights) do -- draw items
-    abilities.draw_item(v, players[id].team, resolve)
-  end
-  if not replay_active then
-    char.draw_paths()
-  end
-end
-
-char.draw_paths = function()
-  char.preview()
-  for i, v in ipairs(knights) do -- draw paths
-    if not resolve and players[id].team == v.team then -- if on the same team, draw path
-      movement.draw_path(v.tile_x, v.tile_y, v.path, colors.white[1], colors.white[2], colors.white[3])
-    end
+    abilities.draw_item(v)
   end
 end
 
 char.preview = function()
+  preview.remove_border()
+  preview.remove_path("preview")
   if not resolve then
     local x, y = window.get_mouse()
     local offset_x, offset_y = camera.get_offset()
@@ -221,7 +216,7 @@ char.preview = function()
       elseif type == "item" then
         abilities.preview_item(knight_id, knights[knight_id], knights, tile_x, tile_y)
       else
-        art.path_icon(4, tile_x, tile_y, colors.red[1], colors.red[2], colors.red[3])
+        preview.add_icon("preview", 9, tile_x, tile_y, "red")
       end
     end
   end
@@ -317,7 +312,7 @@ char.mousepressed = function(x, y, button)
       end
     end
     if valid then
-      particle.add("click", tile_x, tile_y, "green")
+      particle.add("click", tile_x, tile_y, "white")
     else
       particle.add("click", tile_x, tile_y, "red")
     end
@@ -328,15 +323,31 @@ char.use_ability = function(knight_id, tile_x, tile_y)
   if abilities.overlap(knight_id, knights[knight_id], knights, tile_x, tile_y) then
     return false
   end
-  return abilities.use(knight_id, knights[knight_id], tile_x, tile_y)
+  local success = abilities.use(knight_id, knights[knight_id], tile_x, tile_y)
+  if success then
+    abilities.set_preview(knight_id, knights[knight_id], players[id].team, resolve)
+  end
+  return success
 end
 
 char.set_path = function(knight_id, tile_x, tile_y)
-  if movement.valid(knights[knight_id].tile_x, knights[knight_id].tile_y, tile_x, tile_y, move_dist[char.get_state(knight_id, knights[knight_id])]) then
-    local path = movement.get_path(knights[knight_id].tile_x, knights[knight_id].tile_y, tile_x, tile_y)
-    if path then
-      if not char.path_collision(knight_id, path, knights[knight_id].team) then
-        knights[knight_id].path = path
+  local knight = knights[knight_id]
+  if movement.valid(knight.tile_x, knight.tile_y, tile_x, tile_y, move_dist[char.get_state(knight_id, knight)]) then
+    local path = movement.get_path(knight.tile_x, knight.tile_y, tile_x, tile_y)
+    if path and #path > 0 then
+      if not char.path_collision(knight_id, path, knight.team) then
+        knight.path = path
+        -- add path graphic
+        if players[id].team == knight.team then -- only draw path if on the same team
+          preview.remove_path("preview") -- prevent previous path preview's precedence (whew)
+          preview.remove_path(knight_id) -- get rid of old path
+          preview.add_path(knight_id, path, knight.tile_x, knight.tile_y) -- add new path
+          preview.add_icon(knight_id, 2, path[#path].x, path[#path].y) -- add marker at end of path
+          local step = football.path_intersect(path) -- add marker if intersecting ball
+          if step then
+            preview.add_icon("preview", 7, path[step].x, path[step].y)
+          end
+        end
         return true
       end
     end
@@ -345,25 +356,28 @@ char.set_path = function(knight_id, tile_x, tile_y)
 end
 
 char.preview_path = function(knight_id, tile_x, tile_y)
-  local dist = move_dist[char.get_state(knight_id, knights[knight_id])]
-  if movement.valid(knights[knight_id].tile_x, knights[knight_id].tile_y, tile_x, tile_y, dist) then
-    local path = movement.get_path(knights[knight_id].tile_x, knights[knight_id].tile_y, tile_x, tile_y)
+  local knight = knights[knight_id]
+  local dist = move_dist[char.get_state(knight_id, knight)]
+  if movement.valid(knight.tile_x, knight.tile_y, tile_x, tile_y, dist) then
+    local path = movement.get_path(knight.tile_x, knight.tile_y, tile_x, tile_y)
     if #path > 0 then
-      local collide = char.path_collision(knight_id, path, knights[knight_id].team)
-      if collide then
-        path[collide].icon = 3
-        movement.draw_path(knights[knight_id].tile_x, knights[knight_id].tile_y, path, colors.red[1], colors.red[2], colors.red[3])
+      local step = char.path_collision(knight_id, path, knight.team)
+      if step then
+        preview.add_icon("preview", 8, path[step].x, path[step].y, "red")
+        preview.add_path("preview", path, knight.tile_x, knight.tile_y, "red")
+        preview.add_icon("preview", 2, path[#path].x, path[#path].y, "red")
       else
-        local intersect = football.path_intersect(path)
-        if intersect then
-          path[intersect].icon = 2
+        local step = football.path_intersect(path)
+        if step then
+          preview.add_icon("preview", 7, path[step].x, path[step].y, "green")
         end
-        movement.draw_path(knights[knight_id].tile_x, knights[knight_id].tile_y, path, colors.green[1], colors.green[2], colors.green[3])
+        preview.add_path("preview", path, knight.tile_x, knight.tile_y, "green")
+        preview.add_icon("preview", 2, path[#path].x, path[#path].y, "green")
       end
     end
   else
-    art.path_icon(4, tile_x, tile_y, colors.red[1], colors.red[2], colors.red[3])
-    art.path_border(knights[knight_id].tile_x, knights[knight_id].tile_y, dist, movement.valid, dist)
+    preview.add_icon("preview", 2, tile_x, tile_y, "red")
+    preview.set_border(knight.tile_x, knight.tile_y, dist, movement.valid, dist)
   end
 end
 
@@ -570,6 +584,7 @@ char.shield = function(player, x, y)
 end
 
 char.start_resolve = function(step_time)
+  preview.clear()
   resolve = true
   if pos_select then -- assign positions and qb if not selected
     for i, v in ipairs(knights) do

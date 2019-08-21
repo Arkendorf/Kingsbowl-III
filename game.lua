@@ -10,6 +10,7 @@ local camera = require "camera"
 local window = require "window"
 local broadcast = require "broadcast"
 local particle = require "particle"
+local preview = require "preview"
 
 local game = {}
 
@@ -42,6 +43,7 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
   field.load()
   broadcast.load()
   particle.load()
+  preview.load()
 
   -- hud
   local w, h = window.get_dimensions()
@@ -56,6 +58,7 @@ end
 
 game.update = function(dt)
   char.update(dt)
+  rules.update(dt)
   turn.update(dt)
   football.update(dt)
   camera.update(dt)
@@ -79,10 +82,12 @@ game.draw = function()
   love.graphics.push()
   love.graphics.translate(camera.get_offset())
   field.draw()
+  preview.draw_bottom()
   particle.draw_bottom()
   rules.draw()
   char.draw()
   football.draw()
+  preview.draw_top()
   particle.draw_top()
   love.graphics.pop()
   turn.draw_hud()

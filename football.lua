@@ -1,5 +1,6 @@
 local movement = require "movement"
 local rules = require "rules"
+local preview = require "preview"
 
 local football = {}
 
@@ -28,26 +29,17 @@ football.update = function(dt)
 end
 
 football.draw = function()
-  if not ball.caught then
-    local visible = false
-    if ball.thrown then
-      art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y)
-      visible = true
-    elseif ball.primed and ball.preview then
-      art.draw_quad("arrow", art.quad.item[ball.dir], ball.tile_x, ball.tile_y, colors.white[1], colors.white[2], colors.white[3], "border")
-      visible = true
-    end
-    if not replay_active and visible and not resolve then
-      if ball.tile+ball.range >= #ball.full_path then -- if final tile of full path will be reached this turn, add icon to path
-        ball.path[#ball.path].icon = 1
-      else -- otherwise, draw the icon seperately
-        local tile = ball.full_path[#ball.full_path]
-        art.path_icon(1, tile.x, tile.y)
-      end
-      if ball.tile_x == ball.x and ball.tile_y == ball.y then -- very hackty solution to path spazzing, probably a result of client not getting tile info in time (but normal x and y are also funky for some reason)
-        movement.draw_path(ball.tile_x, ball.tile_y, ball.path, colors.white[1], colors.white[2], colors.white[3])
-      end
-    end
+  if ball.thrown and not ball.caught then
+    art.draw_quad("arrow", art.quad.item[ball.dir], ball.x, ball.y)
+  end
+end
+
+football.set_preview = function()
+  preview.remove_path("ball")
+  if not replay_active and not resolve and not ball.caught and (ball.thrown or (ball.primed and ball.preview)) then
+    preview.add_icon("ball", 6, ball.full_path[#ball.full_path].x, ball.full_path[#ball.full_path].y)
+    preview.add_path("ball", ball.path, ball.tile_x, ball.tile_y)
+    preview.add_icon("ball", 5, ball.path[#ball.path].x, ball.path[#ball.path].y) -- add marker at end of path
   end
 end
 
@@ -70,6 +62,7 @@ end
 football.reset = function()
   if not ball.thrown then
     ball.primed = false
+    preview.remove_path("ball")
   end
 end
 
@@ -79,6 +72,7 @@ football.clear = function()
   ball.primed = false
   ball.preview = false
   movement.cancel(ball)
+  preview.remove_path("ball")
 end
 
 football.ball_range = function(x1, y1, x2, y2)
@@ -118,6 +112,8 @@ football.start_resolve = function()
   resolve = true
   if ball.primed and not ball.thrown then
     ball.thrown = true
+    ball.x = ball.tile_x
+    ball.y = ball.tile_y
   end
 end
 
@@ -130,6 +126,7 @@ football.sub_path = function()
       break
     end
   end
+  football.set_preview()
 end
 
 football.end_resolve = function()
@@ -160,6 +157,7 @@ football.catch = function(knight_id, knight)
     ball.caught = true
     ball.carrier = knight_id
     ball.primed = false
+    preview.remove_path("ball")
   end
   return rules.catch(knight)
 end
