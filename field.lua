@@ -1,11 +1,11 @@
 local field = {}
 
-local field_w = 60
-local field_h = 27
+local field_w = 36
+local field_h = 15
 local canvas = false
 local interval = math.floor(field_w/12)
 local yard_mark_y = {1, field_h, math.ceil(field_h/2-interval), math.ceil(field_h/2+interval)}
-local number_y = {interval, math.ceil(field_h/2), field_h-interval+1}
+local number_y = {2, math.ceil(field_h/2), field_h-1}
 local end_zone_color = {1, 2}
 
 field.load = function()
@@ -92,12 +92,12 @@ end
 field.cap_tile = function(x, y)
   if x < 0 then -- don't let tile_x exceed field
     x = 0
-  elseif x > field_w then
+  elseif x > field_w-1 then
     x = field_w
   end
   if y < 0 then
     y = 0
-  elseif y > field_h then
+  elseif y > field_h-1 then
     y = field_h
   end
   return x, y
