@@ -48,13 +48,14 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
   -- hud
   local w, h = window.get_dimensions()
   if not replay_active then
-    nui.add.button("", "move", w/2-52, h-64, 48, 48, {func = char.keypressed, args = "1"})
-    nui.add.button("", "ability", w/2+20, h-64, 48, 48, {func = char.keypressed, args = "2"})
-    nui.add.button("", "cycle_left", w/2-104, h-56, 32, 32, {func = char.cycle_knight, args = -1, content = {img = art.img.cycle_icons, quad = art.quad.cycle_icon[1]}})
-    nui.add.button("", "cycle_right", w/2+88, h-56, 32, 32, {func = char.cycle_knight, args = -1, content = {img = art.img.cycle_icons, quad = art.quad.cycle_icon[2]}})
+    nui.add.button("", "move", w/2-60, h-64, 48, 48, {func = char.keypressed, args = "1"})
+    nui.add.button("", "ability", w/2+12, h-64, 48, 48, {func = char.keypressed, args = "2"})
+    nui.add.button("", "cycle_left", w/2-112, h-56, 32, 32, {func = char.cycle_knight, args = -1, content = {img = art.img.cycle_icons, quad = art.quad.cycle_icon[1]}})
+    nui.add.button("", "cycle_right", w/2+80, h-56, 32, 32, {func = char.cycle_knight, args = -1, content = {img = art.img.cycle_icons, quad = art.quad.cycle_icon[2]}})
   end
   nui.add.button("", "camera", w-112, h-56, 32, 32, {func = char.center_camera, content = {img = art.img.game_icons, quad = art.quad.game_icon[1]}})
-  nui.add.button("", "username", w-56, h-56, 32, 32, {toggle = true, func = char.toggle_usernames, func2 = char.toggle_usernames, content = {img = art.img.game_icons, quad = art.quad.game_icon[2]}})
+  nui.add.button("", "username", w-56, h-56, 32, 32, {toggle = true, func = char.toggle_info, func2 = char.toggle_info, content = {img = art.img.game_icons, quad = art.quad.game_icon[2]}})
+  nui.active("", "username", true)
 end
 
 game.update = function(dt)

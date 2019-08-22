@@ -12,7 +12,7 @@ local preview = require "preview"
 
 local char = {}
 
-local show_usernames = false
+local show_info = false
 local players = {}
 local knights = {}
 local knight_cycle = 1
@@ -30,6 +30,11 @@ local end_info = {type = "", x = 0}
 local replay_active = false
 local select = 0
 local select_t = .5
+local action_str = {
+  position = "select position",
+  move = "move",
+  ability = "use ability",
+}
 
 char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_settings, game_replay_active)
   if network_state == "server" then
@@ -137,7 +142,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
 
   replay_active = game_replay_active
 
-  show_usernames = false
+  show_info = true
   select = 0
 
   char.pos_prepare()
@@ -186,7 +191,44 @@ char.draw = function()
   end
 end
 
+char.draw_char = function(i, v)
+  local state = char.get_state(i, v)
+  local quad = 1
+  if not pos_select then
+    if state == "qb" then
+      quad = 2
+    elseif state == "carrier" then
+      quad = 3
+    elseif v.dead then
+      quad = 4
+    end
+  end
+  if v.tile_x ~= math.huge and v.tile_y ~= math.huge then
+    if not replay_active and i == knight_id then
+      art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, colors.white[1], colors.white[2], colors.white[3], "outline")
+    end
+    art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size)
+    art.draw_quad("char_overlay", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, 1, 1, 1, "color", palette[rules.get_color(v.team)])
+    if show_info then
+      love.graphics.setFont(smallfont)
+      love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
+      love.graphics.setColor(palette[rules.get_color(v.team)][2])
+      love.graphics.setFont(smallfont_overlay)
+      love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
+      love.graphics.setColor(1, 1, 1)
+      love.graphics.setFont(font)
+    end
+  end
+end
+
 char.draw_hud = function()
+  if show_info then
+    local w, h = window.get_dimensions()
+    love.graphics.setFont(smallfont)
+    love.graphics.printf("Current action: "..action_str[knights[knight_id].action], w/2-128, h-82, 256, "center")
+    love.graphics.setFont(font)
+  end
+  -- indicators
   for i, v in ipairs(players[id].knights) do
     if v ~= knight_id and v ~= rules.get_qb() and not knights[v].carrier then
       camera.indicator(1, 2, knights[v].x, knights[v].y, rules.get_color(knights[v].team))
@@ -211,36 +253,6 @@ char.draw_hud = function()
           camera.indicator(3, 2, knights[i].x, knights[i].y, rules.get_color(knights[i].team))
         end
       end
-    end
-  end
-end
-
-char.draw_char = function(i, v)
-  local state = char.get_state(i, v)
-  local quad = 1
-  if not pos_select then
-    if state == "qb" then
-      quad = 2
-    elseif state == "carrier" then
-      quad = 3
-    elseif v.dead then
-      quad = 4
-    end
-  end
-  if v.tile_x ~= math.huge and v.tile_y ~= math.huge then
-    if not replay_active and i == knight_id then
-      art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, colors.white[1], colors.white[2], colors.white[3], "outline")
-    end
-    art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size)
-    art.draw_quad("char_overlay", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, 1, 1, 1, "color", palette[rules.get_color(v.team)])
-    if show_usernames then
-      love.graphics.setFont(smallfont)
-      love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
-      love.graphics.setColor(palette[rules.get_color(v.team)][2])
-      love.graphics.setFont(smallfont_overlay)
-      love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
-      love.graphics.setColor(1, 1, 1)
-      love.graphics.setFont(font)
     end
   end
 end
@@ -742,10 +754,10 @@ char.get_move_dist = function()
   return move_dist
 end
 
-char.toggle_usernames = function()
-  show_usernames = not show_usernames
-  nui.active("", "username", show_usernames)
-  nui.edit.element("", "username", "active", show_usernames)
+char.toggle_info = function()
+  show_info = not show_info
+  nui.active("", "username", show_info)
+  nui.edit.element("", "username", "active", show_info)
 end
 
 char.save_turn = function()

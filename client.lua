@@ -82,8 +82,6 @@ client_func.join_server = function(address)
   client_func.stop_test()
   client = sock.newClient(address.ip, address.port)
   if pcall(client_func.connect) then
-
-
     -- event calls once connected to a server
     client:on("connect", function()
       if client then
