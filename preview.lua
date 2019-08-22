@@ -15,6 +15,7 @@ local icon_tier = {
   7,
   8,
   9,
+  10,
 }
 
 local color_tier = {

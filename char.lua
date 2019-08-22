@@ -17,7 +17,6 @@ local players = {}
 local knights = {}
 local knight_cycle = 1
 local knight_id = 1
-local action = "move"
 local move_dist = {
   qb = 2.5,
   carrier = 2.5,
@@ -29,6 +28,8 @@ local pos_select = false
 local end_down = false
 local end_info = {type = "", x = 0}
 local replay_active = false
+local select = 0
+local select_t = .5
 
 char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_settings, game_replay_active)
   if network_state == "server" then
@@ -127,7 +128,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
     players[v] = {username = menu_client_info[v].username, team = menu_client_info[v].team, tile_x = 3+i, tile_y = 3+i, path = {}, x = 3+i, y = 3+i, xv = 0, yv = 0, item = {active = false}, stats = {0, 0, 0}, knights = {}}
     for j = 1, menu_settings.knights do
       local index = #knights+1
-      knights[index] = {player = v, team = menu_client_info[v].team, tile_x = 3+i, tile_y = 3+i, path = {}, x = 3+i, y = 3+i, xv = 0, yv = 0, item = {active = false}}
+      knights[index] = {player = v, team = menu_client_info[v].team, tile_x = 3+i, tile_y = 3+i, path = {}, x = 3+i, y = 3+i, xv = 0, yv = 0, item = {active = false}, action = "position"}
       players[v].knights[j] = index
     end
   end
@@ -137,6 +138,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
   replay_active = game_replay_active
 
   show_usernames = false
+  select = 0
 
   char.pos_prepare()
   football.visible(players[id].team)
@@ -156,7 +158,12 @@ char.update = function(dt)
   if not replay_active then
     char.preview()
   end
-  abilities.update_hud(knight_id, knights[knight_id], action, dt)
+  -- hud
+  if select > 0 then
+    select = select - dt
+  end
+  local knight = knights[knight_id]
+  abilities.update_hud(knight_id, knight, knight.action, dt)
 end
 
 
@@ -173,6 +180,9 @@ char.draw = function()
   end
   for i, v in ipairs(knights) do -- draw items
     abilities.draw_item(v)
+  end
+  if select > 0 then
+    art.draw_img("select", knights[knight_id].x-8/tile_size, knights[knight_id].y-8/tile_size)
   end
 end
 
@@ -205,32 +215,6 @@ char.draw_hud = function()
   end
 end
 
-char.preview = function()
-  preview.remove_border()
-  preview.remove_path("preview")
-  if not resolve then
-    local x, y = window.get_mouse()
-    local offset_x, offset_y = camera.get_offset()
-    local tile_x = math.floor((x-offset_x)/tile_size)
-    local tile_y = math.floor((y-offset_y)/tile_size)
-    tile_x, tile_y = field.cap_tile(tile_x, tile_y)
-    if action == "position" then
-      rules.preview_position(knight_id, knights[knight_id], tile_x, tile_y)
-    elseif action == "move" then
-      char.preview_path(knight_id, tile_x, tile_y)
-    elseif action == "ability" then
-      local type = abilities.type(knight_id, knights[knight_id])
-      if type == "throw" then
-        abilities.preview_throw(knights[knight_id], tile_x, tile_y)
-      elseif type == "item" then
-        abilities.preview_item(knight_id, knights[knight_id], knights, tile_x, tile_y)
-      else
-        preview.add_icon("preview", 9, tile_x, tile_y, "red")
-      end
-    end
-  end
-end
-
 char.draw_char = function(i, v)
   local state = char.get_state(i, v)
   local quad = 1
@@ -247,19 +231,71 @@ char.draw_char = function(i, v)
     if not replay_active and i == knight_id then
       art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, colors.white[1], colors.white[2], colors.white[3], "outline")
     end
-    if not pos_select or v.team == players[id].team then
-      art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size)
-      art.draw_quad("char_overlay", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, 1, 1, 1, "color", palette[rules.get_color(v.team)])
-      if show_usernames then
-        love.graphics.setFont(smallfont)
-        love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
-        love.graphics.setColor(palette[rules.get_color(v.team)][2])
-        love.graphics.setFont(smallfont_overlay)
-        love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.setFont(font)
+    art.draw_quad("char", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size)
+    art.draw_quad("char_overlay", art.quad.char[v.team][quad], v.x-8/tile_size, v.y-8/tile_size, 1, 1, 1, "color", palette[rules.get_color(v.team)])
+    if show_usernames then
+      love.graphics.setFont(smallfont)
+      love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
+      love.graphics.setColor(palette[rules.get_color(v.team)][2])
+      love.graphics.setFont(smallfont_overlay)
+      love.graphics.printf(players[v.player].username, math.floor((v.x-1)*tile_size), math.floor(v.y*tile_size+12), tile_size*3, "center")
+      love.graphics.setColor(1, 1, 1)
+      love.graphics.setFont(font)
+    end
+  end
+end
+
+char.preview = function()
+  preview.remove_border()
+  preview.remove_path("preview")
+  if not resolve then
+    local x, y = window.get_mouse()
+    local offset_x, offset_y = camera.get_offset()
+    local tile_x = math.floor((x-offset_x)/tile_size)
+    local tile_y = math.floor((y-offset_y)/tile_size)
+    tile_x, tile_y = field.cap_tile(tile_x, tile_y)
+
+    local knight = knights[knight_id]
+    if knight.action == "position" then
+      rules.preview_position(knight_id, knight, tile_x, tile_y)
+    elseif knight.action == "move" then
+      char.preview_path(knight_id, tile_x, tile_y)
+    elseif knight.action == "ability" then
+      local type = abilities.type(knight_id, knight)
+      if type == "throw" then
+        abilities.preview_throw(knight, tile_x, tile_y)
+      elseif type == "item" then
+        abilities.preview_item(knight_id, knight, knights, tile_x, tile_y)
+      else
+        preview.add_icon("preview", 10, tile_x, tile_y, "red")
       end
     end
+  end
+end
+
+char.preview_path = function(knight_id, tile_x, tile_y)
+  local knight = knights[knight_id]
+  local dist = move_dist[char.get_state(knight_id, knight)]
+  if movement.valid(knight.tile_x, knight.tile_y, tile_x, tile_y, dist) then
+    local path = movement.get_path(knight.tile_x, knight.tile_y, tile_x, tile_y)
+    if #path > 0 then
+      local step = char.path_collision(knight_id, path, knight.team)
+      if step then
+        preview.add_icon("preview", 9, path[step].x, path[step].y, "red")
+        preview.add_path("preview", path, knight.tile_x, knight.tile_y, "red")
+        preview.add_icon("preview", 2, path[#path].x, path[#path].y, "red")
+      else
+        local step = football.path_intersect(path)
+        if step then
+          preview.add_icon("preview", 8, path[step].x, path[step].y, "green")
+        end
+        preview.add_path("preview", path, knight.tile_x, knight.tile_y, "green")
+        preview.add_icon("preview", 2, path[#path].x, path[#path].y, "green")
+      end
+    end
+  else
+    preview.add_icon("preview", 2, tile_x, tile_y, "red")
+    preview.set_border(knight.tile_x, knight.tile_y, dist, movement.valid, dist)
   end
 end
 
@@ -271,15 +307,20 @@ char.cycle_knight = function(dir)
     knight_cycle = #players[id].knights
   end
   knight_id = players[id].knights[knight_cycle]
+  select = select_t
 end
 
 char.keypressed = function(key)
   if not replay_active then
     if not pos_select then
-      if key == "1" then
-        action = "move"
-      elseif key == "2" then
-        action = "ability"
+      local ball = football.get_ball()
+      if knight_id ~= ball.carrier then -- ball carrier cant use an ability, so dont let them switch to it
+        local knight = knights[knight_id]
+        if key == "1" then
+          knight.action = "move"
+        elseif key == "2" then
+          knight.action = "ability"
+        end
       end
     end
     if key == "tab" then
@@ -309,6 +350,7 @@ char.center_camera = function()
     end
   else
     camera.object(knights[knight_id])
+    select = select_t
   end
 end
 
@@ -320,23 +362,25 @@ char.mousepressed = function(x, y, button)
     local tile_x = math.floor(x/tile_size)
     local tile_y = math.floor(y/tile_size)
     tile_x, tile_y = field.cap_tile(tile_x, tile_y)
+
+    local knight = knights[knight_id]
     local valid = false
-    if action == "move" then
+    if knight.action == "move" then
       if char.set_path(knight_id, tile_x, tile_y) then
-        abilities.cancel(knight_id, knights[knight_id])
+        abilities.cancel(knight_id, knight)
         network.server_send("path", {knight_id, tile_x, tile_y})
         network.client_send("path", {knight_id, tile_x, tile_y})
         valid = true
       end
-    elseif action == "ability" then
+    elseif knight.action == "ability" then
       if char.use_ability(knight_id, tile_x, tile_y) then
-        movement.cancel(knights[knight_id])
+        movement.cancel(knight)
         network.server_send("ability", {knight_id, tile_x, tile_y})
         network.client_send("ability", {knight_id, tile_x, tile_y})
         valid = true
       end
-    elseif action == "position" then -- choose position to start next down
-      if rules.set_position(knight_id, knights[knight_id], tile_x, tile_y) then
+    elseif knight.action == "position" then -- choose position to start next down
+      if rules.set_position(knight_id, knight, tile_x, tile_y) then
         network.server_send("position", {knight_id, tile_x, tile_y})
         network.client_send("position", {knight_id, tile_x, tile_y})
         valid = true
@@ -376,7 +420,7 @@ char.set_path = function(knight_id, tile_x, tile_y)
           preview.add_icon(knight_id, 2, path[#path].x, path[#path].y) -- add marker at end of path
           local step = football.path_intersect(path) -- add marker if intersecting ball
           if step then
-            preview.add_icon("preview", 7, path[step].x, path[step].y)
+            preview.add_icon("preview", 8, path[step].x, path[step].y)
           end
         end
         return true
@@ -384,32 +428,6 @@ char.set_path = function(knight_id, tile_x, tile_y)
     end
   end
   return false
-end
-
-char.preview_path = function(knight_id, tile_x, tile_y)
-  local knight = knights[knight_id]
-  local dist = move_dist[char.get_state(knight_id, knight)]
-  if movement.valid(knight.tile_x, knight.tile_y, tile_x, tile_y, dist) then
-    local path = movement.get_path(knight.tile_x, knight.tile_y, tile_x, tile_y)
-    if #path > 0 then
-      local step = char.path_collision(knight_id, path, knight.team)
-      if step then
-        preview.add_icon("preview", 8, path[step].x, path[step].y, "red")
-        preview.add_path("preview", path, knight.tile_x, knight.tile_y, "red")
-        preview.add_icon("preview", 2, path[#path].x, path[#path].y, "red")
-      else
-        local step = football.path_intersect(path)
-        if step then
-          preview.add_icon("preview", 7, path[step].x, path[step].y, "green")
-        end
-        preview.add_path("preview", path, knight.tile_x, knight.tile_y, "green")
-        preview.add_icon("preview", 2, path[#path].x, path[#path].y, "green")
-      end
-    end
-  else
-    preview.add_icon("preview", 2, tile_x, tile_y, "red")
-    preview.set_border(knight.tile_x, knight.tile_y, dist, movement.valid, dist)
-  end
 end
 
 char.step_num = function()
@@ -510,7 +528,6 @@ char.finish = function(step, step_time, max_step)
       if football.ball_active() and movement.collision(ball, v, step) then -- ball and knight are colliding
         char.catch_broadcast(v)
         char.catch(i, v)
-        v.carrier = true
         network.server_send("catch", i)
       end
       -- check for td
@@ -537,6 +554,8 @@ char.finish = function(step, step_time, max_step)
 end
 
 char.catch = function(knight_id, knight)
+  knight.carrier = true
+  knight.action = "move"
   if football.catch(knight_id, knight) then
     local qb = rules.get_qb()
     players[knights[qb].player].stats[1] = players[knights[qb].player].stats[1] + 1
@@ -557,7 +576,11 @@ char.touchdown = function(knight)
   char.touchdown_broadcast(knight)
   end_info.type = "touchdown"
   end_down = true
-  particle.add("confetti", knight.tile_x, knight.tile_y, false, "color", palette[rules.get_color(knight.team)])
+  for y = -1, 1 do
+    for x = -1, 1 do
+      particle.add("confetti", knight.tile_x+x, knight.tile_y+y, false, "color", palette[rules.get_color(knight.team)])
+    end
+  end
 end
 
 char.tackle = function(knight_id, knight, tackler, step, step_time)
@@ -626,11 +649,6 @@ char.start_resolve = function(step_time)
   preview.clear()
   resolve = true
   if pos_select then -- assign positions and qb if not selected
-    for i, v in ipairs(knights) do
-      if v.tile_x == math.huge or v.tile_y == math.huge then -- knight never selected a tile
-        rules.give_position(i, v)
-      end
-    end
     rules.ensure_qb(knights) -- make sure a qb exists
   end
   char.item_collide(step_time)
@@ -659,6 +677,7 @@ char.end_resolve = function(step, step_time)
   for i, v in ipairs(knights) do -- reset path and abilities
     movement.cancel(v)
     abilities.reset.item(v, step_time)
+    v.action = "move"
   end
   if network_state == "server" then
     if pos_select then
@@ -683,7 +702,9 @@ end
 
 char.finish_select = function()
   pos_select = false
-  action = "move"
+  for i, v in ipairs(knights) do
+    v.action = "move"
+  end
   rules.finish_select()
 end
 
@@ -698,9 +719,9 @@ end
 
 char.pos_prepare = function()
   pos_select = true
-  action = "position"
   for i, v in ipairs(knights) do
-    rules.prepare_position(i, v)
+    rules.give_position(i, v)
+    v.action = "position"
     v.dead = false
   end
 end

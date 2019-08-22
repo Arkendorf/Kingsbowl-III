@@ -262,11 +262,11 @@ end
 rules.preview_position = function(knight_id, knight, tile_x, tile_y)
   for i, v in ipairs(team_info[knight.team].lineup) do
     if v.x == tile_x-scrimmage and v.y == tile_y and not v.taken then
-      preview.add_icon("preview", 2, tile_x, tile_y, "green")
+      preview.add_icon("preview", 3, tile_x, tile_y, "green")
       return
     end
   end
-  preview.add_icon("preview", 2, tile_x, tile_y, "red")
+  preview.add_icon("preview", 3, tile_x, tile_y, "red")
 end
 
 rules.remove_host = function(knight_id, knight)
@@ -304,18 +304,6 @@ rules.give_position = function(knight_id, knight)
       break
     end
   end
-end
-
-rules.prepare_position = function(knight_id, knight)
-  tile_x = math.huge
-  tile_y = math.huge
-  if network_state == "server" then
-    knight.tile_x = tile_x
-    knight.tile_y = tile_y
-    network.server_send("knight_tile", {knight_id, tile_x, tile_y})
-  end
-  knight.x = tile_x
-  knight.y = tile_y
 end
 
 rules.ensure_qb = function(knights)

@@ -42,7 +42,8 @@ abilities.update_hud = function(knight_id, knight, action, dt)
   else
     nui.edit.element("", "ability", "content", {img = art.img.ability_icons, quad = art.quad.ability_icon[3]})
   end
-  if action == "position" then
+  local ball = football.get_ball()
+  if action == "position" or knight_id == ball.carrier then
     nui.edit.element("", "move", "type", 1)
     nui.edit.element("", "ability", "type", 2)
   elseif action == "ability" then
@@ -97,16 +98,16 @@ abilities.preview_throw = function(knight, x, y)
   if abilities.valid(knight.tile_x, knight.tile_y, x, y) then
     local path = movement.get_path(knight.tile_x, knight.tile_y, x, y)
     preview.add_path("preview", path, knight.tile_x, knight.tile_y, "green")
-    preview.add_icon("preview", 5, path[#path].x, path[#path].y, "green")
+    preview.add_icon("preview", 6, path[#path].x, path[#path].y, "green")
   else
-    preview.add_icon("preview", 5, x, y, "red")
+    preview.add_icon("preview", 6, x, y, "red")
   end
 end
 
 abilities.preview_item = function(knight_id, knight, knights, x, y)
-  local icon = 3
+  local icon = 4
   if knight.team == rules.get_offense() then
-    icon = 4
+    icon = 5
   end
   if abilities.valid(knight.tile_x, knight.tile_y, x, y) and abilities.adjacent(knight.tile_x, knight.tile_y, x, y) and not abilities.overlap(knight_id, knight, knights, x, y) then
     preview.add_icon("preview", icon, x, y, "green")
@@ -149,9 +150,9 @@ abilities.set_preview = function(knight_id, knight, team, resolve)
     preview.remove_path("preview") -- remove precedence
     preview.remove_path(knight_id)
     if knight.team == rules.get_offense() then
-      preview.add_icon(knight_id, 4, knight.item.new_x, knight.item.new_y)
+      preview.add_icon(knight_id, 5, knight.item.new_x, knight.item.new_y)
     else
-      preview.add_icon(knight_id, 3, knight.item.new_x, knight.item.new_y)
+      preview.add_icon(knight_id, 4, knight.item.new_x, knight.item.new_y)
     end
   end
 end

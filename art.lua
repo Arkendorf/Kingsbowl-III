@@ -17,7 +17,7 @@ art.load = function(dir)
 
   art.quad.item = art.set_quad("sword", 8)
 
-  art.quad.path_icon = art.set_quad("path_icons", 9)
+  art.quad.path_icon = art.set_quad("path_icons", 10)
 
   art.quad.tiles = art.set_quad("tiles", 4)
 
