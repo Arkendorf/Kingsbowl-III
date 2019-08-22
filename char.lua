@@ -156,26 +156,6 @@ char.update = function(dt)
   if not replay_active then
     char.preview()
   end
-  -- camera
-  local object = knights[knight_id]
-  if replay_active then
-    local ball = football.get_ball()
-    if ball.thrown then
-      if ball.carrier then
-        object = knights[ball.carrier]
-      else
-        object = ball
-      end
-    else
-      object = knights[rules.get_qb()]
-    end
-  end
-  if not object or object.x == math.huge or object.y == math.huge then
-    camera.scrimmage()
-  else
-    camera.object(object)
-  end
-
   abilities.update_hud(knight_id, knights[knight_id], action, dt)
 end
 
@@ -193,6 +173,26 @@ char.draw = function()
   end
   for i, v in ipairs(knights) do -- draw items
     abilities.draw_item(v)
+  end
+end
+
+char.draw_hud = function()
+  for i, v in ipairs(players[id].knights) do
+    if v ~= rules.get_qb() and not knights[v].carrier then
+      camera.indicator(1, knights[v].x, knights[v].y, rules.get_color(knights[v].team))
+    end
+  end
+  if not pos_select then
+    local ball = football.get_ball()
+    if not ball.thrown then
+      local knight = knights[rules.get_qb()]
+      camera.indicator(3, knight.x, knight.y, rules.get_color(knight.team))
+    elseif not ball.caught then
+      camera.indicator(2, ball.x, ball.y, rules.get_color(rules.get_offense()))
+    elseif ball.carrier then
+      local knight = knights[ball.carrier]
+      camera.indicator(3, knight.x, knight.y, rules.get_color(knight.team))
+    end
   end
 end
 
@@ -272,13 +272,19 @@ char.keypressed = function(key)
       action = "ability"
     end
   end
-  if key == "space" then
+  if key == "tab" then
     char.cycle_knight(1)
   elseif key == "lshift" then
     char.cycle_knight(-1)
   elseif key == "i" then
     char.toggle_usernames()
+  elseif key == "space" then
+    char.center_camera()
   end
+end
+
+char.center_camera = function()
+  camera.object(knights[knight_id])
 end
 
 char.mousepressed = function(x, y, button)
@@ -633,6 +639,7 @@ char.end_resolve = function(step, step_time)
 end
 
 char.start_select = function()
+  camera.scrimmage()
   rules[end_info.type](end_info.x)
   char.pos_prepare()
   football.clear()

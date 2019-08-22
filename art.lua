@@ -37,6 +37,10 @@ art.load = function(dir)
 
   art.quad.cycle_icon = art.set_quad("cycle_icons", 2)
 
+  art.quad.game_icon = art.set_quad("game_icons", 2)
+
+  art.quad.indicator_icon = art.set_quad("indicator_icons", 3)
+
   art.quad.particle = art.set_quad("blood", 8)
 
   art.quad.confetti = art.set_quad("confetti", 18)

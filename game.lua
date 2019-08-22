@@ -53,7 +53,8 @@ game.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
     nui.add.button("", "cycle_left", w/2-104, h-56, 32, 32, {func = char.cycle_knight, args = -1, content = {img = art.img.cycle_icons, quad = art.quad.cycle_icon[1]}})
     nui.add.button("", "cycle_right", w/2+88, h-56, 32, 32, {func = char.cycle_knight, args = -1, content = {img = art.img.cycle_icons, quad = art.quad.cycle_icon[2]}})
   end
-  nui.add.button("", "username", w-56, h-56, 32, 32, {toggle = true, func = char.toggle_usernames, func2 = char.toggle_usernames, content = art.img.username_icon})
+  nui.add.button("", "camera", w-112, h-56, 32, 32, {func = char.center_camera, content = {img = art.img.game_icons, quad = art.quad.game_icon[1]}})
+  nui.add.button("", "username", w-56, h-56, 32, 32, {toggle = true, func = char.toggle_usernames, func2 = char.toggle_usernames, content = {img = art.img.game_icons, quad = art.quad.game_icon[2]}})
 end
 
 game.update = function(dt)
@@ -90,6 +91,7 @@ game.draw = function()
   preview.draw_top()
   particle.draw_top()
   love.graphics.pop()
+  char.draw_hud()
   turn.draw_hud()
   broadcast.draw()
 end

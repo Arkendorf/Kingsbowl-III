@@ -7,6 +7,8 @@ local camera = {}
 
 local cam = {}
 
+local move_range = 16
+
 local shake = {t = 0, mag = 0}
 
 camera.load = function()
@@ -17,12 +19,27 @@ camera.load = function()
 end
 
 camera.update = function(dt)
+  -- lerp
   cam.x = cam.x + (cam.new_x - cam.x)*4*dt
   cam.y = cam.y + (cam.new_y - cam.y)*4*dt
+  -- screenshake
   if shake.t > 0 then
     shake.t = shake.t - dt
     cam.x_offset = math.random(-shake.mag, shake.mag)
     cam.y_offset = math.random(-shake.mag, shake.mag)
+  end
+  -- camera control
+  local x, y = window.get_mouse()
+  local w, h = window.get_dimensions()
+  if x < move_range then
+    cam.new_x = cam.new_x - 140*dt
+  elseif x > w - move_range then
+    cam.new_x = cam.new_x + 140*dt
+  end
+  if y < move_range then
+    cam.new_y = cam.new_y - 140*dt
+  elseif y > h - move_range then
+    cam.new_y = cam.new_y + 140*dt
   end
 end
 
@@ -57,6 +74,34 @@ end
 camera.shake = function(mag, t)
   shake.mag = mag
   shake.t = t
+end
+
+camera.indicator = function(type, x, y, color)
+  local tile_x = math.floor((x+.5)*tile_size)
+  local tile_y = math.floor((y+.5)*tile_size)
+  local x_dif = tile_x-cam.x
+  local y_dif = tile_y-cam.y
+  local x_mag = math.abs(x_dif)
+  local y_mag = math.abs(y_dif)
+  local window_w, window_h = window.get_dimensions()
+  local w = window_w/2-24
+  local h = window_h/2-24
+  if x_mag > w or y_mag > h then
+    local window_angle = math.atan2(h, w)
+    local angle = math.atan2(y_dif, x_dif)
+    local x, y = 0, 0
+    if (angle < window_angle and angle > -window_angle) or angle > math.pi-window_angle or angle < -math.pi+window_angle then
+      x = w * x_dif/x_mag
+      y = math.tan(angle) * x
+    else
+      y = h * y_dif/y_mag
+      x = y / math.tan(angle)
+    end
+    love.graphics.setColor(palette[color][2])
+    love.graphics.draw(art.img.indicator_icons, art.quad.indicator_icon[type], math.floor(window_w/2+x), math.floor(window_h/2+y), 0, 1, 1, 12, 12)
+    love.graphics.draw(art.img.indicator_arrow, math.floor(window_w/2+x), math.floor(window_h/2+y), angle, 1, 1, -14, 4)
+    love.graphics.setColor(1, 1, 1)
+  end
 end
 
 return camera
