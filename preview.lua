@@ -17,6 +17,12 @@ local icon_tier = {
   9,
 }
 
+local color_tier = {
+  green = 1,
+  white = 2,
+  red = 3,
+}
+
 local icon_cutoff = 1
 
 preview.load = function()
@@ -28,7 +34,7 @@ preview.draw_bottom = function()
     preview.draw_border()
   end
   for k, v in pairs(icons) do
-    if icon_tier[v.type] <= icon_cutoff then
+    if icon_tier[v.type] <= icon_cutoff and not preview.icon_blocked(v) then
       preview.draw_icon(v)
     end
   end
@@ -39,28 +45,39 @@ preview.draw_top = function()
     preview.draw_path(v, paths[v])
   end
   for k, v in pairs(icons) do
-    if icon_tier[v.type] > icon_cutoff then
+    if icon_tier[v.type] > icon_cutoff and not preview.icon_blocked(v) then
       preview.draw_icon(v)
     end
   end
 end
 
-preview.add_icon = function(path_id, type, x, y, color)
+preview.icon_blocked = function(icon)
   for k, v in pairs(icons) do
-    if v.x == x and v.y == y then
-      if icon_tier[v.type] < icon_tier[type] then
-        icons[k] = nil
-      else
-        return
+    if v.x == icon.x and v.y == icon.y then
+      if icon_tier[v.type] > icon_tier[icon.type] then
+        return true
+      elseif icon_tier[v.type] == icon_tier[icon.type] then -- order based on color (hacky I know)
+        if color_tier[preview.get_color(v.color)] > color_tier[preview.get_color(icon.color)] then
+          return true
+        end
       end
     end
   end
+  return false
+end
+
+preview.add_icon = function(path_id, type, x, y, color)
   icons[#icons+1] = {type = type, x = x, y = y, path_id = path_id, color = color}
 end
 
 preview.add_path = function(path_id, steps, x, y, color)
   paths[path_id] = {steps = steps, x = x, y = y, color = color}
-  table.insert(path_order, 1, path_id)
+  table.insert(path_order, path_id)
+  table.sort(path_order, preview.path_sort)
+end
+
+preview.path_sort = function(a, b)
+  return color_tier[preview.get_color(paths[a].color)] < color_tier[preview.get_color(paths[b].color)]
 end
 
 preview.set_border = function(x, y, radius, func, info)
@@ -87,13 +104,13 @@ preview.remove_path = function(path_id)
 end
 
 preview.draw_icon = function(icon)
-  local color = preview.get_color(icon.color)
+  local color = colors[preview.get_color(icon.color)]
   art.draw_img("path_icon_border", icon.x, icon.y, color[1], color[2], color[3])
   art.draw_quad("path_icons", art.quad.path_icon[icon.type], icon.x+8/tile_size, icon.y+8/tile_size, color[1], color[2], color[3])
 end
 
 preview.draw_path = function(path_id, path)
-  local color = preview.get_color(path.color)
+  local color = colors[preview.get_color(path.color)]
   if #path.steps > 0 then
     local x_dif = path.steps[1].x - path.x
     local y_dif = path.steps[1].y - path.y
@@ -137,9 +154,9 @@ end
 
 preview.get_color = function(color)
   if color then
-    return colors[color]
+    return color
   else
-    return colors.white
+    return "white"
   end
 end
 

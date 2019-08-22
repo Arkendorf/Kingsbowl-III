@@ -8,6 +8,7 @@ local camera = {}
 local cam = {}
 
 local move_range = 16
+local move_speed = 2.5
 
 local shake = {t = 0, mag = 0}
 
@@ -31,15 +32,15 @@ camera.update = function(dt)
   -- camera control
   local x, y = window.get_mouse()
   local w, h = window.get_dimensions()
-  if x < move_range then
-    cam.new_x = cam.new_x - 140*dt
-  elseif x > w - move_range then
-    cam.new_x = cam.new_x + 140*dt
+  if x < move_range or love.keyboard.isDown("a") or love.keyboard.isDown("left") then
+    cam.new_x = cam.new_x - move_speed
+  elseif x > w - move_range or love.keyboard.isDown("d") or love.keyboard.isDown("right") then
+    cam.new_x = cam.new_x + move_speed
   end
-  if y < move_range then
-    cam.new_y = cam.new_y - 140*dt
-  elseif y > h - move_range then
-    cam.new_y = cam.new_y + 140*dt
+  if y < move_range or love.keyboard.isDown("w") or love.keyboard.isDown("up") then
+    cam.new_y = cam.new_y - move_speed
+  elseif y > h - move_range or love.keyboard.isDown("s") or love.keyboard.isDown("down") then
+    cam.new_y = cam.new_y + move_speed
   end
 end
 
@@ -76,7 +77,7 @@ camera.shake = function(mag, t)
   shake.t = t
 end
 
-camera.indicator = function(type, x, y, color)
+camera.indicator = function(icon, type, x, y, color)
   local tile_x = math.floor((x+.5)*tile_size)
   local tile_y = math.floor((y+.5)*tile_size)
   local x_dif = tile_x-cam.x
@@ -84,8 +85,8 @@ camera.indicator = function(type, x, y, color)
   local x_mag = math.abs(x_dif)
   local y_mag = math.abs(y_dif)
   local window_w, window_h = window.get_dimensions()
-  local w = window_w/2-24
-  local h = window_h/2-24
+  local w = window_w/2-26
+  local h = window_h/2-26
   if x_mag > w or y_mag > h then
     local window_angle = math.atan2(h, w)
     local angle = math.atan2(y_dif, x_dif)
@@ -97,10 +98,14 @@ camera.indicator = function(type, x, y, color)
       y = h * y_dif/y_mag
       x = y / math.tan(angle)
     end
-    love.graphics.setColor(palette[color][2])
-    love.graphics.draw(art.img.indicator_icons, art.quad.indicator_icon[type], math.floor(window_w/2+x), math.floor(window_h/2+y), 0, 1, 1, 12, 12)
-    love.graphics.draw(art.img.indicator_arrow, math.floor(window_w/2+x), math.floor(window_h/2+y), angle, 1, 1, -14, 4)
-    love.graphics.setColor(1, 1, 1)
+    local x = math.floor(window_w/2+x)
+    local y = math.floor(window_h/2+y)
+    love.graphics.draw(art.img.indicator_background, art.quad.indicator[type], x, y, 0, 1, 1, 14, 14)
+    art.set_effects(1, 1, 1, art.img.indicator_overlay, "color", palette[color])
+    love.graphics.draw(art.img.indicator_overlay, art.quad.indicator[type], x, y, 0, 1, 1, 14, 14)
+    art.clear_effects()
+    love.graphics.draw(art.img.indicator_icons, art.quad.indicator_icon[icon], x+6, y+6, 0, 1, 1, 14, 14)
+    love.graphics.draw(art.img.indicator_arrow, x, y, angle, 1, 1, -13, 6)
   end
 end
 

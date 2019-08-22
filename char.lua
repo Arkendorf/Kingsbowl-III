@@ -178,20 +178,29 @@ end
 
 char.draw_hud = function()
   for i, v in ipairs(players[id].knights) do
-    if v ~= rules.get_qb() and not knights[v].carrier then
-      camera.indicator(1, knights[v].x, knights[v].y, rules.get_color(knights[v].team))
+    if v ~= knight_id and v ~= rules.get_qb() and not knights[v].carrier then
+      camera.indicator(1, 2, knights[v].x, knights[v].y, rules.get_color(knights[v].team))
     end
   end
+  camera.indicator(1, 1, knights[knight_id].x, knights[knight_id].y, rules.get_color(knights[knight_id].team))
   if not pos_select then
     local ball = football.get_ball()
-    if not ball.thrown then
-      local knight = knights[rules.get_qb()]
-      camera.indicator(3, knight.x, knight.y, rules.get_color(knight.team))
-    elseif not ball.caught then
-      camera.indicator(2, ball.x, ball.y, rules.get_color(rules.get_offense()))
-    elseif ball.carrier then
-      local knight = knights[ball.carrier]
-      camera.indicator(3, knight.x, knight.y, rules.get_color(knight.team))
+    if ball.thrown and not ball.caught then
+      camera.indicator(2, 2, ball.x, ball.y, rules.get_color(rules.get_offense()))
+    else
+      local i = false
+      if not ball.thrown then
+        i = rules.get_qb()
+      elseif ball.carrier then
+        i = ball.carrier
+      end
+      if i then
+        if i == knight_id then
+          camera.indicator(3, 1, knights[i].x, knights[i].y, rules.get_color(knights[i].team))
+        else
+          camera.indicator(3, 2, knights[i].x, knights[i].y, rules.get_color(knights[i].team))
+        end
+      end
     end
   end
 end
@@ -265,26 +274,42 @@ char.cycle_knight = function(dir)
 end
 
 char.keypressed = function(key)
-  if not pos_select then
-    if key == "1" then
-      action = "move"
-    elseif key == "2" then
-      action = "ability"
+  if not replay_active then
+    if not pos_select then
+      if key == "1" then
+        action = "move"
+      elseif key == "2" then
+        action = "ability"
+      end
+    end
+    if key == "tab" then
+      char.cycle_knight(1)
+    elseif key == "lshift" then
+      char.cycle_knight(-1)
+    elseif key == "i" then
+      char.toggle_usernames()
     end
   end
-  if key == "tab" then
-    char.cycle_knight(1)
-  elseif key == "lshift" then
-    char.cycle_knight(-1)
-  elseif key == "i" then
-    char.toggle_usernames()
-  elseif key == "space" then
+  if key == "space" then
     char.center_camera()
   end
 end
 
 char.center_camera = function()
-  camera.object(knights[knight_id])
+  if replay_active then
+    local ball = football.get_ball()
+    if ball.thrown then
+      if ball.carrier then
+        camera.object(knights[ball.carrier])
+      else
+        camera.object(ball)
+      end
+    else
+      camera.object(knights[rules.get_qb()])
+    end
+  else
+    camera.object(knights[knight_id])
+  end
 end
 
 char.mousepressed = function(x, y, button)

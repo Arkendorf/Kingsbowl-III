@@ -97,9 +97,7 @@ game.draw = function()
 end
 
 game.keypressed = function(key)
-  if not replay_active then
-    char.keypressed(key)
-  end
+  char.keypressed(key)
   if network_state == "server" and key == "backspace" then
     stop = true
   end
