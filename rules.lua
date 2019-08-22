@@ -1,6 +1,7 @@
 local field = require "field"
 local movement = require "movement"
 local preview = require "preview"
+local particle = require "particle"
 
 local rules = {}
 
@@ -189,6 +190,7 @@ rules.turnover = function()
     offense = 1
   end
   qb = 0
+  particle.clear() -- new set of particles for every drive
 end
 
 rules.get_endzones = function()

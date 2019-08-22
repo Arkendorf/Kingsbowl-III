@@ -211,12 +211,8 @@ abilities.collide = function(i, v, knights, step_time)
   return false
 end
 
-abilities.stab = function(knight, tackler, step, step_time)
-  if movement.can_move(knight, step) and not (knight.path[step].x == tackler.tile_x and knight.path[step].y == tackler.tile_y) then
-    abilities.start.item(tackler, knight.path[step].x, knight.path[step].y)
-  else
-    abilities.start.item(tackler, knight.tile_x, knight.tile_y)
-  end
+abilities.stab = function(knight, tackler, tile_x, tile_y, step_time)
+  abilities.start.item(tackler, tile_x, tile_y)
   abilities.set(tackler, step_time)
   movement.bounce(tackler.item, tackler.tile_x, tackler.tile_y, tackler.item.tile_x, tackler.item.tile_y, step_time, .75)
 end

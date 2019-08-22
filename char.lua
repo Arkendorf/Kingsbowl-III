@@ -561,17 +561,25 @@ char.touchdown = function(knight)
 end
 
 char.tackle = function(knight_id, knight, tackler, step, step_time)
-  local x, y = movement.get_pos(knight, step)
-  particle.add("stab", x, y)
-  particle.add("blood", x, y)
+
   char.tackle_broadcast(knight_id, knight, tackler)
   knight.dead = true
   end_info.type = "tackle"
   end_info.x = knight.tile_x
   end_down = true
-  if not tackler.item.active then
-    abilities.stab(knight, tackler, step, step_time)
+  local x, y = 0, 0
+  if movement.can_move(knight, step) and not (knight.path[step].x == tackler.tile_x and knight.path[step].y == tackler.tile_y) then -- get position for stab and particles
+    x = knight.path[step].x
+    y = knight.path[step].y
+  else
+    x = knight.tile_x
+    y = knight.tile_y
   end
+  if not tackler.item.active then
+    abilities.stab(knight, tackler, x, y, step_time)
+  end
+  particle.add("stab", x, y)
+  particle.add("blood", x, y)
   players[tackler.player].stats[2] = players[tackler.player].stats[2] + 1
 end
 
