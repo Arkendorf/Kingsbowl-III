@@ -78,10 +78,10 @@ camera.shake = function(mag, t)
 end
 
 camera.indicator = function(icon, type, x, y, color)
-  local tile_x = math.floor((x+.5)*tile_size)
-  local tile_y = math.floor((y+.5)*tile_size)
-  local x_dif = tile_x-cam.x
-  local y_dif = tile_y-cam.y
+  local tile_x = (x+.5)*tile_size
+  local tile_y = (y+.5)*tile_size
+  local x_dif = math.floor(tile_x-cam.x)
+  local y_dif = math.floor(tile_y-cam.y)
   local x_mag = math.abs(x_dif)
   local y_mag = math.abs(y_dif)
   local window_w, window_h = window.get_dimensions()
@@ -105,7 +105,7 @@ camera.indicator = function(icon, type, x, y, color)
     love.graphics.draw(art.img.indicator_overlay, art.quad.indicator[type], x, y, 0, 1, 1, 14, 14)
     art.clear_effects()
     love.graphics.draw(art.img.indicator_icons, art.quad.indicator_icon[icon], x+6, y+6, 0, 1, 1, 14, 14)
-    love.graphics.draw(art.img.indicator_arrow, x, y, angle, 1, 1, -13, 6)
+    love.graphics.draw(art.img.indicator_arrow, x, y, angle, 1, 1, -12, 6)
   end
 end
 

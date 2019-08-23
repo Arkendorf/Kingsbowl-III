@@ -340,7 +340,7 @@ char.keypressed = function(key)
     elseif key == "lshift" then
       char.cycle_knight(-1)
     elseif key == "i" then
-      char.toggle_usernames()
+      char.toggle_info()
     end
   end
   if key == "space" then

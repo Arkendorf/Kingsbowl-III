@@ -93,12 +93,12 @@ field.cap_tile = function(x, y)
   if x < 0 then -- don't let tile_x exceed field
     x = 0
   elseif x > field_w-1 then
-    x = field_w
+    x = field_w-1
   end
   if y < 0 then
     y = 0
   elseif y > field_h-1 then
-    y = field_h
+    y = field_h-1
   end
   return x, y
 end
