@@ -123,7 +123,9 @@ turn.complete = function(step)
     down_delay = false
     resolve = false
     timer = turn_time
-    char.end_resolve(step, step_time)
+    if char.end_resolve(step, step_time) and replay_active then
+      timer = step_time/2
+    end
     football.end_resolve()
     turn.increment()
   end

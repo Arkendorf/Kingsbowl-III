@@ -21,6 +21,8 @@ server_func.load = function()
   nui.add.button("host", "start", 20, 222, 64, 16, {content = "Start", func = server_func.start_server})
   nui.add.button("host", "leave", 108, 222, 64, 16, {content = "Leave", func = server_func.main_menu})
   server_func.hide_advanced()
+
+  id = 0
 end
 
 server_func.update = function(dt)

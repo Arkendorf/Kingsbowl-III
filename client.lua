@@ -26,6 +26,8 @@ client_func.load = function()
 
   nui.add.menu("lan", "Local Games", 2, w/2+32, h/2-128, 192, 256, true)
   nui.add.button("lan", "refresh", 64, 26, 64, 16, {content = "Refresh", func = client_func.refresh_test})
+
+  id = 0
 end
 
 client_func.update = function(dt)

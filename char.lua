@@ -686,9 +686,13 @@ end
 
 char.end_resolve = function(step, step_time)
   resolve = false
+  local item_active = false
   for i, v in ipairs(knights) do -- reset path and abilities
     movement.cancel(v)
-    abilities.reset.item(v, step_time)
+    if v.item.active then
+      item_active = true
+      abilities.reset.item(v, step_time)
+    end
     v.action = "move"
   end
   if network_state == "server" then
@@ -700,6 +704,7 @@ char.end_resolve = function(step, step_time)
       network.server_send("start_select")
     end
   end
+  return item_active
 end
 
 char.start_select = function()
