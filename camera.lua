@@ -51,8 +51,7 @@ end
 camera.scrimmage = function()
   local scrimmage = rules.get_scrimmage()
   local field_w, field_h = field.get_dimensions()
-  cam.new_x = (scrimmage+1)*tile_size
-  cam.new_y = (field_h/2)*tile_size
+  camera.set_position((scrimmage+1)*tile_size, (field_h/2)*tile_size)
 end
 
 camera.object = function(object)
@@ -62,8 +61,17 @@ camera.object = function(object)
     x = object.item.x
     y = object.item.y
   end
-  cam.new_x = math.floor((x+.5)*tile_size)
-  cam.new_y = math.floor((y+.5)*tile_size)
+  camera.set_position(math.floor((x+.5)*tile_size), math.floor((y+.5)*tile_size))
+end
+
+camera.set_position = function(x, y)
+  cam.new_x = x
+  cam.new_y = y
+  local w, h = window.get_dimensions()
+  if math.abs(cam.new_x-cam.x) > w/2+tile_size or math.abs(cam.new_y-cam.y) > h/2+tile_size then
+    cam.x = cam.new_x
+    cam.y = cam.new_y
+  end
 end
 
 camera.get_offset = function()

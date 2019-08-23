@@ -107,9 +107,7 @@ char.load = function(menu_client_list, menu_client_info, menu_team_info, menu_se
       char.end_down(data.step_time)
     end, {"knight_id", "tackle_id", "step", "step_time", "sheath"})
     network.client_callback("catch", function(data)
-      char.catch_broadcast(knights[data])
       char.catch(data, knights[data])
-      knights[data].carrier = true
     end)
     network.client_callback("touchdown", function(data)
       char.touchdown(knights[data.knight_id])
@@ -538,7 +536,6 @@ char.finish = function(step, step_time, max_step)
       end
       -- ball catching
       if football.ball_active() and movement.collision(ball, v, step) then -- ball and knight are colliding
-        char.catch_broadcast(v)
         char.catch(i, v)
         network.server_send("catch", i)
       end
@@ -566,6 +563,7 @@ char.finish = function(step, step_time, max_step)
 end
 
 char.catch = function(knight_id, knight)
+  char.catch_broadcast(knight)
   knight.carrier = true
   knight.action = "move"
   if football.catch(knight_id, knight) then
@@ -744,7 +742,7 @@ char.pos_prepare = function()
 end
 
 char.get_state = function(knight_id, knight)
-  if knight_id == rules.get_qb() and not football.get_ball().thrown then
+  if knight_id == rules.get_qb() and not football.thrown() then
     return "qb"
   elseif knight.carrier then
     return "carrier"
