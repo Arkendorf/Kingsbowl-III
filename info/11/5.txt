@@ -1,1 +1,1 @@
-At the bottom of the menu is the “Main Menu” button, which will return you to the main menu when clicked.
+Turn information is displayed in the center of the top row, with remaining turns on the left, and the turn timer on the right.

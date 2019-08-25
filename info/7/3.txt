@@ -1,1 +1,1 @@
-The “ability” button is directly to the right of the movement button. Clicking this button allows you to activate your knight’s ability. The ability button’s keyboard shortcut is the “2” key. (See the “Using Abilities” tab for more information)
+If a knight collides with ball anywhere along their paths, that knight has “caught” the ball. From this point on until the end of the down, that knight is the “ball carrier”. An interception occurs If the ball carrier is not on the same team as the quarterback. (See the “Rules” tab for more information)

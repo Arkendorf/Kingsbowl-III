@@ -1,0 +1,1 @@
+To the left of the info button is the “center” button. Pressing it will center the camera on your currently selected knight. The shortcut for the center button is pressing the “space” key. (See the “Controlling the Camera” tab for more information)

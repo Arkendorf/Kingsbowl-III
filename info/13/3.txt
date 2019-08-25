@@ -1,0 +1,1 @@
+You will be presented with a list of available replays. Each replay is represented by button displaying the date and time it was created. Play a replay by clicking its respective button. Additionally, you can delete a replay by clicking the adjacent “X” button.

@@ -1,1 +1,1 @@
-If the ball reaches its final destination without colliding with a knight an incompletion occurs, and the ball becomes inactive. (See the “Rules” tab for more information)
+The left and right arrows on either side of the movement and ability buttons allow you to cycle between all of your knights. Alternatively, pressing “shift” cycles to your previous knight, while “tab” cycles to your next knight.

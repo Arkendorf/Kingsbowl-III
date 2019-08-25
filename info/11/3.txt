@@ -1,1 +1,1 @@
-In addition, you will be presented with a list of players for each team. Next to every players name is a list of stats. From right to left, they are: completed passes, total tackles, and total tackles blocked.
+The top-left of the scoreboard features Team 1’s score, name, and color. The opposite side of the scoreboard features Team 2’s name, score, and color.

@@ -1,1 +1,1 @@
-To view a replay of a game you participated in, click the “Replays” button on the main menu.
+The results page appears when a game ends. The winning team and the final scores appear at the top of the menu.

@@ -1,1 +1,1 @@
-The bottom row features down and possession information. The color and direction of the arrow indicate which team currently has the ball. The string of text begins with the current down, and ends with how many yards (not tiles) need to be traversed before the downs reset.
+If an interception occurs, the offense and defense switch roles, but the down only resets once the play is dead.

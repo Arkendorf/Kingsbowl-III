@@ -1,1 +1,1 @@
-The ball appears on the field once it is thrown by the quarterback, taking the appearance of an arrow. The ball follows a path the same way knights do.
+There are six buttons found at the bottom of the screen during gameplay. The button featuring a square with four adjacent arrows is the “movement” button. Clicking this button allows you to set a new position for your knight by clicking a tile. The movement button’s keyboard shortcut is the “1” key. (See the “Player Movement” tab for more information)

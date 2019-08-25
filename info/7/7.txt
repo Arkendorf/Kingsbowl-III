@@ -1,1 +1,0 @@
-The button in the bottom right is the “username” button. Pressing it toggles the visibility of player usernames. The username button’s keyboard shortcut is the “i” key.
