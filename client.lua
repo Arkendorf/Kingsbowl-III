@@ -34,9 +34,16 @@ client_func.update = function(dt)
   if client then
     client:update()
   end
-  for i, v in ipairs(ip_test) do
-    v:update()
+  for k, v in pairs(ip_test) do
+    pcall(client_func.test_update, v)
+    if v:isDisconnected() then
+      client_func.destroy_test(k, v)
+    end
   end
+end
+
+client_func.test_update = function(object)
+  object:update()
 end
 
 client_func.draw = function()
@@ -51,24 +58,29 @@ end
 client_func.quit = function()
   if client then
     client:disconnectNow(1)
-    client = nil
+    client_func.destroy()
   else
-    client_func.stop_test()
+    client_func.clear_test()
   end
 end
 
 client_func.main_menu = function()
   nui.remove.all()
-  client_func.stop_test()
+  client_func.clear_test()
   network_state = ""
   network.load()
 end
 
 client_func.leave_server = function()
   client:disconnectNow(1)
-  client = nil
+  client_func.destroy()
   client_func.load()
   state = "network"
+end
+
+client_func.destroy = function()
+  client:destroy()
+  client = nil
 end
 
 client_func.direct_connect = function()
@@ -84,6 +96,7 @@ client_func.join_server = function(address)
   client_func.stop_test()
   client = sock.newClient(address.ip, address.port)
   if pcall(client_func.connect) then
+    client_func.clear_test()
     -- event calls once connected to a server
     client:on("connect", function()
       if client then
@@ -92,9 +105,8 @@ client_func.join_server = function(address)
         client:send("client_info", {textboxes.username})
       end
     end)
-
   else
-    client = nil
+    client_func.destroy()
   end
 end
 
@@ -135,16 +147,18 @@ end
 
 client_func.test_for_servers = function()
   ip_test = {}
-  for i = 1, 255 do
-    pcall(function()
-      local ip = default_ip_prefix..tostring(i)
-      ip_test[i] = sock.newClient(ip, default_port)
-      ip_test[i]:connect(0)
+  for i = 1, 254 do
+    local ip = default_ip_prefix..tostring(i)
+    ip_test[i] = sock.newClient(ip, default_port)
+    if pcall(client_func.test_connect, ip_test[i]) then
+      ip_test[i]:setTimeout(32, 200, 300)
       ip_test[i]:setSchema("server_info", {"username", "desc", "client_num"})
       ip_test[i]:on("server_info", function(data)
         local index = #servers+1
         servers[index] = {ip = ip, num = i, info = data}
         nui.add.button("lan", i, 20, 66+(index-1)*56, 152, 32, {content = data.username.."\n"..data.desc, func = client_func.join_server, args = {ip = ip, port = default_port}})
+        ip_test[i]:disconnect(0)
+        client_func.destroy_test(i, ip_test[i])
       end)
       ip_test[i]:on("kick", function()
         ip_test[i]:disconnect(0)
@@ -154,15 +168,30 @@ client_func.test_for_servers = function()
         ip_test[i]:disconnect(0)
         client_func.refresh_test()
       end)
-    end)
+    else
+      client_func.destroy_test(i, ip_test[i])
+    end
   end
 end
 
+client_func.test_connect = function(object)
+  object:connect(0)
+end
+
+client_func.destroy_test = function(i, v)
+  v:destroy()
+  ip_test[i] = nil
+end
+
 client_func.stop_test = function()
-  for i, v in ipairs(ip_test) do
+  for k, v in pairs(ip_test) do
     v:disconnectNow(0)
-    v = nil
+    client_func.destroy_test(k, v)
   end
+end
+
+client_func.clear_test = function()
+  client_func.stop_test()
   for i, v in ipairs(servers) do -- reset gui
     pcall(function() nui.remove.element("lan", v.num) end)
   end
@@ -171,7 +200,7 @@ client_func.stop_test = function()
 end
 
 client_func.refresh_test = function()
-  client_func.stop_test()
+  client_func.clear_test()
   client_func.test_for_servers()
 end
 

@@ -785,6 +785,12 @@ function Client:reset()
     end
 end
 
+function Client:destroy()
+    if self.host then
+        self.host:destroy()
+    end
+end
+
 -- Creates the unserialized message that will be used in callbacks
 -- In: serialized message (string)
 -- Out: event (string), data (mixed)
