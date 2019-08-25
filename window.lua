@@ -1,11 +1,7 @@
-local window = {w = 0, h = 0, scale = 2}
+local window = {w = 0, h = 0, scale = 0}
 
 window.load = function()
   love.window.setTitle("Kingsbowl III")
-  love.window.setMode(800, 600, {fullscreen = false})
-  window.w = math.floor(love.graphics.getWidth()/window.scale)
-  window.h = math.floor(love.graphics.getHeight()/window.scale)
-  window.canvas = love.graphics.newCanvas(window.w, window.h)
 end
 
 window.get_dimensions = function()
@@ -19,6 +15,15 @@ end
 
 window.draw = function()
   love.graphics.draw(window.canvas, 0, 0, 0, window.scale, window.scale)
+end
+
+window.setup = function(w, h, scale, tags)
+  love.window.setMode(w, h, tags)
+  window.scale = math.floor(scale)
+  window.w = math.floor(love.graphics.getWidth()/window.scale)
+  window.h = math.floor(love.graphics.getHeight()/window.scale)
+  window.canvas = love.graphics.newCanvas(window.w, window.h)
+  window_change = true
 end
 
 return window

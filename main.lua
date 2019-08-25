@@ -8,13 +8,16 @@ local results = require "results"
 local info = require "info"
 local window = require "window"
 local replays = require "replays"
+local settings = require "settings"
 
 state = "network"
 reset = false
+window_change = false
 
 love.load = function()
   art.load("art")
   nui.load()
+  settings.read()
   window.load()
 
   state = "network"
@@ -29,12 +32,14 @@ love.update = function(dt)
   elseif state == "menu" then
     menu.update(dt)
   end
+  settings.update(dt)
 
   if reset then
     state = "network"
     network.load()
     reset = false
   end
+  window_change = false
 end
 
 love.draw = function()
@@ -81,6 +86,7 @@ love.keypressed = function(key)
     replays.keypressed(key)
   end
   info.keypressed(key)
+  settings.keypressed(key)
   if key == "`" then
     if not love.filesystem.getInfo("screenshots") then
       love.filesystem.createDirectory("screenshots")

@@ -66,7 +66,9 @@ info.load = function()
 end
 
 info.keypressed = function(key)
-  info.leave()
+  if key == "escape" then
+    info.leave()
+  end
 end
 
 info.swap_section = function(num)

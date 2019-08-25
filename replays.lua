@@ -5,6 +5,8 @@ local game = require "game"
 
 local replays = {}
 
+-- replays are saved in results.lua (to prevent loops)
+
 replays.load = function()
   state = "replays"
   nui.remove.all()

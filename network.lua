@@ -5,6 +5,7 @@ local menu = require "menu"
 local window = require "window"
 local replays = require "replays"
 local info = require "info"
+local settings = require "settings"
 
 local network = {}
 
@@ -15,13 +16,18 @@ network_state = ""
 
 network.load = function()
   nui.remove.all()
+  network.set_gui()
+end
+
+network.set_gui = function()
   local w, h = window.get_dimensions()
   local button_h = math.floor((h+art.img.splash:getHeight())/2)+14
-  nui.add.button("", "host", w/2-116, button_h, 64, 32, {content = "Host", func = network.start_server})
-  nui.add.button("", "join", w/2-32, button_h, 64, 32, {content = "Join", func = network.start_client})
-  nui.add.button("", "info", w/2+52, button_h, 64, 32, {content = "How to Play", func = info.load})
-  nui.add.button("", "replay", w/2-74, button_h+52, 64, 32, {content = "Replays", func = network.start_replays})
-  nui.add.button("", "quit", w/2+10, button_h+52, 64, 32, {content = "Quit", func = love.event.quit, color = 1})
+  nui.add.button("", "host", w/2-94, button_h, 84, 32, {content = "Host", func = network.start_server})
+  nui.add.button("", "join", w/2+10, button_h, 84, 32, {content = "Join", func = network.start_client})
+  nui.add.button("", "replay", w/2-126, button_h+52, 48, 32, {content = "Replays", func = network.start_replays})
+  nui.add.button("", "info", w/2-58, button_h+52, 48, 32, {content = "How to Play", func = info.load})
+  nui.add.button("", "settings", w/2+10, button_h+52, 48, 32, {content = "Options", func = settings.load})
+  nui.add.button("", "quit", w/2+78, button_h+52, 48, 32, {content = "Quit", func = love.event.quit, color = 1})
 end
 
 network.update = function(dt)
@@ -29,6 +35,9 @@ network.update = function(dt)
     server_func.update(dt)
   elseif network_state == "client" then
     client_func.update(dt)
+  end
+  if window_change then
+    network.set_gui()
   end
 end
 

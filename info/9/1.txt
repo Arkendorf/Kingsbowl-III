@@ -1,1 +1,1 @@
-Adjust the in-game camera, move your mouse to an edge of the window. The camera will move in that direction. Alternatively, click the “center” button or press the “space” key will center the camera on your currently selected knight.
+Adjust the in-game camera, move your mouse to an edge of the window. The camera will move in that direction. Alternatively, use WASD or the arrow keys to move the camera. You can also click the “center” button or press the “space” key will center the camera on your currently selected knight.
