@@ -1,6 +1,7 @@
 local nui = require "nui"
 local window = require "window"
 local bitser = require "bitser"
+local client_func = require "client"
 
 local settings = {}
 
@@ -96,6 +97,14 @@ settings.set_gui = function()
   nui.add.text("settings_menu", "scale_label", 20, 120, {text= "Pixel Scale:"})
   nui.add.text("settings_menu", "scale_num", 20, 120, {table = info, index = "scale", w = 152, align = "right"})
   nui.add.slider("settings_menu", "scale_slider", 20, 138, "hori", 152, 12, info, "scale", 1, 4)
+
+  nui.add.text("settings_menu", "network_settings", 0, 160, {text= "Network Settings:", w = 192, align = "center"})
+
+  nui.add.text("settings_menu", "lan_label", 20, 182, {text= "Find Local Games:"})
+  nui.add.button("settings_menu", "lan_toggle", 156, 182, 12, 12, {content = "", func = settings.toggle, args = {"lan", true}, func2 = settings.toggle, args2 = {"lan", false}, toggle = true})
+  nui.active("settings_menu", "lan_toggle", info.lan)
+  settings.toggle({"lan", info.lan})
+  nui.add.text("settings_menu", "lan_note", 0, 204, {text= "(For private networks)", w = 192, align = "center"})
 end
 
 settings.apply = function()
@@ -114,8 +123,19 @@ settings.value = function(data)
   end
 end
 
+settings.toggle = function(data)
+  info[data[1]] = data[2]
+  if info[data[1]] then
+    nui.edit.element("settings_menu", data[1].."_toggle", "content", art.img.check_icon)
+  else
+    nui.edit.element("settings_menu", data[1].."_toggle", "content", "")
+  end
+end
+
 settings.leave = function()
   if active then
+    client_func.lan_active(info.lan)
+
     settings.save()
 
     nui.remove.menu("settings_menu")
@@ -140,6 +160,7 @@ settings.read = function()
     info.wintype = 3
     info.res = 1
     info.scale = 2
+    info.lan = true
     settings.apply()
   end
 end

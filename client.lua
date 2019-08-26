@@ -10,22 +10,29 @@ local servers = {}
 client = nil
 id = 0
 local textboxes = {ip_port = "", username = ""}
+local lan = false
 
 
 client_func.load = function()
-  client_func.test_for_servers()
 
   -- gui
   nui.remove.all()
   local w, h = window.get_dimensions()
-  nui.add.menu("join", "Join Server", 2, w/2-224, h/2-128, 192, 256, false)
+  if lan then
+    client_func.test_for_servers()
+
+    nui.add.menu("join", "Join Server", 2, w/2-224, h/2-128, 192, 256, false)
+
+    nui.add.menu("lan", "Local Games", 2, w/2+32, h/2-128, 192, 256, true)
+    nui.add.button("lan", "refresh", 64, 26, 64, 16, {content = "Refresh", func = client_func.refresh_test})
+  else
+    nui.add.menu("join", "Join Server", 2, w/2-96, h/2-128, 192, 256, false)
+  end
+
   nui.add.textbox("join", "username", 48, 28, 96, textboxes, "username", "Username")
   nui.add.textbox("join", "ip", 20, 66, 152, textboxes, "ip_port", "I.P.")
   nui.add.button("join", "join", 20, 222, 64, 16, {content = "Join", func = client_func.direct_connect})
   nui.add.button("join", "leave", 108, 222, 64, 16, {content = "Leave", func = client_func.main_menu})
-
-  nui.add.menu("lan", "Local Games", 2, w/2+32, h/2-128, 192, 256, true)
-  nui.add.button("lan", "refresh", 64, 26, 64, 16, {content = "Refresh", func = client_func.refresh_test})
 
   id = 0
 end
@@ -202,6 +209,10 @@ end
 client_func.refresh_test = function()
   client_func.clear_test()
   client_func.test_for_servers()
+end
+
+client_func.lan_active = function(active)
+  lan = active
 end
 
 return client_func

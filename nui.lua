@@ -404,6 +404,7 @@ nui.add.slider = function(menu_id, id, x, y, dir, size, node_size, table, index,
     matrix = {x = 0, y = 1}
   end
   nui.add.element(menu_id, id, {element = "slider", x = x, y = y, w = size*matrix.x+nui.info.slider.node_h*matrix.y, h = size*matrix.y+nui.info.slider.node_h*matrix.x, dir = dir, size = size, node_size = node_size, pos = 0, table = table, index = index, min = min, max = max, matrix = matrix})
+  nui.set_slider(nui.get.element(menu_id, id))
 end
 
 nui.add.element = function(menu_id, id, element, info)
@@ -444,13 +445,21 @@ nui.adjust_scroll = function(id)
     if max_h > menu.h then
       nui.edit.element(id, "scroll", "node_size", menu.h/max_h*menu.h)
       nui.edit.element(id, "scroll", "max", max_h-menu.h)
-    elseif menu.scroll.active then
+    else
       menu.scroll.y = 0
       nui.edit.element(id, "scroll", "node_size", menu.h-nui.info.slider.node_edge*2-.1)
       nui.edit.element(id, "scroll", "max", 0)
       nui.edit.element(id, "scroll", "pos", 0)
     end
   end
+end
+
+nui.set_slider = function(slider)
+  local value = slider.table[slider.index]
+  local percent = (value-slider.min)/(slider.max-slider.min)
+  local bar_size = slider.size+nui.info.slider.bar_edge*2
+  local node_size = slider.node_size+nui.info.slider.node_edge*2
+  slider.pos = (bar_size-node_size)*percent
 end
 
 nui.edit = {}
